@@ -1,9 +1,10 @@
 // ===========================================================================
 // Beat Builder — step sequencer grid UI
 // ===========================================================================
-import { State } from './state.js';
+import { State, saveExtraLessons } from './state.js';
 import { LANES, LANE_LABEL, LANE_COLORS, lessonFromPatterns } from './lessons.js';
 import { exportMidiFile } from './midi-file.js';
+import { checkAchievements } from './achievements.js';
 
 // GM note numbers per lane: crash=49, hihat=42, snare=38, kick=36, tom=45, ride=51
 const LANE_STEP_COLORS = [
@@ -148,18 +149,18 @@ function wireBuilderControls(){
     btnLoad.addEventListener('click', () => {
       const lesson = getBuilderLesson();
       if (!lesson) return;
-      // Add as an extra lesson and switch to it
-      const idx = 8 + State.extraLessons.length; // base LESSONS.length is 8
-      // Replace last builder lesson if it exists
       const existingIdx = State.extraLessons.findIndex(l => l._builderLesson);
       if (existingIdx >= 0){
         State.extraLessons[existingIdx] = lesson;
       } else {
         State.extraLessons.push(lesson);
       }
-      // Switch to play tab and load this lesson
+      saveExtraLessons();
+      const hasCoach = !!document.getElementById('builderCoachNote')?.value.trim();
+      checkAchievements({ onCreator: true, onCoach: hasCoach });
+      const lessonIdx = existingIdx >= 0 ? existingIdx : State.extraLessons.length - 1;
       document.dispatchEvent(new CustomEvent('loadLesson', {
-        detail: { idx: existingIdx >= 0 ? 8 + existingIdx : 8 + State.extraLessons.length - 1 }
+        detail: { idx: lessonIdx }
       }));
       // Switch to play tab
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'play'));
@@ -199,7 +200,8 @@ function getBuilderLesson(){
     lane: p.lane,
     pattern: p.pattern.map(on => on ? 'x' : '.').join(''),
   }));
-  const lesson = lessonFromPatterns('Builder Pattern', bpm, 'Custom beat builder pattern.', strPatterns, 1);
+  const coachNote = document.getElementById('builderCoachNote')?.value.trim() || '';
+  const lesson = lessonFromPatterns('Builder Pattern', bpm, coachNote || 'Custom beat builder pattern.', strPatterns, 1);
   lesson._builderLesson = true;
   return lesson;
 }
@@ -218,4 +220,6 @@ export function loadBuilderPattern(lesson){
   });
   State.builderPattern = grid;
   renderBuilderGrid();
+  const ta = document.getElementById('builderCoachNote');
+  if (ta && lesson.tip && lesson.tip !== 'Custom beat builder pattern.') ta.value = lesson.tip;
 }

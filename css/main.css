@@ -331,6 +331,7 @@ body::before{
 .note.lane-5{background:rgba(16,196,214,.85);color:#fff;box-shadow:0 0 10px rgba(16,196,214,.5), inset 0 0 0 1px #fff6}
 .note.hit{opacity:0;transition:opacity .08s}
 .note.missed{opacity:.18;filter:grayscale(.6)}
+.note.shadow{opacity:.35;pointer-events:none}
 
 .judge{
   position:absolute;left:50%;top:30%;
@@ -343,6 +344,7 @@ body::before{
 }
 .judge[data-kind="miss"]{color:var(--led-red);text-shadow:0 0 18px var(--led-red)}
 .judge[data-kind="perfect"]{color:var(--led-green);text-shadow:0 0 18px var(--led-green)}
+.judge[data-kind="countin"]{color:var(--lcd-fg);text-shadow:0 0 24px var(--lcd-fg);font-size:72px}
 
 /* Pads — rubber buttons */
 .pads{
@@ -789,4 +791,102 @@ select.midi{
 
 .builder-footer{
   display:flex;justify-content:flex-end;gap:8px;margin-top:12px;
+}
+.builder-coach{
+  margin-top:14px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.coach-label{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:10px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);
+}
+.coach-textarea{
+  width:100%;
+  background:linear-gradient(180deg,#0a1410 0%,#0d1a14 100%);
+  border:1px solid #000;border-radius:6px;
+  padding:10px 12px;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;line-height:1.55;
+  color:var(--lcd-fg);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.7);
+  resize:vertical;
+  outline:none;
+}
+.coach-textarea::placeholder{color:var(--lcd-dim)}
+.coach-textarea:focus{border-color:var(--led-amber);box-shadow:inset 0 2px 6px rgba(0,0,0,.7),0 0 0 1px var(--led-amber)}
+
+/* ===========================================================================
+   Achievement toast
+   =========================================================================== */
+#achievementToast{
+  position:fixed;bottom:-120px;right:24px;
+  display:flex;align-items:center;gap:14px;
+  background:linear-gradient(135deg,#1a1f28 0%,#0f1318 100%);
+  border:1px solid var(--led-amber);
+  border-radius:12px;
+  padding:14px 20px;
+  box-shadow:0 0 24px rgba(255,138,30,.35), 0 8px 24px rgba(0,0,0,.6);
+  z-index:9999;
+  transition:bottom .45s cubic-bezier(.34,1.56,.64,1);
+  min-width:240px;max-width:320px;
+}
+#achievementToast.show{bottom:24px}
+.toast-icon{font-size:28px;line-height:1;flex-shrink:0}
+.toast-body{display:flex;flex-direction:column;gap:3px}
+.toast-name{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+  color:var(--led-amber-hot);letter-spacing:.04em;
+}
+.toast-desc{
+  font-family:'Major Mono Display',monospace;font-size:10px;
+  color:var(--text-dim);letter-spacing:.08em;
+}
+
+/* ===========================================================================
+   Tier pips on library cards
+   =========================================================================== */
+.tier-pips{
+  display:flex;gap:5px;margin-top:8px;
+}
+.tier-pip{
+  width:12px;height:12px;border-radius:50%;
+  background:#1c2028;border:1px solid #333;
+  transition:background .2s, box-shadow .2s;
+}
+.tier-pip.lit{
+  background:var(--tc, var(--led-green));
+  box-shadow:0 0 6px var(--tc, var(--led-green));
+  border-color:transparent;
+}
+
+/* ===========================================================================
+   Achievement grid (Progress panel)
+   =========================================================================== */
+.achievement-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+.ach-tile{
+  background:linear-gradient(180deg,#1a1f28 0%,#131720 100%);
+  border:1px solid #252a35;
+  border-radius:8px;
+  padding:10px 8px;
+  text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.ach-tile.earned{
+  border-color:var(--led-amber);
+  box-shadow:0 0 10px rgba(255,138,30,.2);
+}
+.ach-tile.locked{opacity:.45}
+.ach-ico{font-size:20px;line-height:1}
+.ach-nm{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:10px;
+  color:var(--text);letter-spacing:.05em;
+}
+.ach-desc{
+  font-family:'Major Mono Display',monospace;font-size:8px;
+  color:var(--text-dim);line-height:1.4;
 }

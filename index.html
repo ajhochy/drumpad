@@ -169,17 +169,10 @@
           </div>
         </div>
 
-        <div class="big-stat">
-          <div class="lbl">Badges</div>
-          <div style="font-family:'Space Grotesk', sans-serif;font-weight:700;font-size:18px;color:var(--text);margin-top:2px" id="badgeCount">0 of 6 earned</div>
-          <div class="badges">
-            <div class="badge-tile" id="badge-rock"><div class="ico">×4</div><div class="nm">4 on Floor</div><div class="nb">first rock beat</div></div>
-            <div class="badge-tile" id="badge-combo"><div class="ico">⚡</div><div class="nm">100x Combo</div><div class="nb">unbroken</div></div>
-            <div class="badge-tile" id="badge-first"><div class="ico">★</div><div class="nm">First Patch</div><div class="nb">lesson 1</div></div>
-            <div class="badge-tile locked" id="badge-streak"><div class="ico">?</div><div class="nm">7 Day</div><div class="nb">streak</div></div>
-            <div class="badge-tile locked" id="badge-sharp"><div class="ico">?</div><div class="nm">Sharpshooter</div><div class="nb">99% acc</div></div>
-            <div class="badge-tile locked" id="badge-grad"><div class="ico">?</div><div class="nm">Graduate</div><div class="nb">all lessons</div></div>
-          </div>
+        <div class="big-stat" style="grid-column:span 3">
+          <div class="lbl">Achievements</div>
+          <div style="font-family:'Space Grotesk', sans-serif;font-weight:700;font-size:18px;color:var(--text);margin-top:2px" id="badgeCount">0 of 18 earned</div>
+          <div class="achievement-grid" id="achievementGrid"></div>
         </div>
 
         <div class="big-stat" style="grid-column:span 3">
@@ -207,6 +200,11 @@
 
       <div class="builder-grid-wrap">
         <div class="builder-grid" id="builderGrid"></div>
+      </div>
+
+      <div class="builder-coach">
+        <label class="coach-label">COACH NOTE <span style="color:var(--text-dim);font-weight:400">— tip shown to student during practice</span></label>
+        <textarea id="builderCoachNote" class="coach-textarea" rows="3" placeholder="e.g. Keep the hi-hat steady. Watch the kick on beat 3…"></textarea>
       </div>
 
       <div class="builder-footer">

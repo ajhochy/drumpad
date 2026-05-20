@@ -5,6 +5,7 @@ import { State } from './state.js';
 import { drumSound, clickSound } from './audio.js';
 import { resetStats } from './scoring.js';
 import { LANE_LABEL } from './lessons.js';
+import { checkAchievements } from './achievements.js';
 
 export const HIT_WINDOW = 60;
 let lastMetronomeBeat = -1;
@@ -33,25 +34,31 @@ export function clearHighway(){
   const hw = document.getElementById('highway');
   if (!hw) return;
   State.noteEls.forEach(e => { if (e && e.parentNode) e.parentNode.removeChild(e); });
+  State.shadowNoteEls.forEach(e => { if (e && e.parentNode) e.parentNode.removeChild(e); });
   State.noteEls = [];
+  State.shadowNoteEls = [];
   State.noteStates = [];
+}
+
+function makeNoteEl(hw, n, shadow){
+  const el = document.createElement('div');
+  el.className = 'note lane-' + n.lane + (shadow ? ' shadow' : '');
+  el.textContent = LANE_LABEL[n.lane];
+  const laneW = 100 / 6;
+  el.style.left = (n.lane * laneW + 1) + '%';
+  el.style.width = (laneW - 2) + '%';
+  el.style.top = '-40px';
+  if (shadow) el.style.display = 'none';
+  hw.appendChild(el);
+  return el;
 }
 
 export function buildNotes(){
   const hw = document.getElementById('highway');
   if (!hw) return;
-  State.noteEls = State.notes.map(n => {
-    const el = document.createElement('div');
-    el.className = 'note lane-' + n.lane;
-    el.textContent = LANE_LABEL[n.lane];
-    const laneW = 100 / 6;
-    el.style.left = (n.lane * laneW + 1) + '%';
-    el.style.width = (laneW - 2) + '%';
-    el.style.top = '-40px';
-    hw.appendChild(el);
-    return el;
-  });
-  State.noteStates = State.notes.map(() => ({ hit: false, missed: false, y: -40 }));
+  State.noteEls       = State.notes.map(n => makeNoteEl(hw, n, false));
+  State.shadowNoteEls = State.notes.map(n => makeNoteEl(hw, n, true));
+  State.noteStates    = State.notes.map(() => ({ hit: false, missed: false, y: -40 }));
 }
 
 export function buildStreak(){
@@ -103,49 +110,107 @@ function pulseMetronome(){
 
 export function animate(ts){
   if (!State.startTime) State.startTime = ts;
-  const elapsed = ts - State.startTime;
-  const HY = hitY();
-  const travelTime = 1800;
-  let allDone = true;
+  const elapsed     = ts - State.startTime;
+  const quarterMs   = State.halfBeatMs * 2;
+  const countInMs   = State.countInBeats * State.halfBeatMs;
+  const grooveMs    = State.loopLengthBeats * State.halfBeatMs;
+  const travelTime  = 1800;
 
-  // metronome
+  // ── Metronome — continuous through count-in and groove ───────────────────
   if (State.metronome){
-    const totalQuarterMs = State.halfBeatMs * 2;
-    const currentBeat = Math.floor(elapsed / totalQuarterMs);
-    if (currentBeat !== lastMetronomeBeat){
-      lastMetronomeBeat = currentBeat;
-      clickSound(currentBeat % 4 === 0);
+    const beat = Math.floor(elapsed / quarterMs);
+    if (beat !== lastMetronomeBeat){
+      lastMetronomeBeat = beat;
+      clickSound(beat % 4 === 0);
       pulseMetronome();
     }
   }
 
-  State.notes.forEach((n, i) => {
-    const st = State.noteStates[i];
-    if (st.hit || st.missed) return;
-    allDone = false;
-    const noteTime = n.beat * State.halfBeatMs;
-    const progress = (elapsed - (noteTime - travelTime)) / travelTime;
-    const y = progress * (HY + 40) - 40;
-    State.noteEls[i].style.top = Math.round(y) + 'px';
-    st.y = y;
+  // ── grooveElapsed: time since groove started (negative during count-in) ──
+  const grooveElapsed = elapsed - countInMs;
 
-    if (y > HY + HIT_WINDOW + 8){
-      st.missed = true;
-      State.noteEls[i].classList.add('missed');
-      State.misses++;
-      State.combo = 0;
-      State.streak = 0;
-      renderStreak();
-      setText('comboVal', '0x');
-      showJudge('miss', 'miss');
-      updateProgress();
+  // ── Count-in display ─────────────────────────────────────────────────────
+  const j = document.getElementById('judge');
+  if (grooveElapsed < 0 && State.loopIteration === 0){
+    const countBeat = Math.floor(elapsed / quarterMs) + 1;
+    if (j){ j.textContent = String(countBeat); j.dataset.kind = 'countin'; j.style.opacity = '1'; }
+  } else if (j && j.dataset.kind === 'countin'){
+    j.style.opacity = '0';
+  }
+
+  // ── Loop rollover ─────────────────────────────────────────────────────────
+  if (State.loop && grooveElapsed >= 0){
+    const pass = Math.floor(grooveElapsed / grooveMs);
+    if (pass > State.loopIteration){
+      State.loopIteration = pass;
+      _savePassScore();
+      State.hits = 0;
+      State.misses = 0;
+      // Clear state flags; positions are re-derived from grooveElapsed naturally
+      State.noteStates.forEach(st => { st.hit = false; st.missed = false; });
+      State.noteEls.forEach(el => { el.classList.remove('hit','missed'); el.style.opacity = ''; });
+    }
+  }
+
+  // ── Note positioning ──────────────────────────────────────────────────────
+  // Each note is positioned using grooveElapsed directly (no modulo).
+  // The primary element tracks the CURRENT pass; the shadow element tracks
+  // the NEXT pass so it pre-appears from the top before the loop wraps.
+  // This creates a seamless reel: the shadow slides in from the top while
+  // the primary slides off the bottom, and they swap roles at the boundary.
+
+  const HY = hitY();
+  let allDone = true;
+
+  State.notes.forEach((n, i) => {
+    const st         = State.noteStates[i];
+    const noteTime   = n.beat * State.halfBeatMs;
+
+    // ── Primary: current pass ─────────────────────────────────────────────
+    const tAbs    = noteTime + State.loopIteration * grooveMs;
+    const prog    = (grooveElapsed - (tAbs - travelTime)) / travelTime;
+    const y       = prog * (HY + 40) - 40;
+
+    if (!st.hit && !st.missed){
+      allDone = false;
+      State.noteEls[i].style.top = Math.round(y) + 'px';
+      st.y = y;
+
+      if (grooveElapsed >= 0 && y > HY + HIT_WINDOW + 8){
+        st.missed = true;
+        State.noteEls[i].classList.add('missed');
+        State.misses++;
+        State.combo = 0;
+        State.streak = 0;
+        renderStreak();
+        setText('comboVal', '0x');
+        showJudge('miss', 'miss');
+        updateProgress();
+      }
+    }
+
+    // ── Shadow: next pass pre-appearing from top ──────────────────────────
+    if (State.loop){
+      const shadowEl   = State.shadowNoteEls[i];
+      const tAbsNext   = noteTime + (State.loopIteration + 1) * grooveMs;
+      const progNext   = (grooveElapsed - (tAbsNext - travelTime)) / travelTime;
+      const yNext      = progNext * (HY + 40) - 40;
+      if (shadowEl){
+        if (yNext >= -42 && yNext <= HY + HIT_WINDOW + 10){
+          shadowEl.style.top     = Math.round(yNext) + 'px';
+          shadowEl.style.display = '';
+        } else {
+          shadowEl.style.display = 'none';
+        }
+      }
     }
   });
 
   updateProgress();
 
-  if (allDone && State.notes.length > 0 &&
-      elapsed > (State.notes[State.notes.length - 1]?.beat || 0) * State.halfBeatMs + 1500){
+  // ── Non-loop end ─────────────────────────────────────────────────────────
+  if (!State.loop && allDone && State.notes.length > 0 &&
+      grooveElapsed > (State.notes[State.notes.length-1]?.beat || 0) * State.halfBeatMs + 1500){
     finishLesson();
     return;
   }
@@ -153,7 +218,8 @@ export function animate(ts){
   State.animFrameId = requestAnimationFrame(animate);
 }
 
-export function finishLesson(){
+// Save high score / stars for the pass that just ended (called on each loop rollover)
+function _savePassScore(){
   const total = State.notes.length;
   const acc = total > 0 ? State.hits / total : 0;
   const stars = acc >= 0.95 ? 3 : acc >= 0.8 ? 2 : acc >= 0.5 ? 1 : 0;
@@ -167,32 +233,15 @@ export function finishLesson(){
     when: Date.now()
   };
   localStorage.setItem('drum.scores', JSON.stringify(State.scores));
-
-  if (State.loop){
-    setTimeout(() => { if (State.playing) restartFromTop(); }, 800);
-  } else {
-    stopPlay();
-    showJudge('done!', 'done');
-  }
-
-  // Refresh library to update score display
+  checkAchievements({ onPass: true });
   import('./library.js').then(m => m.refreshLibrary());
 }
 
-export function restartFromTop(){
-  State.startTime = null;
-  lastMetronomeBeat = -1;
-  clearHighway();
-  buildNotes();
-  State.combo = 0;
-  State.streak = 0;
-  setText('comboVal', '0x');
-  renderStreak();
-  State.hits = 0;
-  State.misses = 0;
-  setText('progLbl', '0 / ' + State.notes.length);
-  const f = document.getElementById('progFill');
-  if (f) f.style.width = '0%';
+// Called only in non-loop mode when groove finishes
+export function finishLesson(){
+  _savePassScore();
+  stopPlay();
+  showJudge('done!', 'done');
 }
 
 export function hitPad(lane){
@@ -225,6 +274,7 @@ export function hitPad(lane){
       const lbl = pts === 300 ? 'perfect!' : pts === 200 ? 'great!' : 'good';
       showJudge(lbl, pts === 300 ? 'perfect' : pts === 200 ? 'great' : 'good');
       updateProgress();
+      checkAchievements({ onHit: true });
       return;
     }
   }
@@ -234,12 +284,18 @@ export function startPlay(){
   import('./audio.js').then(m => m.getAC()); // unlock audio
   State.playing = true;
   State.startTime = null;
+  State.loopIteration = 0;
   lastMetronomeBeat = -1;
   clearHighway();
   buildNotes();
   resetStats();
   setText('playLbl', 'Pause');
-  document.getElementById('btnPlay')?.classList.add('playing');
+  const btnPlay = document.getElementById('btnPlay');
+  if (btnPlay){
+    btnPlay.classList.add('playing');
+    const icon = btnPlay.querySelector('i');
+    if (icon) icon.className = 'ti ti-player-pause';
+  }
   State.animFrameId = requestAnimationFrame(animate);
 }
 
@@ -250,7 +306,12 @@ export function stopPlay(){
     State.animFrameId = null;
   }
   setText('playLbl', 'Play');
-  document.getElementById('btnPlay')?.classList.remove('playing');
+  const btnPlay = document.getElementById('btnPlay');
+  if (btnPlay){
+    btnPlay.classList.remove('playing');
+    const icon = btnPlay.querySelector('i');
+    if (icon) icon.className = 'ti ti-player-play';
+  }
 }
 
 export function togglePlay(){

@@ -80,98 +80,97 @@ export function lessonFromMidiEvents(name, events, ppq){
   };
 }
 
-export const LESSON_META = [
-  { difficulty:'Easy', genre:'Rock' },
-  { difficulty:'Easy', genre:'Dance' },
-  { difficulty:'Easy', genre:'Hip-Hop' },
-  { difficulty:'Med', genre:'Fills' },
-  { difficulty:'Med', genre:'Rock' },
-  { difficulty:'Med', genre:'Jazz' },
-  { difficulty:'Hard', genre:'Punk' },
-  { difficulty:'Hard', genre:'Funk' },
-];
+// Each lesson: 16-char patterns (16 eighth-note steps = 2 bars of 4/4), bars=1
+// so loopLengthBeats = bars * beatsPerBar = 1 * 16 = 16 ✓
+function lesson(name, bpm, tip, patterns, difficulty, genre){
+  const L = lessonFromPatterns(name, bpm, tip, patterns, 1);
+  L.meta = { difficulty, genre };
+  return L;
+}
 
 export const LESSONS = [
-  lessonFromPatterns(
-    'Rock Beat 101',
-    80,
-    'Hi-hat plays straight eighths. Snare lands on 2 and 4. Kick is your heartbeat on 1 and 3. The whole foundation of rock is right here.',
+  lesson(
+    'Rock Beat 101', 80,
+    'Keep the hi-hat steady on every eighth note. Snare locks in on beats 2 and 4 — that\'s what makes it groove.',
     [
-      { lane:'hihat', pattern:'x x x x x x x x' },
-      { lane:'snare', pattern:'....x.......x...' },
-      { lane:'kick',  pattern:'x.......x.......' }
-    ]
+      { lane: 'hihat', pattern: 'xxxxxxxxxxxxxxxx' },
+      { lane: 'snare', pattern: '..x...x...x...x.' },
+      { lane: 'kick',  pattern: 'x...x...x...x...' },
+    ],
+    'Beginner', 'Rock'
   ),
-  lessonFromPatterns(
-    'Disco Pulse',
-    100,
-    'Every quarter note kick — this is the four-on-the-floor that powers disco, house, and most dance music. Open hi-hat on the upbeats gives it that "tsst" lift.',
+  lesson(
+    'Disco Pulse', 100,
+    'Hi-hat hits on the off-beats (the "ands"). That upbeat pulse is what drives disco and funk.',
     [
-      { lane:'hihat', pattern:'.x.x.x.x.x.x.x.x' },
-      { lane:'snare', pattern:'....x.......x...' },
-      { lane:'kick',  pattern:'x...x...x...x...' }
-    ]
+      { lane: 'hihat', pattern: '.x.x.x.x.x.x.x.' },
+      { lane: 'snare', pattern: '..x...x...x...x.' },
+      { lane: 'kick',  pattern: 'x...x...x...x...' },
+    ],
+    'Beginner', 'Disco'
   ),
-  lessonFromPatterns(
-    'Half-Time Slap',
-    72,
-    'Snare moves to beat 3 only. Slower-feeling but actually the same tempo. This is the hip-hop / J Dilla pocket — let it breathe.',
+  lesson(
+    'Half-Time Slap', 72,
+    'The snare only hits once per bar, giving a big heavy feel. Kick fills the space — listen for where beat 1 lands.',
     [
-      { lane:'hihat', pattern:'x x x x x x x x' },
-      { lane:'snare', pattern:'........x.......' },
-      { lane:'kick',  pattern:'x..x............' }
-    ]
+      { lane: 'hihat', pattern: 'xxxxxxxxxxxxxxxx' },
+      { lane: 'snare', pattern: '....x.......x...' },
+      { lane: 'kick',  pattern: 'x..x....x..x....' },
+    ],
+    'Intermediate', 'Funk'
   ),
-  lessonFromPatterns(
-    'Tom Fill Workout',
-    90,
-    'Four bars of groove, then a tom fill takes you home. Hit toms in quick succession on the last beat. Don\'t rush — fills should land on time.',
+  lesson(
+    'Tom Fill', 90,
+    'First half is straight time, second half explodes into toms. Keep the kick locked in when the toms come in.',
     [
-      { lane:'hihat', pattern:'x x x x x x x x . . . . . . . .' },
-      { lane:'snare', pattern:'....x...........' },
-      { lane:'kick',  pattern:'x.....x.........' },
-      { lane:'tom',   pattern:'........xxxxxxxx' }
-    ]
+      { lane: 'hihat', pattern: 'xxxxxxxx........' },
+      { lane: 'snare', pattern: '....x...........' },
+      { lane: 'kick',  pattern: 'x...x...........' },
+      { lane: 'tom',   pattern: '........xxxxxxxx' },
+    ],
+    'Intermediate', 'Rock'
   ),
-  lessonFromPatterns(
-    'Crash & Ride Groove',
-    95,
-    'Open the crash on beat 1 — it\'s your downbeat exclamation point. Ride takes over the timekeeping. Snare on 2 and 4 keeps it grounded.',
+  lesson(
+    'Crash & Ride', 95,
+    'Crash on beat 1 signals the top of the form. Ride carries the pulse. Listen to how the crash and ride work together.',
     [
-      { lane:'crash', pattern:'x...............' },
-      { lane:'ride',  pattern:'.x.x.x.x.x.x.x.x' },
-      { lane:'snare', pattern:'....x.......x...' },
-      { lane:'kick',  pattern:'x.......x.......' }
-    ]
+      { lane: 'crash', pattern: 'x...............' },
+      { lane: 'ride',  pattern: '.x.x.x.x.x.x.x.' },
+      { lane: 'snare', pattern: '..x...x...x...x.' },
+      { lane: 'kick',  pattern: 'x...x...........' },
+    ],
+    'Intermediate', 'Jazz'
   ),
-  lessonFromPatterns(
-    'Shuffle Groove',
-    110,
-    'Triplet feel — count "1-and-a 2-and-a". The shuffle is jazz, blues, and rockabilly all rolled in. Swing those eighths!',
+  lesson(
+    'Shuffle', 110,
+    'The shuffle uses a "long-short" pattern on the hi-hat. Feel the triplet swing — it\'s what separates blues from rock.',
     [
-      { lane:'hihat', pattern:'x.xx.xx.xx.xx.x.' },
-      { lane:'snare', pattern:'....x.......x...' },
-      { lane:'kick',  pattern:'x.......x.......' }
-    ]
+      { lane: 'hihat', pattern: 'x.xx.xx.x.xx.xx.' },
+      { lane: 'snare', pattern: '..x...x...x...x.' },
+      { lane: 'kick',  pattern: 'x...x...........' },
+    ],
+    'Intermediate', 'Blues'
   ),
-  lessonFromPatterns(
-    'Punk Bash',
-    160,
-    'Eighth notes on the hi-hat, BASH the snare on the upbeats too. Fast and loose. Don\'t overthink — feel the riot.',
+  lesson(
+    'Punk Bash', 160,
+    'Fast and aggressive. Hi-hat never lets up. The snare stutters between backbeats — stay relaxed, keep your wrist loose.',
     [
-      { lane:'hihat', pattern:'x x x x x x x x' },
-      { lane:'snare', pattern:'..x.x.x...x.x.x.' },
-      { lane:'kick',  pattern:'x...x...x...x...' }
-    ]
+      { lane: 'hihat', pattern: 'xxxxxxxxxxxxxxxx' },
+      { lane: 'snare', pattern: '..x.x.x...x.x.x.' },
+      { lane: 'kick',  pattern: 'x...x...x...x...' },
+    ],
+    'Advanced', 'Punk'
   ),
-  lessonFromPatterns(
-    'Funk Pocket',
-    96,
-    'Ghost notes on the snare give funk its sneaky pulse. Hi-hat stays steady. Lock that kick into the bassline pocket.',
+  lesson(
+    'Funk Pocket', 96,
+    'Ghost notes and syncopated kick define the pocket. Every hit matters — listen for the spaces between the notes.',
     [
-      { lane:'hihat', pattern:'x x x x x x x x' },
-      { lane:'snare', pattern:'..x.x..x....x...' },
-      { lane:'kick',  pattern:'x..x.x..x..x....' }
-    ]
+      { lane: 'hihat', pattern: 'xxxxxxxxxxxxxxxx' },
+      { lane: 'snare', pattern: '..x.x..x....x...' },
+      { lane: 'kick',  pattern: 'x..x.x..x..x....' },
+    ],
+    'Advanced', 'Funk'
   ),
 ];
+
+export const LESSON_META = LESSONS.map(L => L.meta);

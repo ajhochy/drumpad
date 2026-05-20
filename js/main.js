@@ -67,6 +67,7 @@ export function loadLesson(idx){
   State.bpm = L.bpm;
   State.halfBeatMs = 60000 / State.bpm / 2;
   State.notes = L.notes.map(n => ({ ...n }));
+  State.loopLengthBeats = L.loopLengthBeats || (L.bars * L.beatsPerBar) || 16;
 
   setText('hdrName', L.name);
   const num = String(idx + 1).padStart(2, '0');
@@ -167,8 +168,8 @@ function init(){
   buildStreak();
   renderStreak();
 
-  // Load initial lesson
-  loadLesson(0);
+  // Load initial lesson only if one exists
+  if (allLessons().length > 0) loadLesson(0);
 
   // Library
   refreshLibrary();
@@ -177,8 +178,12 @@ function init(){
   // MIDI device
   initMIDI();
 
-  // Beat builder
+  // Beat builder — init, then restore last saved pattern if one exists
   initBuilder();
+  const savedBuilderLesson = State.extraLessons.find(l => l._builderLesson);
+  if (savedBuilderLesson){
+    import('./builder.js').then(m => m.loadBuilderPattern(savedBuilderLesson));
+  }
 
   // Listen for loadLesson events from library cards
   document.addEventListener('loadLesson', e => {

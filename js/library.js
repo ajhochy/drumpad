@@ -1,10 +1,11 @@
 // ===========================================================================
 // Library + Progress tab rendering
 // ===========================================================================
-import { State } from './state.js';
+import { State, saveExtraLessons } from './state.js';
 import { LESSONS, LESSON_META, LANES, LANE_LABEL, lessonFromMidiEvents } from './lessons.js';
 import { parseMidiFile, midiNoteToLane } from './midi-file.js';
 import { stopPlay, startPlay } from './highway.js';
+import { ACHIEVEMENTS, TIER_NAMES, TIER_COLORS, isUnlocked, getHighestTier, getStreak, getPlayDays } from './achievements.js';
 
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
@@ -46,7 +47,12 @@ export function refreshLibrary(){
   const meta = allMeta();
   const subText = document.getElementById('libSubText');
   if (subText){
-    subText.innerHTML = `${lessons.length} patches · sorted by difficulty<br>tap to load · firmware locked at v2.6`;
+    subText.innerHTML = `${lessons.length} patches · tap to load<br>build new grooves in the Build tab`;
+  }
+
+  if (lessons.length === 0){
+    grid.innerHTML = `<div style="grid-column:span 3;font-family:'Major Mono Display',monospace;font-size:12px;color:var(--text-dim);padding:24px 0;letter-spacing:.1em">no patches loaded — use the Build tab to create one</div>`;
+    return;
   }
 
   lessons.forEach((L, i) => {
@@ -57,6 +63,16 @@ export function refreshLibrary(){
     const card = document.createElement('div');
     card.className = 'lesson-card' + (i === State.currentLesson ? ' playing' : '');
     card.dataset.idx = i;
+    // Tier pips (only for prebuilt lessons)
+    let tierPips = '';
+    if (i < LESSONS.length){
+      const highestTier = getHighestTier(i);
+      tierPips = '<div class="tier-pips">' +
+        TIER_NAMES.map((name, t) =>
+          `<span class="tier-pip${t <= highestTier ? ' lit' : ''}" style="${t <= highestTier ? `--tc:${TIER_COLORS[t]}` : ''}" title="${name}"></span>`
+        ).join('') +
+        '</div>';
+    }
     card.innerHTML = `
       <div class="num">${num}</div>
       <div class="stamp ${s ? 'done' : ''}">${s ? 'Played' : 'New'}</div>
@@ -67,6 +83,7 @@ export function refreshLibrary(){
         <div class="stars">${'★'.repeat(stars)}<span class="off">${'★'.repeat(3 - stars)}</span></div>
         <div>${s ? 'High: ' + s.high.toLocaleString() : '—'}</div>
       </div>
+      ${tierPips}
     `;
     card.addEventListener('click', () => {
       switchTab('play');
@@ -97,65 +114,62 @@ export function relTime(t){
 export function refreshProgress(){
   const lessons = allLessons();
 
-  // calendar
+  // ── Calendar (real play days) ─────────────────────────────────────────────
   const cal = document.getElementById('calGrid');
   if (cal){
     cal.innerHTML = '';
-    const seed = Object.keys(State.scores).length || 3;
-    for (let i = 0; i < 14; i++){
-      const d = document.createElement('div');
-      const v = ((i * 7 + seed * 3) % 11);
-      const lvl = v > 8 ? 'l4' : v > 6 ? 'l3' : v > 3 ? 'l2' : v > 1 ? 'l1' : '';
-      d.className = 'cal-cell ' + lvl;
-      cal.appendChild(d);
+    const playDays = getPlayDays();
+    for (let i = 13; i >= 0; i--){
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const played = playDays.has(key);
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell ' + (played ? 'l3' : '');
+      cell.title = key;
+      cal.appendChild(cell);
     }
   }
 
-  // aggregate stats
+  // ── Aggregate stats ───────────────────────────────────────────────────────
   const scoreEntries = Object.values(State.scores);
-  const totalHits = scoreEntries.reduce((a, s) => a + (s.plays || 0) * 10, 0);
-  const bestCombo = scoreEntries.reduce((a, s) => Math.max(a, s.high || 0), 0);
-  const topAcc = scoreEntries.reduce((a, s) => Math.max(a, s.lastAcc || 0), 0);
-  const playsCount = scoreEntries.reduce((a, s) => a + (s.plays || 0), 0);
+  const totalNotes   = scoreEntries.reduce((a, s) => a + (s.plays || 0) * 50, 0);
+  const bestScore    = scoreEntries.reduce((a, s) => Math.max(a, s.high || 0), 0);
+  const topAcc       = scoreEntries.reduce((a, s) => Math.max(a, s.lastAcc || 0), 0);
+  const playsCount   = scoreEntries.reduce((a, s) => a + (s.plays || 0), 0);
 
-  const psNotes = document.getElementById('psNotes');
-  if (psNotes) psNotes.textContent = totalHits.toLocaleString();
-  const psCombo = document.getElementById('psCombo');
-  if (psCombo) psCombo.textContent = bestCombo.toLocaleString();
-  const psAcc = document.getElementById('psAcc');
-  if (psAcc) psAcc.textContent = topAcc ? topAcc + '%' : '—';
-  const psTime = document.getElementById('psTime');
-  if (psTime) psTime.textContent = playsCount;
+  const streak = getStreak();
 
-  // badges
-  const allPlayed = Object.keys(State.scores).length >= lessons.length;
-  const hasRock = State.scores['0'] != null;
-  const hasFirst = Object.keys(State.scores).length > 0;
-  const has100Combo = scoreEntries.some(s => s.high >= 5000);
-  const has99Acc = scoreEntries.some(s => (s.lastAcc || 0) >= 99);
+  const setText = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  const psStreakEl = document.getElementById('psStreak');
+  if (psStreakEl) psStreakEl.innerHTML = `${streak}<span class="accent">d</span>`;
+  setText('psDelta', streak > 0 ? `${streak} day${streak !== 1 ? 's' : ''} and counting!` : 'keep playing!');
+  setText('psNotes',  totalNotes.toLocaleString());
+  setText('psWeekDelta', playsCount > 0 ? `${playsCount} session${playsCount !== 1 ? 's' : ''} total` : 'start playing!');
+  setText('psCombo',  bestScore.toLocaleString());
+  setText('psAcc',    topAcc ? topAcc + '%' : '—');
+  setText('psTime',   playsCount);
 
-  function setBadge(id, earned){
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (earned){
-      el.classList.add('earned');
-      el.classList.remove('locked');
-    } else {
-      el.classList.remove('earned');
-      el.classList.add('locked');
-    }
+  // ── Achievement grid ──────────────────────────────────────────────────────
+  const grid = document.getElementById('achievementGrid');
+  if (grid){
+    grid.innerHTML = '';
+    let earnedCount = 0;
+    ACHIEVEMENTS.forEach(ach => {
+      const unlocked = isUnlocked(ach.id);
+      if (unlocked) earnedCount++;
+      const tile = document.createElement('div');
+      tile.className = 'ach-tile' + (unlocked ? ' earned' : ' locked');
+      tile.innerHTML =
+        `<div class="ach-ico">${unlocked ? ach.icon : '?'}</div>` +
+        `<div class="ach-nm">${ach.name}</div>` +
+        `<div class="ach-desc">${unlocked ? ach.desc : '???'}</div>`;
+      grid.appendChild(tile);
+    });
+    setText('badgeCount', `${earnedCount} of ${ACHIEVEMENTS.length} earned`);
   }
-  setBadge('badge-rock', hasRock);
-  setBadge('badge-combo', has100Combo);
-  setBadge('badge-first', hasFirst);
-  setBadge('badge-sharp', has99Acc);
-  setBadge('badge-grad', allPlayed);
 
-  const earned = [hasRock, has100Combo, hasFirst, false, has99Acc, allPlayed].filter(Boolean).length;
-  const bc = document.getElementById('badgeCount');
-  if (bc) bc.textContent = `${earned} of 6 earned`;
-
-  // recent list
+  // ── Recent sessions ───────────────────────────────────────────────────────
   const r = document.getElementById('recentList');
   if (r){
     r.innerHTML = '';
@@ -172,8 +186,7 @@ export function refreshProgress(){
       if (!lesson) return;
       const div = document.createElement('div');
       div.className = 'recent';
-      const ago = relTime(x.when);
-      div.innerHTML = `<div class="rdate">${ago}</div><div class="rname">${lesson.name}</div><div class="rscore">${x.high.toLocaleString()} · ${x.lastAcc || '-'}%</div>`;
+      div.innerHTML = `<div class="rdate">${relTime(x.when)}</div><div class="rname">${lesson.name}</div><div class="rscore">${x.high.toLocaleString()} · ${x.lastAcc || '-'}%</div>`;
       r.appendChild(div);
     });
   }
@@ -201,6 +214,7 @@ export function initLibraryMidiLoad(){
       const name = file.name.replace(/\.midi?$/i, '');
       const lesson = lessonFromMidiEvents(name, mappedEvents, ppq);
       State.extraLessons.push(lesson);
+      saveExtraLessons();
       refreshLibrary();
       alert(`Loaded: "${name}" — ${mappedEvents.length} events`);
     } catch (err) {
