@@ -3,6 +3,7 @@
 // ===========================================================================
 import { State } from './state.js';
 import { LESSONS } from './lessons.js';
+import { rollDrumrot, showDrumrotReveal } from './drumrots.js';
 
 export const ACHIEVEMENTS = [
   // Performance
@@ -193,6 +194,14 @@ export function checkAchievements({ onHit = false, onPass = false, onCreator = f
   if (onCoach)   earn('coach');
 
   saveUnlocked(unlocked);
-  earned.forEach(ach => queueToast(ach));
+  earned.forEach((ach, i) => {
+    queueToast(ach);
+    // Roll a drumrot for this achievement — staggered after the toast sequence
+    const delay = i * 4500 + 3200;
+    setTimeout(() => {
+      const { drumrot, tierKey } = rollDrumrot(ach.id);
+      showDrumrotReveal(drumrot, tierKey, ach.name);
+    }, delay);
+  });
   return earned;
 }

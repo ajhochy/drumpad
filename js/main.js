@@ -12,6 +12,7 @@ import {
 import { resetStats } from './scoring.js';
 import { refreshLibrary, refreshProgress, highlightLibrary, initLibraryMidiLoad } from './library.js';
 import { initBuilder } from './builder.js';
+import { initDropsTab } from './drumrots.js';
 
 // ===========================================================================
 // Helpers
@@ -30,6 +31,7 @@ function switchTab(name){
   document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
   if (name === 'library') refreshLibrary();
   if (name === 'progress') refreshProgress();
+  if (name === 'drops') initDropsTab();
 }
 
 // ===========================================================================

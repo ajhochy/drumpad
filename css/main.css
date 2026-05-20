@@ -890,3 +890,328 @@ select.midi{
   font-family:'Major Mono Display',monospace;font-size:8px;
   color:var(--text-dim);line-height:1.4;
 }
+
+/* ===========================================================================
+   Drumrot Cards
+   =========================================================================== */
+.drumrot-card {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, #1a1f2c 0%, #0d1018 100%);
+  border: 2px solid #2a2f3c;
+  border-radius: 14px;
+  overflow: hidden;
+  font-family: 'Space Grotesk', sans-serif;
+  position: relative;
+  transition: transform .2s, box-shadow .2s;
+  cursor: default;
+}
+.drops-card-wrap:hover .drumrot-card:not(.tier-locked){
+  transform: translateY(-6px) scale(1.02);
+}
+
+/* ── Tier borders & glows ── */
+.tier-common     { border-color: #9aa5b4; }
+.tier-rare       { border-color: #3b82f6; box-shadow: 0 0 14px rgba(59,130,246,.35); }
+.tier-epic       { border-color: #a855f7; box-shadow: 0 0 18px rgba(168,85,247,.4); }
+.tier-legendary  { border-color: #f59e0b; box-shadow: 0 0 22px rgba(245,158,11,.45); }
+.tier-mythic     { border-color: #ec4899; box-shadow: 0 0 28px rgba(236,72,153,.5); }
+.tier-drumrot_god{ border-color: #ff3a5a; box-shadow: 0 0 35px rgba(255,58,90,.6); }
+.tier-og         { animation: og-card-rainbow 2s linear infinite; }
+.tier-locked     { border-color: #1c2028; filter: brightness(.38) saturate(.2); }
+
+@keyframes og-card-rainbow {
+  0%   { border-color: #ff2a7a; box-shadow: 0 0 30px #ff2a7a; }
+  14%  { border-color: #ff8a1e; box-shadow: 0 0 30px #ff8a1e; }
+  28%  { border-color: #f59e0b; box-shadow: 0 0 30px #f59e0b; }
+  42%  { border-color: #5cf07d; box-shadow: 0 0 30px #5cf07d; }
+  57%  { border-color: #3b82f6; box-shadow: 0 0 30px #3b82f6; }
+  71%  { border-color: #a855f7; box-shadow: 0 0 30px #a855f7; }
+  85%  { border-color: #ec4899; box-shadow: 0 0 30px #ec4899; }
+  100% { border-color: #ff2a7a; box-shadow: 0 0 30px #ff2a7a; }
+}
+
+/* ── Tier banner ── */
+.dc-tier-banner {
+  text-align: center;
+  padding: 5px 8px;
+  font-family: 'Major Mono Display', monospace;
+  font-size: 9px;
+  letter-spacing: .22em;
+  background: rgba(0,0,0,.5);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  color: #6b7280;
+}
+
+/* ── Portrait ── */
+.dc-portrait {
+  height: 118px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.018) 2px, rgba(255,255,255,.018) 4px),
+    linear-gradient(180deg, #0b0f1a 0%, #060810 100%);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  position: relative;
+  overflow: hidden;
+}
+.dc-art {
+  font-size: 56px;
+  line-height: 1;
+  user-select: none;
+  position: relative;
+  z-index: 1;
+}
+.dc-og-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    transparent 20%, rgba(255,255,255,.06) 50%, transparent 80%);
+  animation: og-shimmer-move 2.5s ease-in-out infinite;
+}
+@keyframes og-shimmer-move {
+  0%   { transform: translateX(-100%) translateY(-100%); }
+  100% { transform: translateX(100%) translateY(100%); }
+}
+
+/* ── Art tier glows ── */
+.tier-rare .dc-art       { filter: drop-shadow(0 0 10px #3b82f6); }
+.tier-epic .dc-art       { filter: drop-shadow(0 0 12px #a855f7); }
+.tier-legendary .dc-art  { filter: drop-shadow(0 0 14px #f59e0b); }
+.tier-mythic .dc-art     { filter: drop-shadow(0 0 18px #ec4899); }
+.tier-drumrot_god .dc-art{ filter: drop-shadow(0 0 22px #ff3a5a); }
+.tier-og .dc-art         { animation: og-art-pulse 1.8s ease-in-out infinite alternate; }
+@keyframes og-art-pulse {
+  from { filter: drop-shadow(0 0 16px #ff2a7a); }
+  to   { filter: drop-shadow(0 0 32px #fff) brightness(1.3); }
+}
+
+/* ── Nameplate ── */
+.dc-nameplate {
+  padding: 8px 10px 4px;
+}
+.dc-name {
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #dde2ea;
+  letter-spacing: .01em;
+}
+.dc-subtitle {
+  font-family: 'Major Mono Display', monospace;
+  font-size: 8px;
+  color: #3a4555;
+  letter-spacing: .1em;
+  margin-top: 2px;
+}
+
+/* ── Flavor ── */
+.dc-flavor {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 9.5px;
+  line-height: 1.55;
+  color: #5a6575;
+  font-style: italic;
+  border-top: 1px solid rgba(255,255,255,.04);
+}
+
+/* ── Stats ── */
+.dc-stats {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  background: rgba(0,0,0,.35);
+}
+.dc-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255,255,255,.03);
+  border-radius: 4px;
+  padding: 4px 2px;
+}
+.dc-stat-lbl {
+  font-family: 'Major Mono Display', monospace;
+  font-size: 7px;
+  color: #3a4555;
+  letter-spacing: .08em;
+}
+.dc-stat-val {
+  font-family: 'Bungee', sans-serif;
+  font-size: 13px;
+  color: #8a9ab0;
+  line-height: 1;
+}
+.tier-rare .dc-stat-val      { color: #3b82f6; }
+.tier-epic .dc-stat-val      { color: #a855f7; }
+.tier-legendary .dc-stat-val { color: #f59e0b; }
+.tier-mythic .dc-stat-val    { color: #ec4899; }
+.tier-drumrot_god .dc-stat-val{ color: #ff3a5a; }
+.tier-og .dc-stat-val        { color: #fff; text-shadow: 0 0 10px #fff; }
+
+/* ── Footer ── */
+.dc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 10px;
+  border-top: 1px solid rgba(255,255,255,.04);
+  background: rgba(0,0,0,.45);
+}
+.dc-num   { font-family:'Major Mono Display',monospace; font-size:8px; color:#252d3a; letter-spacing:.1em; }
+.dc-brand { font-family:'Major Mono Display',monospace; font-size:7px; color:#1e2530; letter-spacing:.08em; }
+
+/* ===========================================================================
+   Drops Tab
+   =========================================================================== */
+#panel-drops { overflow-y: auto; }
+
+.drops-header {
+  padding: 22px 28px 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.drops-header h1 {
+  font-family: 'Bungee', sans-serif;
+  font-size: 26px;
+  color: var(--text);
+  letter-spacing: .04em;
+}
+.drops-count {
+  font-family: 'Major Mono Display', monospace;
+  font-size: 11px;
+  color: var(--led-amber-hot);
+  letter-spacing: .12em;
+}
+.drops-subhead {
+  padding: 0 28px 16px;
+  font-family: 'Major Mono Display', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: .1em;
+}
+.drops-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 0 28px 40px;
+}
+.drops-card-wrap {
+  transition: transform .2s;
+}
+
+/* ===========================================================================
+   Drumrot Reveal Overlay
+   =========================================================================== */
+#drumrotReveal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.88);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s;
+}
+#drumrotReveal.dr-active {
+  opacity: 1;
+  pointer-events: all;
+}
+#drumrotReveal.dr-hiding {
+  opacity: 0;
+  pointer-events: none;
+}
+#drumrotReveal.dr-og {
+  animation: og-screen-flash .45s ease-out;
+}
+@keyframes og-screen-flash {
+  0%   { background: rgba(255,255,255,.92); }
+  100% { background: rgba(0,0,0,.88); }
+}
+
+.dr-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: dr-pop-in .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes dr-pop-in {
+  from { transform: scale(.65) translateY(24px); opacity: 0; }
+  to   { transform: scale(1)   translateY(0);    opacity: 1; }
+}
+
+.dr-header {
+  font-family: 'Bungee', sans-serif;
+  font-size: 34px;
+  letter-spacing: .1em;
+  color: var(--led-amber-hot);
+  animation: dr-hdr-glow 1s ease-in-out infinite alternate;
+}
+@keyframes dr-hdr-glow {
+  from { text-shadow: 0 0 10px var(--led-amber); }
+  to   { text-shadow: 0 0 35px var(--led-amber-hot), 0 0 70px var(--led-amber); }
+}
+.dr-og .dr-header {
+  animation: dr-og-hdr 1.5s linear infinite;
+}
+@keyframes dr-og-hdr {
+  0%   { color: #ff2a7a; text-shadow: 0 0 30px #ff2a7a; }
+  25%  { color: #f59e0b; text-shadow: 0 0 30px #f59e0b; }
+  50%  { color: #5cf07d; text-shadow: 0 0 30px #5cf07d; }
+  75%  { color: #a855f7; text-shadow: 0 0 30px #a855f7; }
+  100% { color: #ff2a7a; text-shadow: 0 0 30px #ff2a7a; }
+}
+
+.dr-from {
+  font-family: 'Major Mono Display', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.dr-card-wrap {
+  animation: dr-card-reveal .55s cubic-bezier(.34,1.56,.64,1) .25s both;
+}
+@keyframes dr-card-reveal {
+  from { transform: rotateY(90deg) scale(.8); opacity: 0; }
+  to   { transform: rotateY(0deg)  scale(1);  opacity: 1; }
+}
+#drumrotReveal .drumrot-card {
+  width: 230px;
+  cursor: pointer;
+}
+
+.dr-new-badge {
+  font-family: 'Bungee', sans-serif;
+  font-size: 18px;
+  letter-spacing: .08em;
+  color: var(--led-green);
+  text-shadow: 0 0 12px var(--led-green);
+  min-height: 24px;
+}
+
+.dr-dismiss {
+  font-family: 'Major Mono Display', monospace;
+  font-size: 9px;
+  color: #2a3545;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  animation: dr-blink 1.8s ease-in-out infinite;
+}
+@keyframes dr-blink {
+  0%,100% { opacity: .3; }
+  50%     { opacity: .85; }
+}

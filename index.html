@@ -25,6 +25,7 @@
       <button class="tab" data-tab="library"><i class="ti ti-database"></i> Library</button>
       <button class="tab" data-tab="progress"><i class="ti ti-chart-bar"></i> Progress</button>
       <button class="tab" data-tab="build"><i class="ti ti-grid-dots"></i> Build</button>
+      <button class="tab" data-tab="drops"><i class="ti ti-cards"></i> Drops</button>
     </nav>
     <div class="lid-right">
       <div class="power-led"><span class="led green"></span> PWR</div>
@@ -212,7 +213,30 @@
       </div>
     </section>
 
+    <!-- ============ DROPS ============ -->
+    <section id="panel-drops" class="panel">
+      <div class="drops-header">
+        <h1>Drumrot <span class="accent">Collection</span></h1>
+        <div class="drops-count" id="dropsCount">0 / 25 collected</div>
+      </div>
+      <div class="drops-subhead">earn achievements to unlock drops · 5% chance of OG on any pull</div>
+      <div class="drops-grid" id="dropsGrid"></div>
+    </section>
+
   </main>
+</div>
+
+<!-- ============ DRUMROT REVEAL OVERLAY ============ -->
+<div id="drumrotReveal">
+  <div class="dr-content">
+    <div class="dr-header">DRUMROT DROP!</div>
+    <div class="dr-from">from: <span id="drAchName"></span></div>
+    <div class="dr-card-wrap">
+      <div id="drCard"></div>
+    </div>
+    <div class="dr-new-badge" id="drNewBadge"></div>
+    <div class="dr-dismiss">tap anywhere to dismiss</div>
+  </div>
 </div>
 
 <script type="module" src="js/main.js"></script>
