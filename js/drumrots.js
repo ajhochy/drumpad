@@ -57,6 +57,8 @@ export const DRUMROTS = [
     sub: 'common · percussion being',
     flavor: 'The first drumrot ever summoned. Hits things. Does not stop. Has never stopped.',
     bpm: 60, groove: 2, power: 1,
+    parody: 'Tung Tung Tung Sahur',
+    parodyImg: 'brainrots/Miscellaneous/Tung_Tung_Tung_Sahur.png',
   },
   {
     id: 'drumbeano_crocodilio', tier: 'common', num: '002', art: '🐊🫘',
@@ -64,6 +66,8 @@ export const DRUMROTS = [
     sub: 'common · rimshot lizard',
     flavor: 'Emerged from a broken drum machine in Naples. Speaks only in rimshots.',
     bpm: 70, groove: 3, power: 2,
+    parody: 'Bombardiro Crocodilo',
+    parodyImg: 'brainrots/Mythic/Bombardiro_Crocodilo.png',
   },
   {
     id: 'kickarino_pinguino', tier: 'common', num: '003', art: '🐧🦵',
@@ -71,6 +75,8 @@ export const DRUMROTS = [
     sub: 'common · kick enthusiast',
     flavor: 'Tiny penguin with enormous kick drum energy. Slides on every beat.',
     bpm: 75, groove: 3, power: 2,
+    parody: 'Penguino Cocosino',
+    parodyImg: 'brainrots/Epic/Penguino_Cocosino.png',
   },
   {
     id: 'snappini_gattonini', tier: 'common', num: '004', art: '🐱💥',
@@ -78,6 +84,8 @@ export const DRUMROTS = [
     sub: 'common · domestic snapper',
     flavor: 'Domestic cat who discovered snare drums at age three. Never recovered.',
     bpm: 80, groove: 4, power: 3,
+    parody: 'Gattatino Nyanino',
+    parodyImg: 'brainrots/Brainrot_God/Gattatino_Nyanino.png',
   },
   // RARE ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -86,6 +94,8 @@ export const DRUMROTS = [
     sub: 'rare · low frequency primate',
     flavor: 'Plays bass with one finger. That is enough.',
     bpm: 85, groove: 5, power: 5,
+    parody: 'Gorillo Subwoofero',
+    parodyImg: 'brainrots/Mythic/Gorillo_Subwoofero.png',
   },
   {
     id: 'rimshottino_elefantino', tier: 'rare', num: '006', art: '🐘💥',
@@ -93,6 +103,8 @@ export const DRUMROTS = [
     sub: 'rare · precision mammal',
     flavor: 'Never misses a rimshot. This has been verified across four continents.',
     bpm: 88, groove: 6, power: 5,
+    parody: 'Cocofanto Elefanto',
+    parodyImg: 'brainrots/Brainrot_God/Cocofanto_Elefanto.png',
   },
   {
     id: 'brrr_brrr_batteria', tier: 'rare', num: '007', art: '🐧❄️',
@@ -100,6 +112,8 @@ export const DRUMROTS = [
     sub: 'rare · cold percussionist',
     flavor: 'Cold-blooded percussionist. Cannot explain the sound it makes. Neither can anyone else.',
     bpm: 92, groove: 6, power: 6,
+    parody: 'Brr Brr Patapim',
+    parodyImg: 'brainrots/Epic/Brr_Brr_Patapim.png',
   },
   {
     id: 'hihatini_serpentino', tier: 'rare', num: '008', art: '🐍🎩',
@@ -107,6 +121,8 @@ export const DRUMROTS = [
     sub: 'rare · time-keeping serpent',
     flavor: 'Coils around the hi-hat stand. Keeps perfect time. Highly unnerving.',
     bpm: 95, groove: 7, power: 6,
+    parody: 'Brri Brri Bicus Dicus Bombicus',
+    parodyImg: 'brainrots/Epic/Brri_Brri_Bicus_Dicus_Bombicus.png',
   },
   // EPIC ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -115,6 +131,8 @@ export const DRUMROTS = [
     sub: 'epic · half croc half cymbal',
     flavor: 'Half crocodile, half crash cymbal. One hundred percent chaos.',
     bpm: 100, groove: 8, power: 9,
+    parody: 'Bombombini Gusini',
+    parodyImg: 'brainrots/Mythic/Bombombini_Gusini.png',
   },
   {
     id: 'cappuccino_tamburino', tier: 'epic', num: '010', art: '☕🥁',
@@ -122,6 +140,8 @@ export const DRUMROTS = [
     sub: 'epic · caffeinated drummer',
     flavor: 'Drinks espresso before every performance. Also during. Also after.',
     bpm: 102, groove: 9, power: 8,
+    parody: 'Cappuccino Assassino',
+    parodyImg: 'brainrots/Epic/Cappuccino_Assassino.png',
   },
   {
     id: 'velociraptorino_rullante', tier: 'epic', num: '011', art: '🦖🥁',
@@ -129,6 +149,8 @@ export const DRUMROTS = [
     sub: 'epic · prehistoric roll master',
     flavor: 'Plays a drum roll faster than you can see. Also faster than you can hear.',
     bpm: 110, groove: 9, power: 10,
+    parody: 'Tractoro Dinosauro',
+    parodyImg: 'brainrots/Brainrot_God/Tractoro_Dinosauro.png',
   },
   {
     id: 'quattro_quattro_pesci', tier: 'epic', num: '012', art: '🐟🎼',
@@ -136,6 +158,8 @@ export const DRUMROTS = [
     sub: 'epic · time signature fish',
     flavor: 'Lives exactly in 4/4 time. Placed in 7/8, it simply ceases to exist.',
     bpm: 108, groove: 10, power: 9,
+    parody: 'Tootini Shrimpini',
+    parodyImg: 'brainrots/Brainrot_God/Tootini_Shrimpini.png',
   },
   {
     id: 'brrr_paradiddlini', tier: 'epic', num: '013', art: '🐧🥢',
@@ -143,6 +167,8 @@ export const DRUMROTS = [
     sub: 'epic · rudiment penguin',
     flavor: 'Distant cousin of Brrr Brrr Batteria. Knows all 40 rudiments by memory.',
     bpm: 115, groove: 10, power: 10,
+    parody: 'Salamino Penguino',
+    parodyImg: 'brainrots/Epic/Salamino_Penguino.png',
   },
   // LEGENDARY ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -151,6 +177,8 @@ export const DRUMROTS = [
     sub: 'legendary · triplet deity',
     flavor: 'Thinks in triplets. Lives in triplets. Will die in triplets.',
     bpm: 120, groove: 13, power: 14,
+    parody: 'Trippi Troppi',
+    parodyImg: 'brainrots/Rare/Trippi_Troppi.png',
   },
   {
     id: 'snarlarello_magnifico', tier: 'legendary', num: '015', art: '🦁🥢',
@@ -158,6 +186,8 @@ export const DRUMROTS = [
     sub: 'legendary · lion of the snare',
     flavor: 'The crack of its snare was heard from three villages away. Still echoing.',
     bpm: 125, groove: 14, power: 15,
+    parody: 'Lionel Cactuseli',
+    parodyImg: 'brainrots/Legendary/Lionel_Cactuseli.png',
   },
   {
     id: 'griddarello_metronomo', tier: 'legendary', num: '016', art: '⏱️😤',
@@ -165,6 +195,8 @@ export const DRUMROTS = [
     sub: 'legendary · fused with time',
     flavor: 'Born fused to a metronome. Cannot be rushed. Cannot be slowed. Cannot be stopped.',
     bpm: 130, groove: 15, power: 14,
+    parody: 'Tictac Sahur',
+    parodyImg: 'brainrots/Secret/Tictac_Sahur.png',
   },
   {
     id: 'poliritmico_coccodrillo', tier: 'legendary', num: '017', art: '🐊🌀',
@@ -172,6 +204,8 @@ export const DRUMROTS = [
     sub: 'legendary · crocodile of 5 vs 3',
     flavor: 'Plays 5 against 3 while sleeping. This is disturbing. Also impressive.',
     bpm: 135, groove: 15, power: 16,
+    parody: 'Glorbo Fruttodrillo',
+    parodyImg: 'brainrots/Legendary/Glorbo_Fruttodrillo.png',
   },
   // MYTHIC ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -180,6 +214,8 @@ export const DRUMROTS = [
     sub: 'mythic · ancient rhythm spirit',
     flavor: 'Descended from ancient rhythm spirits. The groove precedes the beat.',
     bpm: 140, groove: 18, power: 20,
+    parody: 'Lirili Larila',
+    parodyImg: 'brainrots/Common/Liril_Laril_.png',
   },
   {
     id: 'frigo_bassolo_camelini', tier: 'mythic', num: '019', art: '🐪❄️',
@@ -187,6 +223,8 @@ export const DRUMROTS = [
     sub: 'mythic · camel of the low end',
     flavor: 'Stores the low end in its humps. Releases it only on beat one. Only.',
     bpm: 145, groove: 20, power: 21,
+    parody: 'Frigo Camelo',
+    parodyImg: 'brainrots/Mythic/Frigo_Camelo.png',
   },
   {
     id: 'sincopato_del_vento', tier: 'mythic', num: '020', art: '🌪️🎸',
@@ -194,6 +232,8 @@ export const DRUMROTS = [
     sub: 'mythic · child of the offbeat',
     flavor: 'Born between the beats. Lives in the spaces nobody else can hear.',
     bpm: 148, groove: 22, power: 22,
+    parody: 'Ventoliero Pavonero',
+    parodyImg: 'brainrots/Secret/Ventoliero_Pavonero.png',
   },
   {
     id: 'maestro_falsetto_drumini', tier: 'mythic', num: '021', art: '🎩🥢',
@@ -201,6 +241,8 @@ export const DRUMROTS = [
     sub: 'mythic · conductor of chaos',
     flavor: 'Conducts full orchestras using only drumsticks. Orchestras fear him deeply.',
     bpm: 150, groove: 23, power: 24,
+    parody: 'Cavallo Virtuoso',
+    parodyImg: 'brainrots/Mythic/Cavallo_Virtuoso.png',
   },
   // DRUMROT GOD ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -209,6 +251,8 @@ export const DRUMROTS = [
     sub: 'drumrot god · cosmic drummer',
     flavor: 'The universe beats at his tempo. Not the other way around.',
     bpm: 160, groove: 28, power: 30,
+    parody: 'Astrolero Cervalero',
+    parodyImg: 'brainrots/Brainrot_God/Astrolero_Cervalero.png',
   },
   {
     id: 'bombardino_quattro_tempi', tier: 'drumrot_god', num: '023', art: '💣🎼',
@@ -216,6 +260,8 @@ export const DRUMROTS = [
     sub: 'drumrot god · master of all time',
     flavor: 'Once played a perfect 4/4 groove. Time itself stopped. It has not fully resumed.',
     bpm: 170, groove: 30, power: 35,
+    parody: 'Bombardini Tortinii',
+    parodyImg: 'brainrots/Brainrot_God/Bombardini_Tortinii.png',
   },
   // OG ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -224,6 +270,8 @@ export const DRUMROTS = [
     sub: 'OG · the original',
     flavor: 'The original drumrot. All others are echoes of him. Nobody has heard the full performance.',
     bpm: 999, groove: 99, power: 99,
+    parody: 'Tralalero Tralala',
+    parodyImg: 'brainrots/Brainrot_God/Tralalero_Tralala.png',
   },
   {
     id: 'doppio_paradiddle_supremo', tier: 'og', num: '025', art: '✨🥢🥢✨',
@@ -231,6 +279,8 @@ export const DRUMROTS = [
     sub: 'OG · the unknowable',
     flavor: 'Has never played a wrong note. Has never played the same note twice. Unknowable.',
     bpm: 999, groove: 99, power: 99,
+    parody: 'La Grande Combinasion',
+    parodyImg: 'brainrots/Secret/La_Grande_Combinasion.png',
   },
 ];
 
