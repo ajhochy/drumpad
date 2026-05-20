@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>SP-808 KILLA — Drum Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Major+Mono+Display&family=Permanent+Marker&family=Special+Elite&family=Bungee&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div class="shell">
+  <header class="chassis-lid">
+    <div class="brand">
+      <div class="screw"></div>
+      <div class="brand-logo">SP</div>
+      <div>
+        <div class="brand-name">SP-808 KILLA</div>
+        <div class="brand-sub">drum trainer · firmware 2.6.1</div>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="play"><i class="ti ti-player-play"></i> Play</button>
+      <button class="tab" data-tab="library"><i class="ti ti-database"></i> Library</button>
+      <button class="tab" data-tab="progress"><i class="ti ti-chart-bar"></i> Progress</button>
+      <button class="tab" data-tab="build"><i class="ti ti-grid-dots"></i> Build</button>
+    </nav>
+    <div class="lid-right">
+      <div class="power-led"><span class="led green"></span> PWR</div>
+      <div class="power-led"><span class="led" id="midiPwrLed"></span> MIDI</div>
+      <div class="screw"></div>
+    </div>
+  </header>
+
+  <main class="body">
+
+    <!-- ============ PLAY ============ -->
+    <section id="panel-play" class="panel active">
+      <div class="face">
+
+        <div class="readout">
+          <div class="lesson-id">PRG <span class="id" id="hdrChip">01</span></div>
+          <div class="lesson-name" id="hdrName">Rock Beat 101</div>
+          <div class="stats">
+            <div class="stat"><span class="lbl">Score</span><span class="val" id="scoreVal">0</span></div>
+            <div class="stat"><span class="lbl">Combo</span><span class="val warn" id="comboVal">0x</span></div>
+            <div class="stat"><span class="lbl">Acc</span><span class="val" id="accVal">—</span></div>
+          </div>
+        </div>
+
+        <div class="bar-strip" style="height: 25px">
+          <div class="progress" style="height: 8px"><div class="fill" id="progFill"></div></div>
+          <div id="progLbl">0 / 0</div>
+          <div class="streak-bar" id="streakBar"></div>
+        </div>
+
+        <div class="lcd-wrap">
+          <div class="lane-tags">
+            <div class="lane-tag" style="color:var(--sticker-pink)">CRSH</div>
+            <div class="lane-tag" style="color:var(--led-green)">HHAT</div>
+            <div class="lane-tag" style="color:#dde2ea">SNRE</div>
+            <div class="lane-tag" style="color:var(--led-red)">KICK</div>
+            <div class="lane-tag" style="color:var(--led-amber)">TOMS</div>
+            <div class="lane-tag" style="color:var(--sticker-cyan)">RIDE</div>
+          </div>
+          <div class="highway" id="highway">
+            <div class="hit-line"></div>
+            <div class="judge" id="judge">PERFECT!</div>
+          </div>
+        </div>
+
+        <div class="pads">
+          <button class="pad lane-0" data-lane="0"><span class="rim"></span><span class="pad-led"></span><span class="label">Crash</span><span class="key">A</span></button>
+          <button class="pad lane-1" data-lane="1"><span class="rim"></span><span class="pad-led"></span><span class="label">Hi-Hat</span><span class="key">S</span></button>
+          <button class="pad lane-2" data-lane="2"><span class="rim"></span><span class="pad-led"></span><span class="label">Snare</span><span class="key">D</span></button>
+          <button class="pad lane-3" data-lane="3"><span class="rim"></span><span class="pad-led"></span><span class="label">Kick</span><span class="key">F</span></button>
+          <button class="pad lane-4" data-lane="4"><span class="rim"></span><span class="pad-led"></span><span class="label">Tom</span><span class="key">J</span></button>
+          <button class="pad lane-5" data-lane="5"><span class="rim"></span><span class="pad-led"></span><span class="label">Ride</span><span class="key">K</span></button>
+        </div>
+
+        <!-- stickers on chassis -->
+        <div class="deco scribble" style="top:42%;right:4px;transform:rotate(-90deg);transform-origin:right top;z-index:5;font-size:12px;color:var(--sticker-pink);opacity:.7">tempo &gt; all</div>
+      </div>
+
+      <aside class="rail">
+        <div class="module">
+          <h3>Pattern <span style="margin-left:auto;font-family:'Major Mono Display',monospace;font-size:9px;color:var(--led-amber-hot)">16 STEP</span></h3>
+          <div class="notation" id="notation"></div>
+        </div>
+        <div class="module">
+          <h3>Coach Note</h3>
+          <div class="tip" id="tipText">…</div>
+        </div>
+        <div class="module">
+          <h3>Transport</h3>
+          <div class="controls">
+            <button class="btn primary full" id="btnPlay"><i class="ti ti-player-play"></i> <span id="playLbl">Play</span></button>
+            <button class="btn" id="btnRestart"><i class="ti ti-refresh"></i> Restart</button>
+            <button class="btn" id="btnNext"><i class="ti ti-arrow-right"></i> Next</button>
+          </div>
+        </div>
+        <div class="module">
+          <h3>I/O · Sync</h3>
+          <div class="options">
+            <div class="opt">
+              <label><span class="led" style="width:6px;height:6px"></span> Click</label>
+              <div class="toggle" id="metToggle"></div>
+            </div>
+            <div class="opt">
+              <label>Tempo</label>
+              <div style="display:flex;align-items:center;gap:6px">
+                <input class="bpm-input" id="bpmInput" type="number" min="40" max="200" value="80" />
+                <span style="font-size:9px;color:var(--text-dim)">BPM</span>
+              </div>
+            </div>
+            <div class="opt">
+              <label>Loop</label>
+              <div class="toggle" id="loopToggle"></div>
+            </div>
+            <div class="opt">
+              <label>MIDI In <span class="midi-led" id="midiLed"></span></label>
+              <select class="midi" id="midiSel"><option>— scanning —</option></select>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ============ LIBRARY ============ -->
+    <section id="panel-library" class="panel">
+      <div class="lib-head">
+        <h1>Lesson <span class="accent">Bank</span></h1>
+        <div class="sub" id="libSubText">8 patches · sorted by difficulty<br>tap to load · firmware locked at v2.6</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;">
+        <button class="btn" id="btnLoadMidi"><i class="ti ti-file-music"></i> Load MIDI File</button>
+        <input type="file" id="midiFileInput" accept=".mid,.midi" style="display:none">
+      </div>
+      <div class="lib-grid" id="libGrid"></div>
+    </section>
+
+    <!-- ============ PROGRESS ============ -->
+    <section id="panel-progress" class="panel">
+      <div class="prog-head">
+        <h1>Tour <span class="accent">Diary</span></h1>
+        <div class="sub">stats from the practice room<br>last 14 days · keep the kit warm</div>
+      </div>
+
+      <div class="prog-grid">
+        <div class="big-stat">
+          <div class="lbl">Day Streak</div>
+          <div class="val" id="psStreak">0<span class="accent">d</span></div>
+          <div class="delta" id="psDelta">keep playing!</div>
+          <div style="margin-top:10px">
+            <div style="font-family:'Major Mono Display', monospace;font-size:9px;letter-spacing:.15em;color:var(--text-dim);margin-bottom:4px">LAST 14 DAYS</div>
+            <div class="cal-grid" id="calGrid"></div>
+          </div>
+        </div>
+
+        <div class="big-stat">
+          <div class="lbl">Total Notes Hit</div>
+          <div class="val"><span id="psNotes">0</span></div>
+          <div class="delta" id="psWeekDelta">start playing!</div>
+          <div style="margin-top:12px;display:grid;gap:6px">
+            <div style="display:flex;justify-content:space-between;font-family:'Major Mono Display', monospace;font-size:11px;color:var(--text-dim)"><span>Best combo</span><b id="psCombo" style="color:var(--led-amber-hot);font-weight:normal">0</b></div>
+            <div style="display:flex;justify-content:space-between;font-family:'Major Mono Display', monospace;font-size:11px;color:var(--text-dim)"><span>Top accuracy</span><b id="psAcc" style="color:var(--led-green);font-weight:normal">—</b></div>
+            <div style="display:flex;justify-content:space-between;font-family:'Major Mono Display', monospace;font-size:11px;color:var(--text-dim)"><span>Lessons played</span><b id="psTime" style="color:var(--text);font-weight:normal">0</b></div>
+          </div>
+        </div>
+
+        <div class="big-stat">
+          <div class="lbl">Badges</div>
+          <div style="font-family:'Space Grotesk', sans-serif;font-weight:700;font-size:18px;color:var(--text);margin-top:2px" id="badgeCount">0 of 6 earned</div>
+          <div class="badges">
+            <div class="badge-tile" id="badge-rock"><div class="ico">×4</div><div class="nm">4 on Floor</div><div class="nb">first rock beat</div></div>
+            <div class="badge-tile" id="badge-combo"><div class="ico">⚡</div><div class="nm">100x Combo</div><div class="nb">unbroken</div></div>
+            <div class="badge-tile" id="badge-first"><div class="ico">★</div><div class="nm">First Patch</div><div class="nb">lesson 1</div></div>
+            <div class="badge-tile locked" id="badge-streak"><div class="ico">?</div><div class="nm">7 Day</div><div class="nb">streak</div></div>
+            <div class="badge-tile locked" id="badge-sharp"><div class="ico">?</div><div class="nm">Sharpshooter</div><div class="nb">99% acc</div></div>
+            <div class="badge-tile locked" id="badge-grad"><div class="ico">?</div><div class="nm">Graduate</div><div class="nb">all lessons</div></div>
+          </div>
+        </div>
+
+        <div class="big-stat" style="grid-column:span 3">
+          <div class="lbl">Recent Sessions</div>
+          <div class="recent-list" id="recentList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BUILD ============ -->
+    <section id="panel-build" class="panel">
+      <div class="build-header">
+        <h1>Pattern <span class="accent">Editor</span></h1>
+        <div class="step-sel">
+          <button class="step-sel-btn active" data-steps="16">16</button>
+          <button class="step-sel-btn" data-steps="32">32</button>
+        </div>
+        <div class="bpm-build">
+          <input type="number" id="builderBpm" min="40" max="200" value="80">
+          <span>BPM</span>
+        </div>
+        <button class="btn" id="btnSaveMidi"><i class="ti ti-download"></i> Save MIDI</button>
+        <button class="btn" id="btnLoadIntoPlayer"><i class="ti ti-player-play"></i> Load into Player</button>
+      </div>
+
+      <div class="builder-grid-wrap">
+        <div class="builder-grid" id="builderGrid"></div>
+      </div>
+
+      <div class="builder-footer">
+        <button class="btn" id="btnClearPattern"><i class="ti ti-trash"></i> Clear Pattern</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
