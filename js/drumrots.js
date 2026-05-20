@@ -59,6 +59,7 @@ export const DRUMROTS = [
     bpm: 60, groove: 2, power: 1,
     parody: 'Tung Tung Tung Sahur',
     parodyImg: 'brainrots/Miscellaneous/Tung_Tung_Tung_Sahur.png',
+    drumrotImg: 'art/drumrots/tung_tung_tamburino.webp',
   },
   {
     id: 'drumbeano_crocodilio', tier: 'common', num: '002', art: '🐊🫘',
@@ -68,6 +69,7 @@ export const DRUMROTS = [
     bpm: 70, groove: 3, power: 2,
     parody: 'Bombardiro Crocodilo',
     parodyImg: 'brainrots/Mythic/Bombardiro_Crocodilo.png',
+    drumrotImg: 'art/drumrots/drumbeano_crocodilio.webp',
   },
   {
     id: 'kickarino_pinguino', tier: 'common', num: '003', art: '🐧🦵',
@@ -77,6 +79,7 @@ export const DRUMROTS = [
     bpm: 75, groove: 3, power: 2,
     parody: 'Penguino Cocosino',
     parodyImg: 'brainrots/Epic/Penguino_Cocosino.png',
+    drumrotImg: 'art/drumrots/kickarino_pinguino.webp',
   },
   {
     id: 'snappini_gattonini', tier: 'common', num: '004', art: '🐱💥',
@@ -86,6 +89,7 @@ export const DRUMROTS = [
     bpm: 80, groove: 4, power: 3,
     parody: 'Gattatino Nyanino',
     parodyImg: 'brainrots/Brainrot_God/Gattatino_Nyanino.png',
+    drumrotImg: 'art/drumrots/snappini_gattonini.webp',
   },
   // RARE ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -96,6 +100,7 @@ export const DRUMROTS = [
     bpm: 85, groove: 5, power: 5,
     parody: 'Gorillo Subwoofero',
     parodyImg: 'brainrots/Mythic/Gorillo_Subwoofero.png',
+    drumrotImg: 'art/drumrots/bassolo_gorillini.webp',
   },
   {
     id: 'rimshottino_elefantino', tier: 'rare', num: '006', art: '🐘💥',
@@ -105,6 +110,7 @@ export const DRUMROTS = [
     bpm: 88, groove: 6, power: 5,
     parody: 'Cocofanto Elefanto',
     parodyImg: 'brainrots/Brainrot_God/Cocofanto_Elefanto.png',
+    drumrotImg: 'art/drumrots/rimshottino_elefantino.webp',
   },
   {
     id: 'brrr_brrr_batteria', tier: 'rare', num: '007', art: '🐧❄️',
@@ -114,6 +120,7 @@ export const DRUMROTS = [
     bpm: 92, groove: 6, power: 6,
     parody: 'Brr Brr Patapim',
     parodyImg: 'brainrots/Epic/Brr_Brr_Patapim.png',
+    drumrotImg: 'art/drumrots/brrr_brrr_batteria.webp',
   },
   {
     id: 'hihatini_serpentino', tier: 'rare', num: '008', art: '🐍🎩',
@@ -123,6 +130,7 @@ export const DRUMROTS = [
     bpm: 95, groove: 7, power: 6,
     parody: 'Brri Brri Bicus Dicus Bombicus',
     parodyImg: 'brainrots/Epic/Brri_Brri_Bicus_Dicus_Bombicus.png',
+    drumrotImg: 'art/drumrots/hihatini_serpentino.webp',
   },
   // EPIC ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -133,6 +141,7 @@ export const DRUMROTS = [
     bpm: 100, groove: 8, power: 9,
     parody: 'Bombombini Gusini',
     parodyImg: 'brainrots/Mythic/Bombombini_Gusini.png',
+    drumrotImg: 'art/drumrots/bombardino_crashcino.webp',
   },
   {
     id: 'cappuccino_tamburino', tier: 'epic', num: '010', art: '☕🥁',
@@ -142,6 +151,7 @@ export const DRUMROTS = [
     bpm: 102, groove: 9, power: 8,
     parody: 'Cappuccino Assassino',
     parodyImg: 'brainrots/Epic/Cappuccino_Assassino.png',
+    drumrotImg: 'art/drumrots/cappuccino_tamburino.webp',
   },
   {
     id: 'velociraptorino_rullante', tier: 'epic', num: '011', art: '🦖🥁',
@@ -151,6 +161,7 @@ export const DRUMROTS = [
     bpm: 110, groove: 9, power: 10,
     parody: 'Tractoro Dinosauro',
     parodyImg: 'brainrots/Brainrot_God/Tractoro_Dinosauro.png',
+    drumrotImg: 'art/drumrots/velociraptorino_rullante.webp',
   },
   {
     id: 'quattro_quattro_pesci', tier: 'epic', num: '012', art: '🐟🎼',
@@ -160,6 +171,7 @@ export const DRUMROTS = [
     bpm: 108, groove: 10, power: 9,
     parody: 'Tootini Shrimpini',
     parodyImg: 'brainrots/Brainrot_God/Tootini_Shrimpini.png',
+    drumrotImg: 'art/drumrots/quattro_quattro_pesci.webp',
   },
   {
     id: 'brrr_paradiddlini', tier: 'epic', num: '013', art: '🐧🥢',
@@ -169,6 +181,7 @@ export const DRUMROTS = [
     bpm: 115, groove: 10, power: 10,
     parody: 'Salamino Penguino',
     parodyImg: 'brainrots/Epic/Salamino_Penguino.png',
+    drumrotImg: 'art/drumrots/brrr_paradiddlini.webp',
   },
   // LEGENDARY ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -179,6 +192,7 @@ export const DRUMROTS = [
     bpm: 120, groove: 13, power: 14,
     parody: 'Trippi Troppi',
     parodyImg: 'brainrots/Rare/Trippi_Troppi.png',
+    drumrotImg: 'art/drumrots/trippelini_boomolini.webp',
   },
   {
     id: 'snarlarello_magnifico', tier: 'legendary', num: '015', art: '🦁🥢',
@@ -188,6 +202,7 @@ export const DRUMROTS = [
     bpm: 125, groove: 14, power: 15,
     parody: 'Lionel Cactuseli',
     parodyImg: 'brainrots/Legendary/Lionel_Cactuseli.png',
+    drumrotImg: 'art/drumrots/snarlarello_magnifico.webp',
   },
   {
     id: 'griddarello_metronomo', tier: 'legendary', num: '016', art: '⏱️😤',
@@ -197,6 +212,7 @@ export const DRUMROTS = [
     bpm: 130, groove: 15, power: 14,
     parody: 'Tictac Sahur',
     parodyImg: 'brainrots/Secret/Tictac_Sahur.png',
+    drumrotImg: 'art/drumrots/griddarello_metronomo.webp',
   },
   {
     id: 'poliritmico_coccodrillo', tier: 'legendary', num: '017', art: '🐊🌀',
@@ -206,6 +222,7 @@ export const DRUMROTS = [
     bpm: 135, groove: 15, power: 16,
     parody: 'Glorbo Fruttodrillo',
     parodyImg: 'brainrots/Legendary/Glorbo_Fruttodrillo.png',
+    drumrotImg: 'art/drumrots/poliritmico_coccodrillo.webp',
   },
   // MYTHIC ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -216,6 +233,7 @@ export const DRUMROTS = [
     bpm: 140, groove: 18, power: 20,
     parody: 'Lirili Larila',
     parodyImg: 'brainrots/Common/Liril_Laril_.png',
+    drumrotImg: 'art/drumrots/lirili_beatlarila.webp',
   },
   {
     id: 'frigo_bassolo_camelini', tier: 'mythic', num: '019', art: '🐪❄️',
@@ -225,6 +243,7 @@ export const DRUMROTS = [
     bpm: 145, groove: 20, power: 21,
     parody: 'Frigo Camelo',
     parodyImg: 'brainrots/Mythic/Frigo_Camelo.png',
+    drumrotImg: 'art/drumrots/frigo_bassolo_camelini.webp',
   },
   {
     id: 'sincopato_del_vento', tier: 'mythic', num: '020', art: '🌪️🎸',
@@ -234,6 +253,7 @@ export const DRUMROTS = [
     bpm: 148, groove: 22, power: 22,
     parody: 'Ventoliero Pavonero',
     parodyImg: 'brainrots/Secret/Ventoliero_Pavonero.png',
+    drumrotImg: 'art/drumrots/sincopato_del_vento.webp',
   },
   {
     id: 'maestro_falsetto_drumini', tier: 'mythic', num: '021', art: '🎩🥢',
@@ -243,6 +263,7 @@ export const DRUMROTS = [
     bpm: 150, groove: 23, power: 24,
     parody: 'Cavallo Virtuoso',
     parodyImg: 'brainrots/Mythic/Cavallo_Virtuoso.png',
+    drumrotImg: 'art/drumrots/maestro_falsetto_drumini.webp',
   },
   // DRUMROT GOD ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -253,6 +274,7 @@ export const DRUMROTS = [
     bpm: 160, groove: 28, power: 30,
     parody: 'Astrolero Cervalero',
     parodyImg: 'brainrots/Brainrot_God/Astrolero_Cervalero.png',
+    drumrotImg: 'art/drumrots/tamburino_cosmico.webp',
   },
   {
     id: 'bombardino_quattro_tempi', tier: 'drumrot_god', num: '023', art: '💣🎼',
@@ -262,6 +284,7 @@ export const DRUMROTS = [
     bpm: 170, groove: 30, power: 35,
     parody: 'Bombardini Tortinii',
     parodyImg: 'brainrots/Brainrot_God/Bombardini_Tortinii.png',
+    drumrotImg: 'art/drumrots/bombardino_quattro_tempi.webp',
   },
   // OG ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
@@ -272,6 +295,7 @@ export const DRUMROTS = [
     bpm: 999, groove: 99, power: 99,
     parody: 'Tralalero Tralala',
     parodyImg: 'brainrots/Brainrot_God/Tralalero_Tralala.png',
+    drumrotImg: 'art/drumrots/grande_maestro_drumbeano.webp',
   },
   {
     id: 'doppio_paradiddle_supremo', tier: 'og', num: '025', art: '✨🥢🥢✨',
@@ -281,6 +305,7 @@ export const DRUMROTS = [
     bpm: 999, groove: 99, power: 99,
     parody: 'La Grande Combinasion',
     parodyImg: 'brainrots/Secret/La_Grande_Combinasion.png',
+    drumrotImg: 'art/drumrots/doppio_paradiddle_supremo.webp',
   },
   {
     id: 'snareless_horseman', tier: 'og', num: '026', art: '🎃🐴🥁',
@@ -290,6 +315,7 @@ export const DRUMROTS = [
     bpm: 999, groove: 99, power: 99,
     parody: 'Headless Horseman',
     parodyImg: 'brainrots/OG/Headless_Horseman.png',
+    drumrotImg: 'art/drumrots/snareless_horseman.webp',
   },
   {
     id: 'jam_pork', tier: 'og', num: '027', art: '🐷🎷',
@@ -299,6 +325,7 @@ export const DRUMROTS = [
     bpm: 999, groove: 99, power: 99,
     parody: 'John Pork',
     parodyImg: 'brainrots/OG/John_Pork.png',
+    drumrotImg: 'art/drumrots/jam_pork.webp',
   },
   {
     id: 'meowltronome', tier: 'og', num: '028', art: '🦉⏱️',
@@ -308,6 +335,7 @@ export const DRUMROTS = [
     bpm: 999, groove: 99, power: 99,
     parody: 'Meowl',
     parodyImg: 'brainrots/OG/Meowl.png',
+    drumrotImg: 'art/drumrots/meowltronome.webp',
   },
   {
     id: 'skibidi_tomtomlet', tier: 'og', num: '029', art: '🚽🥁',
@@ -317,6 +345,7 @@ export const DRUMROTS = [
     bpm: 999, groove: 99, power: 99,
     parody: 'Skibidi Toilet',
     parodyImg: 'brainrots/OG/Skibidi_Toilet.png',
+    drumrotImg: 'art/drumrots/skibidi_tomtomlet.webp',
   },
   {
     id: 'spyder_sousaphant', tier: 'og', num: '030', art: '🕷️🐘🎺',
@@ -326,6 +355,7 @@ export const DRUMROTS = [
     bpm: 999, groove: 99, power: 99,
     parody: 'Spyder Elephant',
     parodyImg: 'brainrots/OG/Spyder_Elephant.png',
+    drumrotImg: 'art/drumrots/spyder_sousaphant.webp',
   },
   {
     id: 'strawbeatry_elefantino', tier: 'og', num: '031', art: '🍓🐘🥢',
@@ -335,6 +365,7 @@ export const DRUMROTS = [
     bpm: 999, groove: 99, power: 99,
     parody: 'Strawberry Elephant',
     parodyImg: 'brainrots/OG/Strawberry_Elephant.png',
+    drumrotImg: 'art/drumrots/strawbeatry_elefantino.webp',
   },
 ];
 
