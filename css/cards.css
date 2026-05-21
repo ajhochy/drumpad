@@ -1,0 +1,719 @@
+/* ============================================================================
+   Drumrot card chrome — v0.3 port
+   Source: /Users/ajhochhalter/Downloads/roster-v0.3/SP-808 KILLA Roster.html
+   Owns the .drumrot-card visual language. Page-level body/page-head styles
+   from the standalone preview are intentionally NOT carried over.
+   ============================================================================ */
+
+.tier-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.tier-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(255,255,255,0.08);
+}
+.tier-section-head .ts-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ts-color, #9aa5b4);
+  box-shadow: 0 0 12px var(--ts-color, transparent);
+  align-self: center;
+}
+.tier-section-head.og .ts-swatch {
+  background: conic-gradient(#ff3a5a, #ff8a1e, #f5f55c, #5cf07d, #3bd4f6, #a855f7, #ec4899, #ff3a5a);
+}
+.tier-section-head .ts-name {
+  font-family: 'Major Mono Display', monospace;
+  font-size: 18px;
+  letter-spacing: 0.14em;
+  color: var(--ink, #e8ecf2);
+  text-transform: uppercase;
+}
+.tier-section-head .ts-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-dim, #8a93a3);
+  text-transform: uppercase;
+  margin-left: auto;
+}
+.card-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 240px);
+  gap: 28px 28px;
+  justify-content: start;
+  align-items: start;
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* perf: skip layout/paint for off-screen cards (Pi target) */
+  content-visibility: auto;
+  contain-intrinsic-size: 240px 388px;
+}
+
+/* ─────────── BASE CARD ─────────── */
+.drumrot-card {
+  --tier: #9aa5b4;
+  --tier-deep: #4b5563;
+  --tier-glow: rgba(154, 165, 180, 0);
+  --tier-ink: #0f1114;
+
+  width: 240px;
+  height: 388px;
+  position: relative;
+  border-radius: 14px;
+  padding: 9px;
+  background:
+    linear-gradient(180deg, #1a1e25 0%, #0e1116 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 -1px 0 rgba(0,0,0,0.4) inset,
+    0 18px 40px -18px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(255,255,255,0.04);
+  isolation: isolate;
+  transition: transform .25s ease, box-shadow .25s ease;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  color: #e8ecf2;
+}
+.drumrot-card:hover {
+  transform: translateY(-4px);
+}
+
+/* knurled hardware edge */
+.drumrot-card::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 11px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 5px, rgba(255,255,255,0.025) 5px 6px),
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0));
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* screws */
+.drumrot-card .screw {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #5a6270, #1d2128 70%);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.6),
+    0 1px 1px rgba(255,255,255,0.06) inset;
+  z-index: 5;
+}
+.drumrot-card .screw::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent 43%, rgba(0,0,0,0.55) 43% 57%, transparent 57%);
+  border-radius: 50%;
+}
+.drumrot-card .screw.tl { top: 6px; left: 6px; }
+.drumrot-card .screw.tr { top: 6px; right: 6px; }
+.drumrot-card .screw.bl { bottom: 6px; left: 6px; }
+.drumrot-card .screw.br { bottom: 6px; right: 6px; }
+
+.drumrot-card .card-inner {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  border-radius: 7px;
+  background: #0c0e12;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 0 0 2px var(--tier-deep),
+    0 0 24px var(--tier-glow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─────────── TIER BANNER ─────────── */
+.drumrot-card .tier-banner {
+  height: 18px;
+  background: var(--tier);
+  color: var(--tier-ink);
+  font-family: 'Major Mono Display', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  text-transform: uppercase;
+  position: relative;
+  flex-shrink: 0;
+}
+.drumrot-card .tier-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 3px, rgba(0,0,0,0.08) 3px 4px);
+  pointer-events: none;
+}
+.drumrot-card .tier-banner .label { font-weight: 700; position: relative; z-index: 1; }
+.drumrot-card .tier-banner .num   { position: relative; z-index: 1; opacity: 0.75; }
+
+/* ─────────── PORTRAIT ─────────── */
+.drumrot-card .portrait {
+  height: 180px;
+  position: relative;
+  background:
+    linear-gradient(180deg, #0a0c10 0%, #050608 100%);
+  overflow: hidden;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.drumrot-card .portrait .grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 14px 14px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+.drumrot-card .portrait .scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 2px,
+    rgba(255,255,255,0.018) 2px 3px
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+.drumrot-card .portrait .glow {
+  position: absolute;
+  width: 124px;
+  height: 124px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--tier-glow) 0%, transparent 65%);
+  filter: blur(2px);
+}
+.drumrot-card .portrait .creature {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0;
+  line-height: 0.85;
+  text-shadow:
+    0 0 18px rgba(0,0,0,0.6),
+    0 2px 0 rgba(0,0,0,0.4);
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+
+/* Photographic character art (voxel renders) */
+.drumrot-card .portrait-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 38%;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  z-index: 2;
+  filter:
+    drop-shadow(0 6px 12px rgba(0,0,0,0.55))
+    drop-shadow(0 0 18px var(--tier-glow));
+}
+.drumrot-card .portrait .photo-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 0%, transparent 55%, rgba(0,0,0,0.18) 100%),
+    linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.35) 100%);
+  mix-blend-mode: multiply;
+}
+.drumrot-card .portrait .photo-tint {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, transparent 60%, var(--tier-glow) 140%);
+  opacity: 0.6;
+  mix-blend-mode: screen;
+}
+.drumrot-card .portrait .corner { z-index: 6; }
+.drumrot-card .portrait .stamp  { z-index: 6; }
+
+.drumrot-card .portrait .creature .e { display: block; }
+.drumrot-card .portrait .creature[data-n="1"] .e1 { font-size: 70px; }
+.drumrot-card .portrait .creature[data-n="2"] .e1 { font-size: 48px; transform: translateY(4px) rotate(-6deg); }
+.drumrot-card .portrait .creature[data-n="2"] .e2 { font-size: 40px; transform: translateY(-4px) rotate(5deg); }
+.drumrot-card .portrait .creature[data-n="3"] { gap: 2px; }
+.drumrot-card .portrait .creature[data-n="3"] .e1 { font-size: 34px; transform: translateY(2px) rotate(-5deg); }
+.drumrot-card .portrait .creature[data-n="3"] .e2 { font-size: 38px; }
+.drumrot-card .portrait .creature[data-n="3"] .e3 { font-size: 32px; transform: translateY(-2px) rotate(5deg); }
+.drumrot-card .portrait .creature[data-n="4"] { flex-direction: row; gap: 4px; }
+.drumrot-card .portrait .creature[data-n="4"] .e  { font-size: 30px; }
+.drumrot-card .portrait .creature[data-n="4"] .e1 { transform: rotate(-8deg); }
+.drumrot-card .portrait .creature[data-n="4"] .e4 { transform: rotate(8deg); }
+
+.drumrot-card .portrait .corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--tier);
+  border-style: solid;
+  opacity: 0.55;
+}
+.drumrot-card .portrait .corner.tl { top: 6px; left: 6px; border-width: 1px 0 0 1px; }
+.drumrot-card .portrait .corner.tr { top: 6px; right: 6px; border-width: 1px 1px 0 0; }
+.drumrot-card .portrait .corner.bl { bottom: 6px; left: 6px; border-width: 0 0 1px 1px; }
+.drumrot-card .portrait .corner.br { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
+.drumrot-card .portrait .stamp {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--tier);
+  opacity: 0.7;
+  background: rgba(0,0,0,0.4);
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+/* ─────────── NAME PLATE ─────────── */
+.drumrot-card .name-plate {
+  padding: 6px 10px 5px;
+  background:
+    linear-gradient(180deg, #161a21 0%, #11141a 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.5);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
+  flex-shrink: 0;
+}
+.drumrot-card .name-plate .name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: #e8ecf2;
+  text-wrap: balance;
+}
+.drumrot-card .name-plate .sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-style: italic;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: #8a93a3;
+  margin-top: 4px;
+  text-transform: lowercase;
+}
+.drumrot-card .name-plate .sub .tier-name {
+  color: var(--tier);
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* ─────────── FLAVOR ─────────── */
+.drumrot-card .flavor {
+  margin: 6px 10px 0;
+  padding: 6px 8px;
+  background: #07090c;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.02),
+    0 2px 4px rgba(0,0,0,0.4) inset;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  line-height: 1.4;
+  color: #b6bdc8;
+  flex: 1;
+  min-height: 0;
+}
+.drumrot-card .flavor::first-letter { color: var(--tier); }
+
+/* ─────────── STATS ─────────── */
+.drumrot-card .stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+  padding: 6px 10px 5px;
+  flex-shrink: 0;
+}
+.drumrot-card .stat {
+  background: linear-gradient(180deg, #1a1e25, #0d1014);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 3px;
+  padding: 3px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
+}
+.drumrot-card .stat .k {
+  font-family: 'Major Mono Display', monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: #8a93a3;
+  text-transform: uppercase;
+}
+.drumrot-card .stat .v {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--tier);
+  line-height: 1.1;
+  text-shadow: 0 0 8px var(--tier-glow);
+}
+
+/* ─────────── FOOTER ─────────── */
+.drumrot-card .footer {
+  height: 22px;
+  background:
+    linear-gradient(180deg, #11141a 0%, #0a0c10 100%);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: #8a93a3;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.drumrot-card .footer .num { color: var(--tier); font-weight: 500; }
+.drumrot-card .footer .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Major Mono Display', monospace;
+  color: #ff8a1e;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+.drumrot-card .footer .logo .mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #ff8a1e;
+  border-radius: 1px;
+  box-shadow: 0 0 6px #ff8a1e;
+}
+.drumrot-card .footer .shine {
+  display: none;
+  width: 14px;
+  height: 8px;
+  background: linear-gradient(90deg, #fff0, #fff, #fff0);
+  border-radius: 1px;
+  opacity: 0.85;
+  animation: shineSlide 2.6s ease-in-out infinite;
+}
+@keyframes shineSlide {
+  0%, 100% { transform: translateX(-4px); opacity: 0.3; }
+  50% { transform: translateX(4px); opacity: 1; }
+}
+
+/* ═════════ TIER OVERRIDES ═════════ */
+.drumrot-card.tier-common {
+  --tier: #9aa5b4;
+  --tier-deep: #2c333d;
+  --tier-glow: rgba(154, 165, 180, 0);
+  --tier-ink: #0f1114;
+}
+.drumrot-card.tier-rare {
+  --tier: #3b82f6;
+  --tier-deep: #1e3a8a;
+  --tier-glow: rgba(59, 130, 246, 0.35);
+  --tier-ink: #ffffff;
+}
+.drumrot-card.tier-rare .card-inner {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 0 0 2px var(--tier-deep),
+    0 0 18px rgba(59, 130, 246, 0.35);
+}
+.drumrot-card.tier-epic {
+  --tier: #a855f7;
+  --tier-deep: #4c1d95;
+  --tier-glow: rgba(168, 85, 247, 0.5);
+  --tier-ink: #ffffff;
+}
+.drumrot-card.tier-epic .card-inner {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 0 0 2px var(--tier-deep),
+    0 0 26px rgba(168, 85, 247, 0.5);
+}
+.drumrot-card.tier-epic .footer .shine { display: block; }
+.drumrot-card.tier-legendary {
+  --tier: #f59e0b;
+  --tier-deep: #78350f;
+  --tier-glow: rgba(245, 158, 11, 0.55);
+  --tier-ink: #1a0e00;
+}
+.drumrot-card.tier-legendary .card-inner {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 0 0 2px var(--tier-deep),
+    0 0 30px rgba(245, 158, 11, 0.55);
+}
+.drumrot-card.tier-legendary .footer .shine { display: block; }
+.drumrot-card.tier-legendary .name-plate .name {
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+.drumrot-card.tier-mythic {
+  --tier: #ec4899;
+  --tier-deep: #831843;
+  --tier-glow: rgba(236, 72, 153, 0.7);
+  --tier-ink: #ffffff;
+}
+.drumrot-card.tier-mythic .card-inner {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 0 0 2px var(--tier-deep),
+    0 0 38px rgba(236, 72, 153, 0.7),
+    0 0 60px rgba(236, 72, 153, 0.25);
+}
+.drumrot-card.tier-mythic .footer .shine { display: block; }
+.drumrot-card.tier-mythic .name-plate .name {
+  color: #ffe3f1;
+  text-shadow: 0 0 14px rgba(236, 72, 153, 0.6);
+}
+.drumrot-card.tier-mythic .portrait .grid {
+  background-image:
+    linear-gradient(rgba(236,72,153,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(236,72,153,0.08) 1px, transparent 1px);
+}
+
+/* DRUMROT GOD */
+.drumrot-card.tier-god {
+  --tier: #ff3a5a;
+  --tier-deep: #7f1d1d;
+  --tier-glow: rgba(255, 58, 90, 0.8);
+  --tier-ink: #fff5f5;
+}
+.drumrot-card.tier-god .card-inner {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 0 0 2px var(--tier-deep),
+    0 0 44px rgba(255, 58, 90, 0.75),
+    0 0 80px rgba(255, 58, 90, 0.35),
+    0 0 120px rgba(255, 138, 30, 0.12);
+}
+.drumrot-card.tier-god .tier-banner {
+  background: linear-gradient(90deg, #ff3a5a 0%, #ff8a1e 50%, #ff3a5a 100%);
+  background-size: 200% 100%;
+  animation: lavaSlide 4s linear infinite;
+}
+@keyframes lavaSlide { to { background-position: -200% 0; } }
+.drumrot-card.tier-god .portrait {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255,138,30,0.18), transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(255,58,90,0.25), transparent 55%),
+    linear-gradient(180deg, #1a0608 0%, #0a0203 100%);
+}
+.drumrot-card.tier-god .portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background:
+    radial-gradient(2px 2px at 20% 30%, rgba(255,138,30,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,58,90,0.7), transparent),
+    radial-gradient(1.5px 1.5px at 45% 80%, rgba(255,138,30,0.5), transparent),
+    radial-gradient(1px 1px at 85% 25%, rgba(255,58,90,0.6), transparent),
+    radial-gradient(1px 1px at 15% 75%, rgba(255,138,30,0.5), transparent);
+  pointer-events: none;
+}
+.drumrot-card.tier-god .footer .shine { display: block; }
+.drumrot-card.tier-god .name-plate .name {
+  color: #ffd4cf;
+  text-shadow: 0 0 16px rgba(255, 58, 90, 0.75);
+}
+
+/* OG — prismatic / holographic */
+.drumrot-card.tier-og {
+  --tier: #ffffff;
+  --tier-deep: transparent;
+  --tier-glow: rgba(255, 255, 255, 0.5);
+  --tier-ink: #0a0a0a;
+  background:
+    conic-gradient(from var(--ang, 0deg),
+      #ff3a5a, #ff8a1e, #f5f55c, #5cf07d, #3bd4f6, #a855f7, #ec4899, #ff3a5a
+    );
+  animation: ogSpin 8s linear infinite;
+}
+@property --ang {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes ogSpin { to { --ang: 360deg; } }
+.drumrot-card.tier-og::before {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 5px, rgba(0,0,0,0.15) 5px 6px);
+}
+.drumrot-card.tier-og .card-inner {
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.9),
+    0 0 28px rgba(255, 255, 255, 0.35),
+    0 0 60px rgba(168, 85, 247, 0.25),
+    0 0 100px rgba(255, 138, 30, 0.15);
+}
+.drumrot-card.tier-og .tier-banner {
+  background: linear-gradient(90deg,
+    #ff3a5a, #ff8a1e, #f5f55c, #5cf07d, #3bd4f6, #a855f7, #ec4899);
+  background-size: 200% 100%;
+  animation: lavaSlide 6s linear infinite;
+  color: #0a0a0a;
+}
+.drumrot-card.tier-og .portrait {
+  background:
+    linear-gradient(135deg,
+      rgba(255,58,90,0.08) 0%,
+      rgba(255,138,30,0.08) 16%,
+      rgba(245,245,92,0.08) 33%,
+      rgba(92,240,125,0.08) 50%,
+      rgba(59,212,246,0.08) 66%,
+      rgba(168,85,247,0.08) 83%,
+      rgba(236,72,153,0.08) 100%),
+    linear-gradient(180deg, #0a0c10 0%, #050608 100%);
+}
+.drumrot-card.tier-og .portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: linear-gradient(115deg,
+    transparent 30%,
+    rgba(255,255,255,0.08) 45%,
+    rgba(255,255,255,0.18) 50%,
+    rgba(255,255,255,0.08) 55%,
+    transparent 70%);
+  background-size: 300% 300%;
+  animation: holoShift 3.5s linear infinite;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+@keyframes holoShift {
+  0% { background-position: 100% 0%; }
+  100% { background-position: -100% 100%; }
+}
+.drumrot-card.tier-og .portrait .glow {
+  background: conic-gradient(from 0deg,
+    rgba(255,58,90,0.4),
+    rgba(255,138,30,0.4),
+    rgba(245,245,92,0.4),
+    rgba(92,240,125,0.4),
+    rgba(59,212,246,0.4),
+    rgba(168,85,247,0.4),
+    rgba(236,72,153,0.4),
+    rgba(255,58,90,0.4));
+  filter: blur(20px);
+  animation: ogSpin 6s linear infinite reverse;
+}
+.drumrot-card.tier-og .name-plate .name {
+  background: linear-gradient(90deg, #ff8a1e, #f5f55c, #5cf07d, #3bd4f6, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+}
+.drumrot-card.tier-og .stat .v {
+  background: linear-gradient(90deg, #ff8a1e, #5cf07d, #a855f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.drumrot-card.tier-og .footer .shine { display: block; }
+.drumrot-card.tier-og .footer .num {
+  background: linear-gradient(90deg, #ff8a1e, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ─────────── OG HOLOFOIL HOVER SWEEP (issue #4) ─────────── */
+.drumrot-card.tier-og .card-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  background: conic-gradient(from 0deg,
+    rgba(255,58,90,0.18),
+    rgba(255,138,30,0.18),
+    rgba(245,245,92,0.18),
+    rgba(92,240,125,0.18),
+    rgba(59,212,246,0.18),
+    rgba(168,85,247,0.18),
+    rgba(236,72,153,0.18),
+    rgba(255,58,90,0.18));
+  mix-blend-mode: overlay;
+  opacity: 0;
+  transition: opacity .3s ease;
+  animation: ogFoilSpin 6s linear infinite;
+}
+.drumrot-card.tier-og:hover .card-inner::after { opacity: 0.25; }
+@keyframes ogFoilSpin { to { transform: rotate(360deg); } }
+
+/* ─────────── LOCKED STATE (issue #3 + #4) ─────────── */
+.drumrot-card.tier-locked {
+  filter: grayscale(0.6) brightness(0.6);
+}
+.drumrot-card.tier-locked:hover {
+  transform: translateY(-2px);
+  filter: grayscale(0.6) brightness(0.7);
+}
+.drumrot-card.tier-locked .name-plate .name,
+.drumrot-card.tier-locked .name-plate .sub,
+.drumrot-card.tier-locked .flavor,
+.drumrot-card.tier-locked .stat .v {
+  color: #6a7280;
+}
+
+/* ─────────── DROP REVEAL ANIMATION (issue #4) ─────────── */
+.drumrot-card.revealing {
+  animation: cardReveal 420ms cubic-bezier(.18,.9,.32,1.2) both;
+}
+@keyframes cardReveal {
+  0%   { transform: scale(.7) translateY(8px); opacity: 0; filter: blur(6px); }
+  60%  { opacity: 1; filter: blur(0); }
+  100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+}
+
+/* Respect reduced-motion: kill spins, holo shifts, foil sweeps, reveal anim */
+@media (prefers-reduced-motion: reduce) {
+  .drumrot-card,
+  .drumrot-card .tier-banner,
+  .drumrot-card .footer .shine,
+  .drumrot-card.tier-og,
+  .drumrot-card.tier-og .portrait::after,
+  .drumrot-card.tier-og .portrait .glow,
+  .drumrot-card.tier-og .card-inner::after,
+  .drumrot-card.revealing {
+    animation: none !important;
+    transition: none !important;
+  }
+  .drumrot-card.tier-og:hover .card-inner::after { opacity: 0; }
+}
