@@ -1,0 +1,48 @@
+{
+  "patterns": [],
+  "process_patterns": [],
+  "workflow_patterns": [
+    {
+      "id": "w1-required-skill-skipped",
+      "category": "W1",
+      "description": "Required skill skipped failures: 4 occurrence(s) across issues ['1,2,3,4']",
+      "occurrences": 4,
+      "affected_issues": [
+        "1,2,3,4"
+      ],
+      "affected_skills": [
+        "workflow-orchestrator"
+      ],
+      "reason": "A required skill in the canonical chain was skipped. The orchestrator must enforce the chain \u2014 every required step is gated.",
+      "suggested_prompt_addition": "Before dispatching the next step, verify that the immediately-previous required step in the chain announced itself, expanded its TodoWrite checklist, and emitted its expected output artifact. If the previous step is missing, halt and surface the gap rather than continuing.",
+      "evidence_files": [
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json"
+      ]
+    },
+    {
+      "id": "w2-bypassed-orchestrator-routing",
+      "category": "W2",
+      "description": "Bypassed orchestrator routing failures: 1 occurrence(s) across issues ['1,2,3,4']",
+      "occurrences": 1,
+      "affected_issues": [
+        "1,2,3,4"
+      ],
+      "affected_skills": [
+        "workflow-orchestrator"
+      ],
+      "reason": "Agent bypassed the orchestrator and went straight to implementation despite the repo having AGENTS.md and docs/ai/*.",
+      "suggested_prompt_addition": "Add a Pre-Flight Check that runs FIRST on every entry: if AGENTS.md and docs/ai/project-state.md both exist, the orchestrator must be the entry point \u2014 no Edit/Write/Bash on source code is permitted until orchestrator dispatch has emitted a routing decision. Reject any direct-implementation attempt with a one-line redirect to orchestrator.",
+      "evidence_files": [
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json"
+      ]
+    }
+  ],
+  "last_updated": "2026-05-20",
+  "total_runs_analyzed": 1,
+  "min_occurrences_threshold": 1,
+  "process_min_occurrences_threshold": 1,
+  "workflow_min_occurrences_threshold": 1
+}

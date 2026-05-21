@@ -448,14 +448,19 @@ function creatureHtml(emoji){
 }
 
 function portraitHtml(entry){
+  // Always emit the emoji creature behind the image. If drumrotImg exists, the
+  // image (z-index 2) covers it; if the image fails or is skipped by the
+  // browser, the creature stays visible — no silently-blank portraits.
+  const creature = creatureHtml(entry?.emoji || '');
   if (entry?.drumrotImg){
     const alt = escapeHtml(entry.name || '');
     return `
-      <img class="portrait-img" src="${entry.drumrotImg}" alt="${alt}" loading="lazy" decoding="async" onerror="this.style.display='none'">
+      ${creature}
+      <img class="portrait-img" src="${entry.drumrotImg}" alt="${alt}" decoding="async" onerror="this.style.display='none'">
       <span class="photo-vignette"></span>
       <span class="photo-tint"></span>`;
   }
-  return creatureHtml(entry?.emoji || '');
+  return creature;
 }
 
 function statDisplay(entry, tierKey, key){

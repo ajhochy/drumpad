@@ -1,0 +1,36 @@
+{
+  "run_id": "2026-05-21-portrait-blank-after-pr5",
+  "issue": "PR#5-regression",
+  "date": "2026-05-21",
+  "smoke_result": "fail",
+  "verification_claimed": "PASS",
+  "divergence": true,
+  "criteria_results": [
+    {
+      "criterion": "Triggering an achievement drop shows a card with the new chrome (screws, tier banner, portrait image, stats footer).",
+      "result": "fail",
+      "evidence": "User screenshot of revealed Drumbeano Crocodilio card: chrome present (banner #002, FRG·02 stamp, name plate, flavor, stats, footer) but portrait area shows only the dark gradient — no voxel image, no emoji fallback. Playwright smoke had reported 'all 31 portrait assets loaded, no portrait 404s', which was a status-200 check, not a pixel-painted check.",
+      "category": "C3"
+    }
+  ],
+  "process_issues": [
+    {
+      "category": "P2",
+      "description": "Playwright check verified HTTP 200 on portrait WebPs but did not assert that the images were actually painted at non-zero rect. The smoke checklist treated 'no 404s' as equivalent to 'visible art', which it is not. The same false-positive likely hid blank portraits in the Drops grid too."
+    }
+  ],
+  "workflow_adherence": {
+    "overall_score": "strict",
+    "expected_chain": ["failure-postmortem", "diagnostic-agent (in-process)", "coding-agent (in-process)", "verification-gate (in-process)", "project-state-updater (in-process)"],
+    "observed_chain": ["failure-postmortem", "diagnostic (in-process)", "coding-agent (in-process)", "verification-gate (in-process)"],
+    "skipped_skills": [],
+    "issues": []
+  },
+  "implementation_files": [
+    "js/drumrots.js",
+    "css/cards.css"
+  ],
+  "failure_output": "User-reported regression after PR #5 merged: 'revealed cards dont have the actual character on them?' Live DOM probe via Claude Preview Chromium confirmed the portrait-img element mounts and the WebP fetches 200, but in the reveal-popup pathway the image never reaches paintable state. Direct render bypassing the reveal animation (drops grid) shows the same risk. Root cause hypothesis: `loading=\"lazy\"` on the img + `content-visibility: auto` on the `.cell` wrapper interact badly when the cell is rendered inside an `opacity: 0` ancestor (`#drumrotReveal`); content-visibility's layout skip plus lazy's intersection-observer trigger conspire so the image element never enters a paintable state.",
+  "overall_category": "C3",
+  "suggested_follow_up": "Smoke ladder rung must include a *pixel* assertion: `getBoundingClientRect().width > 0 && img.complete && img.naturalWidth > 0` for the portrait-img after the reveal animation completes. Add to docs/testing/manual-smoke.md and to any Playwright spec that exercises the Drops/reveal flow. Update smoke-test-writer to call this out as the default for any 'images load' criterion."
+}

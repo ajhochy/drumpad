@@ -54,9 +54,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* perf: skip layout/paint for off-screen cards (Pi target) */
-  content-visibility: auto;
-  contain-intrinsic-size: 240px 388px;
 }
 
 /* ─────────── BASE CARD ─────────── */
