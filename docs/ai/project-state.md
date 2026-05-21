@@ -1,23 +1,25 @@
 # Project state
 
 ## Current focus
-Workflow run 2026-05-20: implement issues #1–#4 — migrate Drumrot card system to v0.3 schema, chrome, and renderer; polish pass.
+Idle — Drumrot v0.3 card system shipped to `main`.
 
 ## Branch
-`workflow/run-2026-05-20` → PR to `main` (manual merge).
+`main`. Last run branch `workflow/run-2026-05-20` merged via PR #5 (squash, commit `f0927d31`) and deleted.
 
-## Recently completed
-- Card v0.3 schema migration (issue #1)
-- v0.3 chrome CSS port (issue #2)
-- renderDrumrotCard rewrite (issue #3)
-- Polish pass (issue #4)
+## Recently completed (2026-05-20 → 2026-05-21)
+- Issues #1–#4 (v0.3 card system) merged to `main`:
+  - #1 — DRUMROTS migrated to v0.3 schema (`drumrot_god` → `god`, `art` → `emoji`, v0.3 wording, numeric stats with 99 sentinel).
+  - #2 — `css/cards.css` ports v0.3 card chrome; `index.html` head adds IBM Plex Mono + `cards.css`.
+  - #3 — `renderDrumrotCard` rewritten for v0.3 markup, OG `∞/MAX` rules, locked variant, grapheme emoji fallback.
+  - #4 — Dead `.dc-*` CSS removed, reveal entry animation, OG holofoil hover sweep, `prefers-reduced-motion` guards, Pi-perf hooks (`content-visibility: auto`, lazy images), README docs.
+- Playwright + computer-control smoke: all acceptance criteria PASS. Drops scroll ~94 fps locally; portrait assets all 200; reveal/OG/god-tier display rules verified.
 
 ## In progress
 n/a
 
 ## Risks / known gaps
-- Pi performance check (issue #4 task 5) requires actual Pi hardware — not exercised by an agent. Tagged as manual smoke item.
-- No automated test runner; verification is by `node` import-shape check + manual browser smoke.
+- **#6 (favicon 404)** — open follow-up filed from PR #5 smoke. Single console error on hard load; not user-facing.
+- **Pi hardware perf check** — code hooks are in place but ≥30 fps gate on the physical Pi has not been re-verified on hardware post-merge. Procedure documented in `docs/testing/manual-smoke.md`.
 
 ## Next step
-Manual smoke + merge.
+When ready, pick up #6 (favicon) or any newly filed work. No active workflow run.
