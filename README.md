@@ -96,6 +96,31 @@ Then drop the 240×388 voxel render at `art/drumrots/snake_case_id.webp`
 (no SVG fallback is shipped — emoji is the fallback). Update tier
 weights in `TIER_WEIGHTS` only if you also want to change drop odds.
 
+### Testing the MIDI input path
+
+The repo ships a tiny Node script that exposes a virtual MIDI source so
+you can verify the app's input path without plugging in a real
+controller. On macOS this works out of the box (CoreMIDI); on Linux
+you'll need `libasound2-dev` before `npm install`; Windows users should
+use loopMIDI separately.
+
+```bash
+npm install              # one-time, installs the `midi` native dep
+npm run midi:list        # show MIDI inputs/outputs visible to the OS
+npm run midi:pulse       # start a 90 BPM backbeat on a virtual port
+
+# env vars for the pulse:
+#   BPM=120 PATTERN=fourfloor PORT_NAME='My Source' npm run midi:pulse
+# patterns available: backbeat | fourfloor | fills | pulse
+```
+
+While the pulse is running, open the app, switch to **Library** (or any
+tab with the MIDI selector), and the dropdown should show
+`Drumrot Test Source`. Pick it on the Play tab — the highway pads
+respond to the incoming GM drum notes.
+
+Ctrl-C stops the pulse and tears down the virtual port.
+
 ### Pi performance notes
 
 The collection grid uses `content-visibility: auto` and lazy-loaded

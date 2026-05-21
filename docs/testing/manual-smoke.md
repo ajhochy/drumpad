@@ -12,3 +12,14 @@ Open `index.html` directly in a modern browser.
 - [ ] No 404s on portrait images in the network tab.
 - [ ] **Portrait pixel check** (not just network 200): inspect a reveal-popup card with DevTools, confirm `img.portrait-img` has `getBoundingClientRect().width > 0`, `complete === true`, `naturalWidth > 0`. A 200 response does **not** prove the image was painted. Repeat for at least one Drops-grid card.
 - [ ] Pi target: collection scrolls at ≥30 fps across all 31 cards. (Verify on actual hardware.)
+
+## MIDI input loopback (optional)
+
+In a second terminal:
+```bash
+npm run midi:pulse
+```
+Then in the running app:
+- [ ] Library / MIDI dropdown lists `Drumrot Test Source`.
+- [ ] Selecting it on Play tab causes the highway pads to light on each pulse hit (backbeat kick on 1 & 3, snare on 2 & 4, hi-hat sixteenths).
+- [ ] Stopping the script (`Ctrl-C`) removes the port from the dropdown after the next refresh.
