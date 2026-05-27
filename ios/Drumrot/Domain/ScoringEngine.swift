@@ -49,6 +49,12 @@ struct ScoringEngine: Equatable {
         combo = 0
     }
 
+    /// Reset per-pass hit/miss tallies at a loop rollover (score + combo persist).
+    mutating func resetPassCounts() {
+        hits = 0
+        misses = 0
+    }
+
     /// Live accuracy over attempted notes (hits + misses), rounded like `Math.round`.
     var accuracy: Int {
         let total = hits + misses

@@ -15,11 +15,9 @@ struct PlayView: View {
             VStack(spacing: 10) {
                 readout
                 progressStrip
-                HighwayView(engine: engine) { beat in
-                    if clickOn { store.audio.playClick(accent: beat == 1) }
-                }
-                .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                HighwayView(engine: engine)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 pads
                 rail
             }
@@ -30,11 +28,16 @@ struct PlayView: View {
             store.activateAudio()
             store.midi.onNote = { lane, _ in hit(lane) }
             store.midi.start()
+            // Continuous metronome (count-in + groove), gated by the Click toggle.
+            engine.onMetronome = { accent in store.audio.playClick(accent: accent) }
+            engine.metronomeEnabled = clickOn
             if engine.lesson == nil {
                 engine.load(store.currentLesson ?? LessonCatalog.all[0], loop: loop)
             }
             if store.autoStartPlay { engine.start(); store.autoStartPlay = false }
         }
+        .onChange(of: clickOn) { _, on in engine.metronomeEnabled = on }
+        .onChange(of: loop) { _, on in engine.loop = on }
         .onChange(of: engine.phase) { _, phase in
             if phase == .finished { persistPass() }
         }
@@ -52,7 +55,7 @@ struct PlayView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(engine.lesson?.name ?? "—")
                     .font(SPFont.display(.headline, weight: .bold))
-                Text("\(engine.lesson?.bpm ?? 0) BPM · \(engine.lesson?.genre ?? "")")
+                Text("\(engine.bpm) BPM · \(engine.lesson?.genre ?? "")")
                     .font(SPFont.mono(.caption2)).foregroundStyle(.secondary)
             }
             Spacer()
@@ -105,10 +108,7 @@ struct PlayView: View {
 
     private var rail: some View {
         HStack(spacing: 16) {
-            Button {
-                engine.load(engine.lesson ?? LessonCatalog.all[0], loop: loop)
-                engine.start()
-            } label: {
+            Button { restart() } label: {
                 Label("Play", systemImage: "play.fill")
             }
             .buttonStyle(.borderedProminent).tint(SPColor.accentGreen)
@@ -123,10 +123,7 @@ struct PlayView: View {
                 .toggleStyle(.button).tint(SPColor.accentOrange)
 
             Spacer()
-            BpmStepper(bpm: Binding(
-                get: { engine.bpm },
-                set: { engine.bpm = $0 }
-            ))
+            BpmStepper(bpm: $engine.bpm)
             HStack(spacing: 6) {
                 LED(on: store.midi.activity); Text("MIDI").font(SPFont.mono(.caption2)).foregroundStyle(.secondary)
             }
@@ -145,8 +142,11 @@ struct PlayView: View {
         .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)
     }
 
+    /// Restart the current lesson at the user's chosen BPM (start() keeps bpm/loop;
+    /// load() would reset tempo to the lesson default).
     private func restart() {
-        engine.load(engine.lesson ?? LessonCatalog.all[0], loop: loop)
+        if engine.lesson == nil { engine.load(LessonCatalog.all[0], loop: loop) }
+        engine.loop = loop
         engine.start()
     }
 

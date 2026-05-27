@@ -1,16 +1,17 @@
 import SpriteKit
 
 /// SpriteKit note highway. Drives the PlaybackEngine from its own per-frame
-/// update loop and positions one node per note by `progress` (0 top → 1 strike).
+/// update loop and positions a node per note by `progress` (0 top → 1 strike),
+/// plus a dim shadow node one pass ahead for a seamless loop reel.
 @MainActor
 final class HighwayScene: SKScene {
     var engine: PlaybackEngine?
-    var onCountInBeat: ((Int) -> Void)?
 
     private let laneCount = 6
     private var noteNodes: [Int: SKShapeNode] = [:]
+    private var shadowNodes: [Int: SKShapeNode] = [:]
+    private var countInLabel: SKLabelNode?
     private var strikeY: CGFloat = 90
-    private var lastBeat = 0
 
     private let laneColors: [SKColor] = [
         SKColor(red: 1.0, green: 0.16, blue: 0.48, alpha: 1),   // crash – pink
@@ -23,25 +24,29 @@ final class HighwayScene: SKScene {
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.03, green: 0.04, blue: 0.05, alpha: 1)
-        buildLanes()
+        rebuild()
     }
 
     override func didChangeSize(_ oldSize: CGSize) {
         strikeY = size.height * 0.16
         removeAllChildren()
         noteNodes.removeAll()
-        buildLanes()
+        shadowNodes.removeAll()
+        countInLabel = nil
+        rebuild()
     }
 
     private func laneX(_ lane: Int) -> CGFloat {
-        let w = size.width / CGFloat(laneCount)
-        return w * (CGFloat(lane) + 0.5)
+        (size.width / CGFloat(laneCount)) * (CGFloat(lane) + 0.5)
     }
 
-    private func buildLanes() {
+    private func yFor(_ progress: Double) -> CGFloat {
+        size.height - CGFloat(progress) * (size.height - strikeY)
+    }
+
+    private func rebuild() {
         for lane in 0..<laneCount {
-            let guideRect = CGRect(x: laneX(lane) - 1, y: 0, width: 2, height: size.height)
-            let guide = SKShapeNode(rect: guideRect)
+            let guide = SKShapeNode(rect: CGRect(x: laneX(lane) - 1, y: 0, width: 2, height: size.height))
             guide.fillColor = laneColors[lane].withAlphaComponent(0.10)
             guide.strokeColor = .clear
             addChild(guide)
@@ -50,45 +55,72 @@ final class HighwayScene: SKScene {
         strike.fillColor = SKColor.white.withAlphaComponent(0.7)
         strike.strokeColor = .clear
         addChild(strike)
+
+        let label = SKLabelNode(text: "")
+        label.fontName = "Menlo-Bold"
+        label.fontSize = 96
+        label.fontColor = SKColor(red: 0.36, green: 0.94, blue: 0.49, alpha: 1)
+        label.position = CGPoint(x: size.width / 2, y: size.height * 0.55)
+        label.horizontalAlignmentMode = .center
+        label.verticalAlignmentMode = .center
+        label.isHidden = true
+        addChild(label)
+        countInLabel = label
     }
 
     override func update(_ currentTime: TimeInterval) {
         guard let engine else { return }
-        if let beat = engine.update(nowMs: currentTime * 1000) {
-            if beat != lastBeat { onCountInBeat?(beat); lastBeat = beat }
-        }
-        render(notes: engine.notes)
+        engine.update(nowMs: currentTime * 1000)
+        render(engine: engine)
     }
 
-    private func render(notes: [PlaybackEngine.ActiveNote]) {
+    private func render(engine: PlaybackEngine) {
+        // Count-in number.
+        if case let .countIn(n) = engine.phase {
+            countInLabel?.text = "\(n)"
+            countInLabel?.isHidden = false
+        } else {
+            countInLabel?.isHidden = true
+        }
+
         var seen = Set<Int>()
-        for note in notes {
+        for note in engine.notes {
             seen.insert(note.id)
-            let node = noteNodes[note.id] ?? makeNode(for: note)
-            let y = size.height - CGFloat(note.progress) * (size.height - strikeY)
-            node.position = CGPoint(x: laneX(note.lane), y: y)
-            let visible = note.progress >= -0.1 && note.progress <= 1.2 && !note.hit
-            node.isHidden = !visible
-            if note.hit {
-                node.fillColor = SKColor.white
-            } else if note.missed {
-                node.fillColor = laneColors[note.lane].withAlphaComponent(0.25)
+
+            // Primary node (current pass).
+            let node: SKShapeNode
+            if let existing = noteNodes[note.id] {
+                node = existing
             } else {
-                node.fillColor = laneColors[note.lane]
+                node = makeNode(lane: note.lane, alpha: 1)
+                noteNodes[note.id] = node
             }
+            node.position = CGPoint(x: laneX(note.lane), y: yFor(note.progress))
+            node.isHidden = !(note.progress >= -0.1 && note.progress <= 1.2 && !note.hit)
+            node.fillColor = note.missed ? laneColors[note.lane].withAlphaComponent(0.25) : laneColors[note.lane]
+
+            // Shadow node (next pass) — the seamless reel.
+            let shadow: SKShapeNode
+            if let existing = shadowNodes[note.id] {
+                shadow = existing
+            } else {
+                shadow = makeNode(lane: note.lane, alpha: 0.45)
+                shadowNodes[note.id] = shadow
+            }
+            shadow.position = CGPoint(x: laneX(note.lane), y: yFor(note.shadowProgress))
+            shadow.isHidden = !note.shadowVisible
         }
-        for (id, node) in noteNodes where !seen.contains(id) {
-            node.removeFromParent(); noteNodes[id] = nil
-        }
+        for (id, node) in noteNodes where !seen.contains(id) { node.removeFromParent(); noteNodes[id] = nil }
+        for (id, node) in shadowNodes where !seen.contains(id) { node.removeFromParent(); shadowNodes[id] = nil }
     }
 
-    private func makeNode(for note: PlaybackEngine.ActiveNote) -> SKShapeNode {
+    private func makeNode(lane: Int, alpha: CGFloat) -> SKShapeNode {
         let w = size.width / CGFloat(laneCount) - 16
         let node = SKShapeNode(rectOf: CGSize(width: max(24, w), height: 22), cornerRadius: 6)
         node.strokeColor = .clear
-        node.fillColor = laneColors[note.lane]
+        node.fillColor = laneColors[lane]
+        node.alpha = alpha
         addChild(node)
-        noteNodes[note.id] = node
         return node
     }
 }
