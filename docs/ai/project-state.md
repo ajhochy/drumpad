@@ -102,6 +102,7 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - Decisions made: explicit plist chosen because `INFOPLIST_KEY_NSBonjourServices` did not emit into the processed app plist as a build setting.
 - Deviations from spec: #47 snapshot tests and #48 XCUITest remain deferred per handoff; #51–#52 cannot be completed without App Store Connect/TestFlight/hardware.
 - Verification recovery: first post-edit `xcodebuild ... test` rerun hit a simulator `FBSOpenApplicationServiceErrorDomain` / preflight `Busy` launch failure, with duplicate `iPad (A16)` simulator runtimes and simulator cleanup still active. No source change was needed; rerunning the same command after cleanup passed 42 tests. First pushed CI run then failed because `.gitignore`'s unanchored `build/` rule ignored `ios/SP808Killa/Features/Build/BuildView.swift`; fix is to anchor `/build/` and track `BuildView.swift`.
+- Remote verification: PR #53 CI run `26489231572` passed on commit `c89259d` (`iOS build` build-test: Build + Test on iPad simulator).
 - Concerns: real iPad MIDI/audio/VoiceOver and App Store Connect acceptance remain manual gates.
 
 ## Risks / known gaps
