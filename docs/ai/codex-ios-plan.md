@@ -1,41 +1,16 @@
-# Current plan — SP-808 KILLA native iPadOS port (v1)
+# Codex iOS Plan — SP-808 KILLA Native iPadOS Port (v1)
 
-> **Source of truth.** Promoted 2026-05-26 from [docs/ai/codex-ios-plan.md](codex-ios-plan.md) (the iPad-first planning pass that matches the locked 2026-05-21 direction), with a tightened entitlements/usage-description section grafted from [docs/ai/claudes-ios-plan.md](claudes-ios-plan.md). Both prior planning passes are preserved alongside this file for historical comparison; this file is the authoritative current plan and supersedes the v0.3 card-system plan (shipped via PR #5 / #8 / #10).
->
-> For implementation agents: create a feature branch named `workflow/run-YYYY-MM-DD` before editing. This plan is planning-only; do not commit generated images outside the iOS app asset catalog, `art/drumrots/`, or `brainrots/`. Do not commit `.DS_Store`.
+> For implementation agents: create a feature branch named `workflow/run-YYYY-MM-DD-ios-port` before editing. This plan is planning-only; do not commit generated images outside the iOS app asset catalog, `art/drumrots/`, or `brainrots/`. Do not commit `.DS_Store`.
 
 ## Status
 
-Active. The web app at `index.html` is **frozen at v0.3** and remains the reference implementation. The native app is a **clean SwiftUI + AVAudioEngine + CoreMIDI rewrite**, not a wrapped WebView. The two surfaces are intentionally independent — no progress migration in either direction.
+Active — supersedes the v0.3 card-system plan (shipped via PR #5 / #8 / #10). The web app at `index.html` is **frozen at v0.3** and remains the reference implementation. The native app is a **clean SwiftUI + AVAudioEngine + CoreMIDI rewrite**, not a wrapped WebView. The two surfaces are intentionally independent — no progress migration in either direction.
 
 ## Goal
 
 Ship drumrot / SP-808 KILLA as a native Swift/SwiftUI iPadOS app — **one iPad-first App Store/TestFlight app**, available on Apple silicon Macs as the iPad app where compatible — with real **CoreMIDI** input from a hardware drum controller, low-latency rhythm-game-quality response, and a visual experience that matches the existing SP-808 web UI exactly: v0.3 card chrome, 6-lane highway, 5-tab information architecture, chassis/readout styling, and all current functionality.
 
-## Plan ID ↔ GitHub issue crosswalk
-
-The issue table below uses **plan IDs #20–#60** (numbering leaves room for open web-side follow-ups like favicon #6). When filed on GitHub on 2026-05-26 the repo's shared issue/PR sequence was already at #11, so the live GitHub numbers are offset by **−8**:
-
-| Plan ID | GitHub # | Plan ID | GitHub # | Plan ID | GitHub # |
-|---|---|---|---|---|---|
-| 20 | #12 | 34 | #26 | 48 | #40 |
-| 21 | #13 | 35 | #27 | 49 | #41 |
-| 22 | #14 | 36 | #28 | 50 | #42 |
-| 23 | #15 | 37 | #29 | 51 | #43 |
-| 24 | #16 | 38 | #30 | 52 | #44 |
-| 25 | #17 | 39 | #31 | 53 | #45 |
-| 26 | #18 | 40 | #32 | 54 | #46 |
-| 27 | #19 | 41 | #33 | 55 | #47 |
-| 28 | #20 | 42 | #34 | 56 | #48 |
-| 29 | #21 | 43 | #35 | 57 | #49 |
-| 30 | #22 | 44 | #36 | 58 | #50 |
-| 31 | #23 | 45 | #37 | 59 | #51 |
-| 32 | #24 | 46 | #38 | 60 | #52 |
-| 33 | #25 | 47 | #39 | | |
-
-**Rule:** `GitHub# = plan ID − 8`. Dependencies in the filed GitHub issues are expressed in live GitHub numbers; the issue table below keeps plan IDs for readability.
-
-## Locked decisions (from upfront orchestrator alignment, 2026-05-21)
+## Locked decisions (from upfront orchestrator alignment)
 
 | Decision | Choice | Reason on record |
 |---|---|---|
@@ -113,6 +88,18 @@ Before the full plan runs, **issues #20–#21 build a 1-screen prototype**:
 
 If this builds on iPad simulator, runs as the iPad app on Apple silicon Mac where available, plays a sample, and lists a real/virtual MIDI source, the architecture is proven. Everything after is volume, not risk.
 
+## Clarification interview
+
+**Round 1 (orchestrator upfront alignment, complete):**
+- Architecture → fully native Swift/SwiftUI, no WKWebView wrapper.
+- Platform → iPad main; Apple silicon Mac runs the iPad app where compatible.
+- MIDI → hard requirement v1.
+- Distribution → App Store/TestFlight.
+- UX → exact same SP-808 web UI.
+- Latency → low latency is vital.
+
+**Round 2 skipped** — remaining choices (minimum OS, monetization, accessibility scope, localization, privacy posture, audio engine, render engine, persistence layer) are reasonable-default decisions made by the planner below. User can redirect any at issue-review time without re-interview.
+
 ## Decisions made by the planner (redirect any of these before issue creation)
 
 | # | Decision | Rationale | Cost to flip later |
@@ -137,7 +124,7 @@ If this builds on iPad simulator, runs as the iPad app on Apple silicon Mac wher
 
 - **A1.** Whether the user has an Apple Developer Program enrollment already, or whether enrollment is part of the v1 timeline.
 - **A2.** Whether the existing **drum sounds** (synthesized at runtime by `js/audio.js` from Web Audio oscillators / noise buffers) translate 1:1 to AVAudioEngine synthesis, OR whether v1 ships pre-rendered sample WAVs. If WAVs: source/license must be confirmed before submission.
-- **A3.** Final **app icon**. Current web favicon is a 404 (open issue [#6](https://github.com/ajhochy/drumpad/issues/6)). App Store requires a 1024×1024 PNG plus a full Asset Catalog set.
+- **A3.** Final **app icon**. Current web favicon is a 404 (open issue [#6](https://github.com/ajhochy/drumrot/issues/6) on the web side). App Store requires a 1024×1024 PNG plus a full Asset Catalog set.
 - **A4.** Voxel-art licensing — whether the 31 portraits in `art/drumrots/` are original, commissioned, or sourced, and whether they are commercially redistributable on the App Store.
 - **A5.** Whether any drumrot names / portraits read as direct parody of trademarked characters (review pre-submission).
 
@@ -178,7 +165,7 @@ These five surface before Phase 7. They don't block any earlier phase.
 - [Running your iOS apps in macOS](https://developer.apple.com/documentation/apple-silicon/running-your-ios-apps-in-macos)
 - [Manage availability of iPhone and iPad apps on Macs with Apple silicon](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-of-iphone-and-ipad-apps-on-macs-with-apple-silicon/)
 
-## Existing web feature inventory
+## Existing web feature inventory (preserved from prior planning pass; light edits)
 
 ### App shell
 - `index.html` defines a single app shell with tabs: Play, Library, Progress, Build, Drops.
@@ -334,9 +321,9 @@ ios/SP808Killa/
 
 ### Native APIs
 - **AVFoundation / AVAudioEngine** for drum + click synthesis (Phase 3).
-- **CoreMIDI** for device enumeration and note input (Phase 8).
-- **UniformTypeIdentifiers** (`UTType.midi`) + document picker / exporter for MIDI file I/O (Phase 8).
-- **SwiftData** for persistence (Phase 4).
+- **CoreMIDI** for device enumeration and note input (Phase 12).
+- **UniformTypeIdentifiers** (`UTType.midi`) + document picker / exporter for MIDI file I/O (Phase 11).
+- **SwiftData** for persistence (Phase 2).
 - **XCTest** + **XCUITest** + **swift-snapshot-testing** for tests.
 
 ### Audio engine details
@@ -425,24 +412,23 @@ Debug-only Settings entry: "Export progress (JSON)" / "Import progress (JSON)" �
 - App Store Connect record: name, subtitle, bundle id, age rating 4+, category Games > Music, screenshots (4-6 per device class), 30 s app preview video.
 - **Privacy nutrition label: "Data Not Collected."**
 - Required device capabilities: `audio-output`.
-- Capabilities (target Signing & Capabilities — iPad-only target):
-  - **Bluetooth** — required for BLE MIDI pairing.
-  - **Local network** — required for Network MIDI.
-  - **User-selected file access** via the iOS document picker / exporter for MIDI import/export (no persistent file-access entitlement needed).
-  - **No macOS App Sandbox entitlements.** This is an iPad-only target; it runs on Apple silicon Mac as the iPad app and inherits the iOS capability model. If a separate Mac/Catalyst target is ever added in v1.1, it will need its own sandbox entitlements (`com.apple.security.app-sandbox`, `device.bluetooth`, `device.usb`, `network.client`, `files.user-selected.read-only`).
-- Info.plist usage descriptions (required):
+- Entitlements/capabilities (`SP808Killa.entitlements` / target Signing & Capabilities):
+  - Bluetooth capability/usage where required for BLE MIDI.
+  - Local network usage for Network MIDI.
+  - User-selected file access through iOS document picker/exporter APIs for MIDI file import/export.
+- Info.plist usage descriptions:
   - `NSBluetoothAlwaysUsageDescription` = "drumrot uses Bluetooth to connect to wireless MIDI drum controllers."
   - `NSLocalNetworkUsageDescription` = "drumrot uses your local network to receive MIDI from network MIDI sources."
   - `NSBonjourServices` = `["_apple-midi._udp"]` (required for iOS 14+ Network MIDI discovery).
 - No background modes declared.
 - No tracking, no IDFA, no SKAdNetwork.
-- **No audio-input usage description and no recording entitlement** — the app does not record audio.
+- No audio input usage description or recording entitlement (we don't record audio).
 
 ## Implementation phases
 
 Phase numbering aligns with the Issue Table below.
 
-| Phase | Theme | Issues (plan IDs) | Exit criteria |
+| Phase | Theme | Issues | Exit criteria |
 |---|---|---|---|
 | 0 | Project setup, asset pipeline, CI | #20–#23 | Xcode project builds + runs blank tab UI on iPad simulator and, where available, the iPad app on Apple silicon Mac; CI green; 31 voxel PNGs in Asset Catalog. |
 | 1 | Visual chassis & navigation | #24–#27 | All 5 tabs present, blank content, design system primitives exist, settings + SwiftData container working. |
@@ -458,7 +444,7 @@ Phase numbering aligns with the Issue Table below.
 
 ## Issue table
 
-(Plan IDs `#20`–`#60`. GitHub numbers are plan ID − 8; see the crosswalk above.)
+(Numbering picks up from `#20` to leave room for any open web-side follow-ups like favicon `#6`.)
 
 | Order | # | Title | Goal | Likely files | Tests / evaluation | Deps |
 |---|---|---|---|---|---|---|
@@ -500,7 +486,7 @@ Phase numbering aligns with the Issue Table below.
 | 36 | 55 | Snapshot test suite + CI integration | swift-snapshot-testing SPM dep; baseline images committed; runs in CI | `Tests/Snapshot/*.swift`, `Package.swift` | CI green; snapshot regression fails build | 36, 37, 38 |
 | 37 | 56 | XCUITest UI smoke suite | Tab nav, drop reveal, settings round-trip, builder load-into-player | `SP808KillaUITests/*.swift` | CI runs UI tests on iPad simulator; Apple silicon Mac click-through remains manual unless CI supports that destination | 24, 38, 41, 45, 50 |
 | 38 | 57 | Manual smoke checklist for native (iPad + iPad app on Mac) | `docs/testing/manual-smoke.md` extended with iPad + Apple silicon Mac sections, per-MIDI-transport coverage | `docs/testing/manual-smoke.md` | Single checklist Markdown; aliases the existing web smoke doc | 49, 50, 53 |
-| 39 | 58 | Privacy + entitlements audit + ASC privacy label | Verify Info.plist usage descriptions; capabilities complete; draft "Data Not Collected" privacy label | `Info.plist`, `SP808Killa.entitlements`, `docs/app-store/privacy-label.md` | TestFlight build accepted by ASC with drafted label | 50 |
+| 39 | 58 | Privacy + entitlements audit + ASC privacy label | Verify Info.plist usage descriptions; entitlements complete; draft "Data Not Collected" privacy label | `Info.plist`, `SP808Killa.entitlements`, `docs/app-store/privacy-label.md` | TestFlight build accepted by ASC with drafted label | 50 |
 | 40 | 59 | App Store Connect record + screenshots + 30 s preview | Populate ASC; capture 4-6 screenshots per device class; record preview video | `docs/app-store/{screenshots,preview-script.md}` | Record reaches "Ready for Review" state | 54, 57, 58 |
 | 41 | 60 | TestFlight build + external testers + final smoke | Upload archive; invite ≥3 external testers via public link; collect smoke notes | (uploads + tracking, no code) | TestFlight build accepted; ≥3 testers complete a session; smoke passes | 59 |
 
@@ -561,14 +547,6 @@ Phase numbering aligns with the Issue Table below.
 - Do not hard-code signing team ids, certificates, or provisioning profile paths.
 - Do not commit any audio files unless their license is documented.
 
-## Non-goals
-
-- Adding new drumrots, lessons, or content.
-- WKWebView/JavaScriptCore shipping architecture.
-- Separate macOS/Catalyst target in v1.
-- iPhone target in v1.
-- Cross-device sync or web→iPad progress migration in v1.
-
 ## Glossary
 
 - **iPad app on Mac** — Apple's Apple silicon Mac path for running compatible iPhone/iPad apps from the Mac App Store without adding a separate Mac target.
@@ -579,3 +557,21 @@ Phase numbering aligns with the Issue Table below.
 - **ProMotion** — Apple's 120 Hz display tech on iPad Pro models.
 - **Strike line** — the visual line where the player must hit the note.
 - **SP-808** — the visual / brand identity of the app.
+
+## Next in chain
+
+Hand off to `issue-writer` to convert this issue table into `docs/ai/generated-issues/*.md` files (one per row, 41 files). User has **not** confirmed remote `gh issue create` — issue-writer should produce local files only, then ask the user whether to push them to GitHub.
+
+## Completion checklist
+
+- [x] Plan is written to `docs/ai/current-plan.md`
+- [x] Clarification interview completed (round 1 captured; round 2 skipped with rationale)
+- [x] Acceptance criteria are concrete or listed under `## Known ambiguities`
+- [x] Issues are atomic
+- [x] Dependencies are clear (every issue lists `Deps` column)
+- [x] Tests / evaluation are specified per issue
+- [x] Data safety risks are documented
+- [x] Prior-art swarm dispatched + synthesized
+- [x] Locked decisions, planner decisions, and ambiguities surfaced separately
+- [x] Risk register written
+- [x] v1.1 backlog written

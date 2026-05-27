@@ -1,10 +1,15 @@
 # Project state
 
 ## Current focus
-Idle — Drumrot v0.3 card system shipped to `main`.
+iPadOS native port, Phase 0 ready. The plan comparison is **resolved**: Codex's iPad-first plan won over Claude's Mac Catalyst plan (matches the locked 2026-05-21 direction) and is now the source of truth in `docs/ai/current-plan.md`. Both planning passes preserved as historical artifacts (`codex-ios-plan.md`, `claudes-ios-plan.md`).
+
+Confirmed direction: Swift/SwiftUI, iPad-first, Apple silicon Mac via iPad app availability, hardware MIDI as the main v1 requirement, App Store/TestFlight distribution, exact SP-808 web UI parity, low-latency rhythm response. Audio = AVAudioEngine + synth buffers; highway = SpriteKit; persistence = SwiftData; MIDI transport order USB → Network → BLE.
 
 ## Branch
-`main`. Last merges: PR #5 (v0.3 card system, `f0927d31`), PR #8 (portrait-rendering fix, `5fff600`), PR #10 (virtual MIDI test source, `ac00810`).
+`workflow/run-2026-05-26` (this run: plan promotion + 41 issues filed). Off `main`. Last merges: PR #5 (v0.3 card system, `f0927d31`), PR #8 (portrait-rendering fix, `5fff600`), PR #10 (virtual MIDI test source, `ac00810`).
+
+## iOS port issues (filed 2026-05-26)
+All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20–#60; **GitHub# = plan ID − 8**. Crosswalk table is at the top of `current-plan.md`. Dependencies in the filed issue bodies use live GitHub numbers. Local issue files: `docs/ai/generated-issues/*.md`. Phase 0 = #12–#15 (bootstrap, prototype, asset pipeline, CI).
 
 ## Recently completed (2026-05-20 → 2026-05-21)
 - **PR #5** — Issues #1–#4, v0.3 card system:
@@ -16,7 +21,9 @@ Idle — Drumrot v0.3 card system shipped to `main`.
 - **PR #10** — Virtual MIDI test source. `scripts/midi-pulse.mjs` opens a system-visible CoreMIDI port (`Drumrot Test Source`) and pulses GM drum notes; Chrome's Web MIDI API enumerates it like a hardware controller, exercising the real receive path in `js/midi-device.js`. Confirmed working — app catches the notes.
 
 ## In progress
-n/a
+- `docs/ai/current-plan.md` is the canonical iPadOS port plan (promoted from Codex's pass 2026-05-26, with a tightened iPad-only entitlements section grafted from Claude's pass).
+- 41 issues filed (#12–#52); awaiting Phase 0 implementation start.
+- `docs/ai/decisions.md` records the plan-comparison outcome and issue-filing (2026-05-26 entry).
 
 ## Risks / known gaps
 - **#6 (favicon 404)** — open follow-up filed from PR #5 smoke. Single console error on hard load; not user-facing.
@@ -24,4 +31,4 @@ n/a
 - **Playwright smoke** still does not assert pixel painting on portraits — only the manual smoke checklist does. Worth adding a Playwright spec that asserts `naturalWidth > 0` and `rect.width > 0` on `.portrait-img` after the reveal animation.
 
 ## Next step
-When ready, pick up #6 (favicon) or strengthen the Playwright smoke to catch pixel-paint regressions. No active workflow run.
+Start Phase 0: implement #12 (bootstrap `ios/SP808Killa` Xcode project) → #13 (1-screen prototype: card + AVAudioEngine sample + CoreMIDI enumeration) → #14 (asset pipeline) → #15 (CI). Resolve Apple Developer enrollment (Ambiguity A1) before Phase 7. Web-side follow-ups remain #6 (favicon) and stronger portrait pixel-paint smoke.
