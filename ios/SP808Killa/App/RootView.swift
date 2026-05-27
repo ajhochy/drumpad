@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct RootView: View {
-    enum Tab: Hashable { case play, library, progress, build, drops }
+    enum Tab: String, Hashable { case play, library, progress, build, drops }
 
-    @State private var selection: Tab = .play
+    @EnvironmentObject private var store: AppStore
 
     var body: some View {
-        TabView(selection: $selection) {
+        TabView(selection: $store.selectedTab) {
             PlayView()
                 .tabItem { Label("Play", systemImage: "music.note.list") }
                 .tag(Tab.play)
@@ -24,10 +24,25 @@ struct RootView: View {
                 .tag(Tab.drops)
         }
         .tint(SPColor.accentGreen)
+        .overlay(alignment: .topTrailing) {
+            Button { store.showSettings = true } label: {
+                Image(systemName: "gearshape.fill")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+                    .padding(10)
+            }
+            .accessibilityLabel("Settings")
+            .padding(.trailing, 8)
+        }
+        .sheet(isPresented: $store.showSettings) {
+            SettingsView()
+        }
     }
 }
 
 #Preview {
     RootView()
+        .environmentObject(AppStore())
+        .modelContainer(AppModelContainer.make(inMemory: true))
         .preferredColorScheme(.dark)
 }

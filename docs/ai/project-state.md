@@ -30,6 +30,13 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - **#13 (prototype) folded forward** — rather than a throwaway 1-screen prototype, the real architecture is proven by the building/launching skeleton; the audio-tap + MIDI-enumeration parts of #13 are delivered for real in Phase 3 (#24) and Phase 8 (#41).
 - **#46 / #6 local asset pass (Codex)** — `scripts/generate-app-icon.py` creates an original SP-style pad-device mark (no external API / no source image). Generated `AppIcon-1024.png` (1024 RGB, no alpha), `LaunchMark.imageset`, `App/LaunchScreen.swift`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`; `index.html` links the favicon. **Now validated inside the Xcode target** (AppIcon compiles in the build above).
 
+## Phase 1 — chassis, design system, Settings, AppStore (DONE, sim-verified)
+- **#16** root TabView (5 tabs) shipped in Phase 0; now bound to `AppStore.selectedTab`.
+- **#17 design system:** `DesignSystem/Theme/ColorHex.swift` (`Color(hex:)` + `DrumrotTier.color`/`PracticeTier.color`), `Typography.swift` (`SPFont` mono/display), controls `LED`, `PadButton`, `BpmStepper` (40–200 clamp). `SPColor` palette from Phase 0.
+- **#18 Settings + SwiftData:** `Data/AppSettings.swift` (`@Model` singleton: midiDeviceUID, audioLatencyOffsetMs, haptics, reduceMotionOverride, lastTab, schemaVersion), `Data/AppModelContainer.swift` (schema + factory, `inMemory` for tests/previews), `Features/Settings/SettingsView.swift` (Form bound to the settings row; gear button in `RootView` opens it as a sheet).
+- **#19 AppStore:** `@MainActor` `ObservableObject` (selectedTab, showSettings, modelContext handle), injected via `.environmentObject` + `.modelContainer` in `SP808KillaApp`.
+- **Verified:** BUILD + all 4 test suites pass; app launches on iPad (A16) sim with the gear button rendering. NOTE: benign first-launch CoreData "Application Support missing → recovery successful" log in the sim; self-heals, real devices unaffected.
+
 ## Phase 2 — domain parity (DONE, all tests green)
 - **Hosted unit-test target `SP808KillaTests`** added to pbxproj + scheme (TEST_HOST = app). 4 parity suites, all passing on iPad (A16) sim: **TEST SUCCEEDED**.
 - **#20 drumrots:** `Drumrots.json` (31; tiers 4/4/5/4/4/2/8) via `/tmp/port_drumrots.py`; `DrumrotTier`/`Drumrot`+`DrumrotCatalog`/`DropRoller` (verbatim `rollDrumrot`, injectable RNG, 5% OG, per-difficulty weights)/`DrumrotCollection` (upgrade-only). `DrumrotParityTests` (8).
