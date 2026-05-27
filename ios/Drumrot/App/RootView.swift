@@ -5,35 +5,45 @@ struct RootView: View {
 
     @EnvironmentObject private var store: AppStore
 
+    private var spTabBinding: Binding<SPTab> {
+        Binding(
+            get: { SPTab(rawValue: store.selectedTab.rawValue) ?? .play },
+            set: { store.selectedTab = Tab(rawValue: $0.rawValue) ?? .play }
+        )
+    }
+
+    private var midiConnectedBinding: Binding<Bool> {
+        Binding(get: { !store.midi.sources.isEmpty }, set: { _ in })
+    }
+
     var body: some View {
-        TabView(selection: $store.selectedTab) {
-            PlayView()
-                .tabItem { Label("Play", systemImage: "music.note.list") }
-                .tag(Tab.play)
-            LibraryView()
-                .tabItem { Label("Library", systemImage: "books.vertical") }
-                .tag(Tab.library)
-            ProgressTabView()
-                .tabItem { Label("Progress", systemImage: "chart.bar") }
-                .tag(Tab.progress)
-            BuildView()
-                .tabItem { Label("Build", systemImage: "slider.horizontal.3") }
-                .tag(Tab.build)
-            DropsView()
-                .tabItem { Label("Drops", systemImage: "square.grid.3x3.fill") }
-                .tag(Tab.drops)
-        }
-        .tint(SPColor.accentGreen)
-        .overlay(alignment: .topTrailing) {
-            Button { store.showSettings = true } label: {
-                Image(systemName: "gearshape.fill")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-                    .padding(10)
+        ZStack {
+            RadialGradient(
+                colors: [Color(hex: 0x2A2D35), SPColor.roomBG, SPColor.plastic],
+                center: .init(x: 0.3, y: 0), startRadius: 0, endRadius: 1400
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                SPLidBar(
+                    selection: spTabBinding,
+                    midiConnected: midiConnectedBinding,
+                    onOpenSettings: { store.showSettings = true }
+                )
+
+                ZStack {
+                    switch store.selectedTab {
+                    case .play:     PlayView()
+                    case .library:  LibraryView()
+                    case .progress: ProgressTabView()
+                    case .build:    BuildView()
+                    case .drops:    DropsView()
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .accessibilityLabel("Settings")
-            .padding(.trailing, 8)
         }
+        .preferredColorScheme(.dark)
         .sheet(isPresented: $store.showSettings) {
             SettingsView()
         }
@@ -50,7 +60,6 @@ struct RootView: View {
         .background { keyboardShortcuts }
     }
 
-    /// Hardware-keyboard shortcuts (iPad + iPad-app-on-Mac): Cmd+1…5 tabs, Cmd+,
     @ViewBuilder private var keyboardShortcuts: some View {
         Group {
             Button("") { store.selectedTab = .play }.keyboardShortcut("1", modifiers: .command)
