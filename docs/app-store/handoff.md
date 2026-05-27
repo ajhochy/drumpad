@@ -28,8 +28,8 @@ from here — they need your hardware, your Apple account, or App Store Connect.
 
 ## How to run what exists
 ```
-open ios/SP808Killa.xcodeproj      # scheme SP808Killa, iPad (A16) sim or device
-xcodebuild -project ios/SP808Killa.xcodeproj -scheme SP808Killa \
+open ios/Drumrot.xcodeproj      # scheme Drumrot, iPad (A16) sim or device
+xcodebuild -project ios/Drumrot.xcodeproj -scheme Drumrot \
   -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPad (A16)' test
 ```
 Debug launch args: `--play`, `--demo`, `--reveal`, `--library/--progress/--build/--drops`.

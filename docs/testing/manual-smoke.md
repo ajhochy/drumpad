@@ -37,7 +37,7 @@ Run on a real iPad (primary) and, where available, the iPad app on an Apple
 silicon Mac. The simulator covers UI/logic but **not** audio latency, MIDI
 hardware, BLE, or VoiceOver — those rows are device-only.
 
-Launch (dev): open `ios/SP808Killa.xcodeproj`, scheme `SP808Killa`, run on an
+Launch (dev): open `ios/Drumrot.xcodeproj`, scheme `Drumrot`, run on an
 iPad (A16+) sim or a connected device. Debug args: `--play`, `--demo`,
 `--reveal`, `--library/--progress/--build/--drops`.
 
