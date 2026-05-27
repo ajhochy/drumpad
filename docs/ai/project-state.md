@@ -30,6 +30,12 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - **#13 (prototype) folded forward** — rather than a throwaway 1-screen prototype, the real architecture is proven by the building/launching skeleton; the audio-tap + MIDI-enumeration parts of #13 are delivered for real in Phase 3 (#24) and Phase 8 (#41).
 - **#46 / #6 local asset pass (Codex)** — `scripts/generate-app-icon.py` creates an original SP-style pad-device mark (no external API / no source image). Generated `AppIcon-1024.png` (1024 RGB, no alpha), `LaunchMark.imageset`, `App/LaunchScreen.swift`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`; `index.html` links the favicon. **Now validated inside the Xcode target** (AppIcon compiles in the build above).
 
+## Phase 9 — accessibility + iPad-on-Mac + icon (DONE; on-device VoiceOver = gate)
+- **#43 a11y:** cards/pads/settings have `accessibilityLabel`s; decorative LEDs hidden. Real VoiceOver navigation pass is a manual/device gate.
+- **#44 reduce-motion + dynamic type:** RevealOverlay + PadButton honor `accessibilityReduceMotion`; all text uses `.system(textStyle)` so it scales with Dynamic Type.
+- **#45 keyboard shortcuts:** RootView Cmd+1…5 (tabs) + Cmd+, (settings); PlayView Space/Cmd+R (restart), L (loop), C (click) — for iPad hardware keyboard + iPad-app-on-Mac.
+- **#46 icon/launch:** Codex's AppIcon + LaunchScreen compiled into the target (Phase 0/5).
+
 ## Phase 8 — MIDI file I/O + CoreMIDI input (DONE; live hardware = gate)
 - **#39 parser:** `Domain/MIDIFile.swift` `MIDIFileParser` (SMF header/track, VLQ, running status, note-on, meta/sysex skip, SMPTE rejection) + `lesson(name:events:ppq:)` import (quantize ppq/2). `Domain/GMDrumMapper.swift`.
 - **#40 exporter:** `MIDIFileExporter` (Type-0, ch10, PPQ96, tempo meta, GM notes [49,42,38,36,45,51]) — byte-compatible w/ web. `MIDIFileTests` (6): round-trip, SMF header, SMPTE/non-MIDI rejection, GM map, import quantize. TEST SUCCEEDED.

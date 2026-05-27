@@ -7,6 +7,7 @@ struct PadButton: View {
     var action: () -> Void
 
     @State private var pulse = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button {
@@ -27,8 +28,8 @@ struct PadButton: View {
                         .stroke(color.opacity(pulse ? 1.0 : 0.5), lineWidth: pulse ? 2.5 : 1.5)
                 )
                 .foregroundStyle(color)
-                .scaleEffect(pulse ? 0.97 : 1)
-                .animation(.easeOut(duration: 0.1), value: pulse)
+                .scaleEffect(reduceMotion ? 1 : (pulse ? 0.97 : 1))
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.1), value: pulse)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(label) pad")

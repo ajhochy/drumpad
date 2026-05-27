@@ -25,6 +25,7 @@ struct PlayView: View {
             }
             .padding(12)
         }
+        .background { transportShortcuts }
         .onAppear {
             store.activateAudio()
             store.midi.onNote = { lane, _ in hit(lane) }
@@ -131,6 +132,22 @@ struct PlayView: View {
             }
         }
         .tint(SPColor.accentGreen)
+    }
+
+    /// Hardware-keyboard transport: Space/Cmd+R restart, L loop, C click.
+    @ViewBuilder private var transportShortcuts: some View {
+        Group {
+            Button("") { restart() }.keyboardShortcut(.space, modifiers: [])
+            Button("") { restart() }.keyboardShortcut("r", modifiers: .command)
+            Button("") { loop.toggle() }.keyboardShortcut("l", modifiers: [])
+            Button("") { clickOn.toggle() }.keyboardShortcut("c", modifiers: [])
+        }
+        .opacity(0).frame(width: 0, height: 0).accessibilityHidden(true)
+    }
+
+    private func restart() {
+        engine.load(engine.lesson ?? LessonCatalog.all[0], loop: loop)
+        engine.start()
     }
 
     private func laneColor(_ lane: DrumLane) -> Color {
