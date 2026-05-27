@@ -30,6 +30,11 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - **#13 (prototype) folded forward** — rather than a throwaway 1-screen prototype, the real architecture is proven by the building/launching skeleton; the audio-tap + MIDI-enumeration parts of #13 are delivered for real in Phase 3 (#24) and Phase 8 (#41).
 - **#46 / #6 local asset pass (Codex)** — `scripts/generate-app-icon.py` creates an original SP-style pad-device mark (no external API / no source image). Generated `AppIcon-1024.png` (1024 RGB, no alpha), `LaunchMark.imageset`, `App/LaunchScreen.swift`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`; `index.html` links the favicon. **Now validated inside the Xcode target** (AppIcon compiles in the build above).
 
+## Phase 3 — audio / AVAudioEngine (DONE, synthesis tested; real latency = hardware gate)
+- **#24:** `Audio/VoiceSynth.swift` ports `js/audio.js` drumSound (kick sine sweep 120→40, snare highpass-1500 shaped noise, tom bandpass-350, crash/hihat/ride highpass white noise w/ web durations 0.6/0.08/0.35) via an RBJ `Biquad`; preloaded PCM buffers. `Audio/DrumAudioEngine.swift` (AVAudioEngine + 8-node pool, `play(lane:velocity:)`).
+- **#25:** `Audio/ClickSynth.swift` (square 1800/1100 accent/normal) + `Audio/AudioSessionManager.swift` (.playback + .mixWithOthers, 5ms IO buffer, interruption + route-change handlers → engine stop/restart).
+- **Tests:** `VoiceSynthTests` (3) — per-lane buffer durations, non-silent + in-range PCM, accent louder than normal. TEST SUCCEEDED. NOTE: audible output + ≤10ms latency must be confirmed on real iPad (hardware gate, not sim-verifiable).
+
 ## Phase 5 — Drops + card chrome + reveal (DONE, sim-verified)
 - **#14 asset pipeline:** `scripts/export-drumrots-png.py` (Pillow) → 31 `<id>.imageset` under `Assets.xcassets/drumrots/`. `Image(drumrot.imageName)` (== id) resolves portraits.
 - **#28 card:** `DesignSystem/Cards/DrumrotCardView.swift` — tier banner (★ LABEL + #NNN, OG → #NNN/OG), portrait (image over emoji fallback), name plate, flavor, stats (OG → ∞/∞/MAX; power 99 → MAX), footer, locked `???` variant, a11y label.
