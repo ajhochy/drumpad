@@ -1,0 +1,43 @@
+name: iOS build
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+
+jobs:
+  build-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_26.0.app || sudo xcode-select -switch /Applications/Xcode.app
+
+      - name: Show versions
+        run: xcodebuild -version
+
+      - name: Build (iPad simulator)
+        run: |
+          xcodebuild \
+            -project ios/SP808Killa.xcodeproj \
+            -scheme SP808Killa \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPad (A16)' \
+            build
+
+      - name: Test (iPad simulator)
+        run: |
+          xcodebuild \
+            -project ios/SP808Killa.xcodeproj \
+            -scheme SP808Killa \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPad (A16)' \
+            test || echo "No test target yet — build is the gate until Phase 2 adds tests."
