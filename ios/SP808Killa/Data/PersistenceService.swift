@@ -10,7 +10,7 @@ struct PersistenceService {
 
     /// Records a completed pass for a lesson, returning the (created/updated) row.
     @discardableResult
-    func recordPass(lessonKey: String, score: Int, accuracy: Int) -> LessonScore {
+    func recordPass(lessonKey: String, score: Int, accuracy: Int, tier: Int? = nil) -> LessonScore {
         let row = fetchOne(LessonScore.self, #Predicate { $0.lessonKey == lessonKey }) ?? {
             let created = LessonScore(lessonKey: lessonKey)
             context.insert(created)
@@ -20,6 +20,7 @@ struct PersistenceService {
         row.stars = max(row.stars, ScoringEngine.stars(accuracy: accuracy))
         row.plays += 1
         row.lastAccuracy = accuracy
+        if let tier { row.practiceTier = max(row.practiceTier, tier) }
         row.updatedAt = .now
         return row
     }

@@ -40,6 +40,13 @@ struct RootView: View {
         .fullScreenCover(item: $store.currentReveal) { item in
             RevealOverlay(item: item) { store.dismissCurrentReveal() }
         }
+        .overlay(alignment: .top) {
+            if let toast = store.currentToast {
+                AchievementToast(achievement: toast)
+                    .padding(.top, 60)
+            }
+        }
+        .animation(.spring(response: 0.4), value: store.currentToast)
     }
 }
 

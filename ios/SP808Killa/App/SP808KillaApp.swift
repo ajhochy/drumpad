@@ -29,8 +29,19 @@ struct SP808KillaApp: App {
         svc.collect(drumrotId: "bombardino_crashcino", tier: .epic)
         svc.collect(drumrotId: "lirili_beatlarila", tier: .mythic)
         svc.collect(drumrotId: "grande_maestro_drumbeano", tier: .og)
+        svc.recordPass(lessonKey: "Rock Beat 101", score: 5400, accuracy: 96,
+                       tier: PracticeTier.grooving.rawValue)
+        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"; fmt.timeZone = TimeZone(identifier: "UTC")
+        svc.recordPlayDay(fmt.string(from: Date()))
+        svc.unlock("first_hit"); svc.unlock("groove_master")
         try? container.mainContext.save()
         store.selectedTab = .drops
+
+        if let tabArg = CommandLine.arguments.first(where: {
+            ["--library", "--progress", "--build", "--drops"].contains($0)
+        }), let tab = RootView.Tab(rawValue: String(tabArg.dropFirst(2))) {
+            store.selectedTab = tab
+        }
 
         if CommandLine.arguments.contains("--reveal"),
            let og = DrumrotCatalog.all.first(where: { $0.tier == .og }) {

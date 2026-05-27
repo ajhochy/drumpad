@@ -35,6 +35,11 @@ struct PlayView: View {
         .onChange(of: engine.phase) { _, phase in
             if phase == .finished { persistPass() }
         }
+        .onChange(of: store.currentLesson) { _, lesson in
+            guard let lesson else { return }
+            engine.load(lesson, loop: loop)
+            if store.autoStartPlay { engine.start(); store.autoStartPlay = false }
+        }
     }
 
     // MARK: readout
@@ -88,7 +93,9 @@ struct PlayView: View {
 
     private func hit(_ lane: DrumLane) {
         store.audio.play(lane: lane)
-        _ = engine.registerHit(lane: lane.rawValue)
+        if engine.registerHit(lane: lane.rawValue) != nil {
+            store.achievements?.fire(.hit(combo: engine.combo))
+        }
     }
 
     // MARK: rail
@@ -137,9 +144,20 @@ struct PlayView: View {
 
     private func persistPass() {
         guard let lesson = engine.lesson, let p = store.persistence else { return }
-        p.recordPass(lessonKey: lesson.name, score: engine.score, accuracy: engine.accuracy)
+        let acc = engine.accuracy
+        let isPrebuilt = LessonCatalog.all.contains { $0.name == lesson.name }
+        let tier = isPrebuilt ? PracticeTier.forPass(accuracy: acc, bpm: engine.bpm, lessonBpm: lesson.bpm)?.rawValue : nil
+        p.recordPass(lessonKey: lesson.name, score: engine.score, accuracy: acc, tier: tier)
         let fmt = DateFormatter()
         fmt.dateFormat = "yyyy-MM-dd"; fmt.timeZone = TimeZone(identifier: "UTC")
         p.recordPlayDay(fmt.string(from: Date()))
+        store.achievements?.fire(.pass(
+            accuracy: acc,
+            stars: ScoringEngine.stars(accuracy: acc),
+            bpm: engine.bpm,
+            lessonKey: lesson.name,
+            lessonBpm: isPrebuilt ? lesson.bpm : nil,
+            isPrebuilt: isPrebuilt
+        ))
     }
 }

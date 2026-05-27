@@ -12,16 +12,19 @@ final class LessonScore {
     var stars: Int
     var plays: Int
     var lastAccuracy: Int
+    /// Highest practice tier reached (PracticeTier.rawValue; -1 = none).
+    var practiceTier: Int
     var updatedAt: Date
     var schemaVersion: Int
 
     init(lessonKey: String, high: Int = 0, stars: Int = 0, plays: Int = 0,
-         lastAccuracy: Int = 0, updatedAt: Date = .now, schemaVersion: Int = 1) {
+         lastAccuracy: Int = 0, practiceTier: Int = -1, updatedAt: Date = .now, schemaVersion: Int = 1) {
         self.lessonKey = lessonKey
         self.high = high
         self.stars = stars
         self.plays = plays
         self.lastAccuracy = lastAccuracy
+        self.practiceTier = practiceTier
         self.updatedAt = updatedAt
         self.schemaVersion = schemaVersion
     }

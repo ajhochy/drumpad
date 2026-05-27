@@ -56,8 +56,32 @@ final class AppStore: ObservableObject {
     /// Set once the SwiftData context is available (Phase 4 wires persistence here).
     private(set) var modelContext: ModelContext?
 
+    // Achievement engine + toast.
+    private(set) var achievements: AchievementEngine?
+    @Published var currentToast: Achievement?
+    private var toastQueue: [Achievement] = []
+    var consecutiveAccuratePasses = 0
+
     func attach(modelContext: ModelContext) {
         self.modelContext = modelContext
+        let engine = AchievementEngine(context: modelContext)
+        engine.store = self
+        self.achievements = engine
+    }
+
+    func enqueueToast(_ achievement: Achievement) {
+        toastQueue.append(achievement)
+        showNextToastIfIdle()
+    }
+
+    private func showNextToastIfIdle() {
+        guard currentToast == nil, !toastQueue.isEmpty else { return }
+        currentToast = toastQueue.removeFirst()
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            currentToast = nil
+            showNextToastIfIdle()
+        }
     }
 
     /// Write/upsert layer over the live context (nil before `attach`).
