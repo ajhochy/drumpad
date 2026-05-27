@@ -1,11 +1,9 @@
 import SwiftUI
-import SwiftData
 
 struct SettingsView: View {
     @EnvironmentObject private var store: AppStore
-    @Environment(\.modelContext) private var context
+    @EnvironmentObject private var persistence: PersistenceStore
     @Environment(\.dismiss) private var dismiss
-    @Query private var rows: [AppSettings]
     @State private var showBluetooth = false
     @State private var selectedSection: PanelSection = .midi
 
@@ -235,7 +233,9 @@ struct SettingsView: View {
                 "compensate for bluetooth or output lag"
             ) {
                 HStack(spacing: 8) {
-                    Button { settings.audioLatencyOffsetMs = max(-50, settings.audioLatencyOffsetMs - 1) } label: {
+                    Button {
+                        persistence.updateSettings { $0.audioLatencyOffsetMs = max(-50, $0.audioLatencyOffsetMs - 1) }
+                    } label: {
                         Image(systemName: "minus")
                             .frame(width: 30, height: 30)
                             .background(SPColor.ink)
@@ -251,7 +251,9 @@ struct SettingsView: View {
                         .background(SPColor.lcdBG)
                         .overlay(RoundedRectangle(cornerRadius: 4).stroke(.black, lineWidth: 1))
                         .clipShape(RoundedRectangle(cornerRadius: 4))
-                    Button { settings.audioLatencyOffsetMs = min(50, settings.audioLatencyOffsetMs + 1) } label: {
+                    Button {
+                        persistence.updateSettings { $0.audioLatencyOffsetMs = min(50, $0.audioLatencyOffsetMs + 1) }
+                    } label: {
                         Image(systemName: "plus")
                             .frame(width: 30, height: 30)
                             .background(SPColor.ink)
@@ -341,22 +343,21 @@ struct SettingsView: View {
 
     // MARK: - Settings access
 
-    private var settings: AppSettings {
-        if let existing = rows.first { return existing }
-        let created = AppSettings()
-        context.insert(created)
-        return created
-    }
+    private var settings: AppSettings { persistence.settings }
 
-    private func bind<Value>(_ keyPath: ReferenceWritableKeyPath<AppSettings, Value>) -> Binding<Value> {
-        let s = settings
-        return Binding(get: { s[keyPath: keyPath] }, set: { s[keyPath: keyPath] = $0 })
+    private func bind<Value>(_ keyPath: WritableKeyPath<AppSettings, Value>) -> Binding<Value> {
+        Binding(
+            get: { persistence.settings[keyPath: keyPath] },
+            set: { newValue in
+                persistence.updateSettings { $0[keyPath: keyPath] = newValue }
+            }
+        )
     }
 }
 
 #Preview {
     SettingsView()
-        .environmentObject(AppStore())
-        .modelContainer(AppModelContainer.make(inMemory: true))
+        .environmentObject(AppStore(persistence: PersistenceStore(defaults: nil)))
+        .environmentObject(PersistenceStore(defaults: nil))
         .preferredColorScheme(.dark)
 }

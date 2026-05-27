@@ -1,9 +1,8 @@
 import SwiftUI
-import SwiftData
 
 /// App-wide observable state + service handles, injected at the root.
-/// Persistent data lives in SwiftData; this holds transient UI state and
-/// (in later phases) the audio/MIDI/playback engine handles.
+/// Persistent data lives in `PersistenceStore` (UserDefaults-backed); this
+/// holds transient UI state and the audio/MIDI/playback engine handles.
 @MainActor
 final class AppStore: ObservableObject {
     @Published var selectedTab: RootView.Tab = .play
@@ -54,8 +53,8 @@ final class AppStore: ObservableObject {
         currentReveal = revealQueue.removeFirst()
     }
 
-    /// Set once the SwiftData context is available (Phase 4 wires persistence here).
-    private(set) var modelContext: ModelContext?
+    /// Persistent data layer (UserDefaults-backed; iOS 16 compatible).
+    let persistence: PersistenceStore
 
     // Achievement engine + toast.
     private(set) var achievements: AchievementEngine?
@@ -63,9 +62,9 @@ final class AppStore: ObservableObject {
     private var toastQueue: [Achievement] = []
     var consecutiveAccuratePasses = 0
 
-    func attach(modelContext: ModelContext) {
-        self.modelContext = modelContext
-        let engine = AchievementEngine(context: modelContext)
+    init(persistence: PersistenceStore) {
+        self.persistence = persistence
+        let engine = AchievementEngine(persistence: persistence)
         engine.store = self
         self.achievements = engine
     }
@@ -83,10 +82,5 @@ final class AppStore: ObservableObject {
             currentToast = nil
             showNextToastIfIdle()
         }
-    }
-
-    /// Write/upsert layer over the live context (nil before `attach`).
-    var persistence: PersistenceService? {
-        modelContext.map(PersistenceService.init(context:))
     }
 }

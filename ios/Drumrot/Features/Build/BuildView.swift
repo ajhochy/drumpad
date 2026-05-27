@@ -1,9 +1,8 @@
 import SwiftUI
-import SwiftData
 
 struct BuildView: View {
     @EnvironmentObject private var store: AppStore
-    @Environment(\.modelContext) private var context
+    @EnvironmentObject private var persistence: PersistenceStore
 
     @State private var steps = 16
     @State private var grid = Array(repeating: Array(repeating: false, count: 16), count: 6)
@@ -46,8 +45,8 @@ struct BuildView: View {
 
     private var readout: some View {
         HStack(spacing: 14) {
-            Text("PAT").font(SPFont.monoSmall).tracking(2).foregroundStyle(SPColor.ledAmber)
-            + Text(" BUILD").font(SPFont.monoSmall).tracking(2).foregroundStyle(SPColor.lcdFG)
+            Text("PAT").font(SPFont.monoSmall).tracking(2).foregroundColor(SPColor.ledAmber)
+            + Text(" BUILD").font(SPFont.monoSmall).tracking(2).foregroundColor(SPColor.lcdFG)
 
             Text("CUSTOM PATTERN")
                 .font(SPFont.ui(15, weight: .bold)).tracking(0.6)
@@ -85,7 +84,7 @@ struct BuildView: View {
             }
             .pickerStyle(.segmented)
             .frame(width: 180)
-            .onChange(of: steps) { _, new in resize(to: new) }
+            .onChange(of: steps) { new in resize(to: new) }
 
             Rectangle().fill(SPColor.ink).frame(width: 1, height: 22).padding(.horizontal, 4)
 
@@ -396,27 +395,17 @@ struct BuildView: View {
     private func persistBuilderState() {
         let pattern = Dictionary(uniqueKeysWithValues: lanes.map { ($0.key, grid[$0.rawValue]) })
         let json = (try? JSONEncoder().encode(pattern)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
-        let existing = try? context.fetch(FetchDescriptor<BuilderState>()).first
-        if let row = existing ?? nil {
-            row.steps = steps; row.patternJSON = json; row.bpm = bpm; row.coachNote = coach
-        } else {
-            context.insert(BuilderState(steps: steps, patternJSON: json, bpm: bpm, coachNote: coach))
-        }
+        persistence.saveBuilder(BuilderState(steps: steps, patternJSON: json, bpm: bpm, coachNote: coach))
     }
 
     private func upsertExtraLesson(name: String, json: String) {
-        let existing = try? context.fetch(FetchDescriptor<ExtraLesson>()).first { $0.name == name }
-        if let row = existing ?? nil {
-            row.lessonJSON = json; row.createdAt = .now
-        } else {
-            context.insert(ExtraLesson(name: name, lessonJSON: json))
-        }
+        persistence.saveExtraLesson(name: name, lessonJSON: json)
     }
 }
 
 #Preview {
     BuildView()
-        .environmentObject(AppStore())
-        .modelContainer(AppModelContainer.make(inMemory: true))
+        .environmentObject(AppStore(persistence: PersistenceStore(defaults: nil)))
+        .environmentObject(PersistenceStore(defaults: nil))
         .preferredColorScheme(.dark)
 }

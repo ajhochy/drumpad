@@ -1,8 +1,8 @@
 import SwiftUI
-import SwiftData
 
 struct DropsView: View {
-    @Query private var collection: [DrumrotCollectionEntry]
+    @EnvironmentObject private var persistence: PersistenceStore
+    private var collection: [DrumrotCollectionEntry] { persistence.collection }
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 5)
 
@@ -155,6 +155,6 @@ struct DropsView: View {
 
 #Preview {
     DropsView()
-        .modelContainer(AppModelContainer.make(inMemory: true))
+        .environmentObject(PersistenceStore(defaults: nil))
         .preferredColorScheme(.dark)
 }

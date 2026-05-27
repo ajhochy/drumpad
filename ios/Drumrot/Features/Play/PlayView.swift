@@ -31,10 +31,10 @@ struct PlayView: View {
             }
             if store.autoStartPlay { engine.start(); store.autoStartPlay = false }
         }
-        .onChange(of: clickOn) { _, on in engine.metronomeEnabled = on }
-        .onChange(of: loop) { _, on in engine.loop = on }
-        .onChange(of: engine.phase) { _, phase in if phase == .finished { persistPass() } }
-        .onChange(of: store.currentLesson) { _, lesson in
+        .onChange(of: clickOn) { on in engine.metronomeEnabled = on }
+        .onChange(of: loop) { on in engine.loop = on }
+        .onChange(of: engine.phase) { phase in if phase == .finished { persistPass() } }
+        .onChange(of: store.currentLesson) { lesson in
             guard let lesson else { return }
             engine.load(lesson, loop: loop)
             if store.autoStartPlay { engine.start(); store.autoStartPlay = false }
@@ -261,7 +261,8 @@ struct PlayView: View {
     }
 
     private func persistPass() {
-        guard let lesson = engine.lesson, let p = store.persistence else { return }
+        guard let lesson = engine.lesson else { return }
+        let p = store.persistence
         let acc = engine.accuracy
         let isPrebuilt = LessonCatalog.all.contains { $0.name == lesson.name }
         let tier = isPrebuilt ? PracticeTier.forPass(accuracy: acc, bpm: engine.bpm, lessonBpm: lesson.bpm)?.rawValue : nil

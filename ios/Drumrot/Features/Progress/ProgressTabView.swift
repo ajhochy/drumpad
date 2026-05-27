@@ -1,10 +1,10 @@
 import SwiftUI
-import SwiftData
 
 struct ProgressTabView: View {
-    @Query private var playDays: [PracticeDay]
-    @Query private var scores: [LessonScore]
-    @Query private var unlocks: [AchievementUnlock]
+    @EnvironmentObject private var persistence: PersistenceStore
+    private var playDays: [PracticeDay] { persistence.playDays }
+    private var scores: [LessonScore] { persistence.scores }
+    private var unlocks: [AchievementUnlock] { persistence.unlocks }
 
     private var daySet: Set<String> { Set(playDays.map(\.day)) }
     private var unlockedIds: Set<String> { Set(unlocks.map(\.achievementId)) }
@@ -261,6 +261,6 @@ struct ProgressTabView: View {
 
 #Preview {
     ProgressTabView()
-        .modelContainer(AppModelContainer.make(inMemory: true))
+        .environmentObject(PersistenceStore(defaults: nil))
         .preferredColorScheme(.dark)
 }

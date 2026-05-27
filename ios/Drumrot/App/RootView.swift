@@ -77,7 +77,7 @@ struct RootView: View {
 
 #Preview {
     RootView()
-        .environmentObject(AppStore())
-        .modelContainer(AppModelContainer.make(inMemory: true))
+        .environmentObject(AppStore(persistence: PersistenceStore(defaults: nil)))
+        .environmentObject(PersistenceStore(defaults: nil))
         .preferredColorScheme(.dark)
 }

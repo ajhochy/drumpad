@@ -1,16 +1,13 @@
 import Foundation
-import SwiftData
 
 /// Evaluates achievement rules on game events (port of `checkAchievements`),
 /// unlocks new ones, and fires toast + drop-reveal through the AppStore.
 @MainActor
 final class AchievementEngine {
-    private let context: ModelContext
+    private let persistence: PersistenceStore
     weak var store: AppStore?
 
-    init(context: ModelContext) { self.context = context }
-
-    private var persistence: PersistenceService { PersistenceService(context: context) }
+    init(persistence: PersistenceStore) { self.persistence = persistence }
 
     enum Event {
         case hit(combo: Int)
@@ -46,12 +43,12 @@ final class AchievementEngine {
                 // (score/accuracy already recorded by the caller; this only lifts the tier)
             }
 
-            let streak = PracticeStreak.current(playDays: playDaySet())
+            let streak = PracticeStreak.current(playDays: Set(persistence.playDays.map(\.day)))
             if streak >= 3 { ids.append("streak_3") }
             if streak >= 7 { ids.append("streak_7") }
 
             let prebuilt = Set(LessonCatalog.all.map(\.name))
-            let scores = allScores()
+            let scores = persistence.scores
             let played = scores.filter { prebuilt.contains($0.lessonKey) }
             if played.count >= prebuilt.count { ids.append("all_grooves") }
             if played.filter({ $0.stars >= 3 }).count >= prebuilt.count { ids.append("graduate") }
@@ -69,19 +66,10 @@ final class AchievementEngine {
 
     private func award(_ id: String) {
         guard persistence.unlock(id) else { return }
-        try? context.save()
         guard let ach = AchievementCatalog.all.first(where: { $0.id == id }) else { return }
         store?.enqueueToast(ach)
         let roll = DropRoller.roll(achievementId: id) { Double.random(in: 0..<1) }
         let isNew = persistence.collect(drumrotId: roll.drumrot.id, tier: roll.tier)
-        try? context.save()
         store?.enqueueReveal(.init(drumrot: roll.drumrot, tier: roll.tier, fromAchievement: ach.name, isNew: isNew))
-    }
-
-    private func allScores() -> [LessonScore] {
-        (try? context.fetch(FetchDescriptor<LessonScore>())) ?? []
-    }
-    private func playDaySet() -> Set<String> {
-        Set(((try? context.fetch(FetchDescriptor<PracticeDay>())) ?? []).map(\.day))
     }
 }

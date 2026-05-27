@@ -1,12 +1,11 @@
 import SwiftUI
-import SwiftData
 import UniformTypeIdentifiers
 
 struct LibraryView: View {
     @EnvironmentObject private var store: AppStore
-    @Environment(\.modelContext) private var context
-    @Query private var scores: [LessonScore]
-    @Query private var playDays: [PracticeDay]
+    @EnvironmentObject private var persistence: PersistenceStore
+    private var scores: [LessonScore] { persistence.scores }
+    private var playDays: [PracticeDay] { persistence.playDays }
     @State private var showImporter = false
     @State private var importError: String?
     @State private var searchText = ""
@@ -419,8 +418,7 @@ struct LibraryView: View {
             let lesson = MIDIFileParser.lesson(name: name, events: parsed.events, ppq: parsed.ppq)
             if let json = try? JSONEncoder().encode(lesson),
                let str = String(data: json, encoding: .utf8) {
-                context.insert(ExtraLesson(name: name, lessonJSON: str))
-                try? context.save()
+                persistence.saveExtraLesson(name: name, lessonJSON: str)
             }
             load(lesson)
         } catch {
@@ -433,7 +431,7 @@ struct LibraryView: View {
 
 #Preview {
     LibraryView()
-        .environmentObject(AppStore())
-        .modelContainer(AppModelContainer.make(inMemory: true))
+        .environmentObject(AppStore(persistence: PersistenceStore(defaults: nil)))
+        .environmentObject(PersistenceStore(defaults: nil))
         .preferredColorScheme(.dark)
 }

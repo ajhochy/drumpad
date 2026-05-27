@@ -1,22 +1,24 @@
 import SwiftUI
-import SwiftData
 
 @main
 struct DrumrotApp: App {
-    @StateObject private var store = AppStore()
-    private let container = AppModelContainer.make()
+    @StateObject private var persistence: PersistenceStore
+    @StateObject private var store: AppStore
+
+    init() {
+        let p = PersistenceStore()
+        _persistence = StateObject(wrappedValue: p)
+        _store = StateObject(wrappedValue: AppStore(persistence: p))
+    }
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(store)
+                .environmentObject(persistence)
                 .preferredColorScheme(.dark)
-                .task {
-                    store.attach(modelContext: container.mainContext)
-                    seedDemoIfRequested()
-                }
+                .task { seedDemoIfRequested() }
         }
-        .modelContainer(container)
     }
 
     /// Debug-only: `--demo` seeds a few collected drumrots and opens Drops, so the
@@ -24,7 +26,7 @@ struct DrumrotApp: App {
     private func seedDemoIfRequested() {
         #if DEBUG
         guard CommandLine.arguments.contains("--demo") else { return }
-        let svc = PersistenceService(context: container.mainContext)
+        let svc = store.persistence
         svc.collect(drumrotId: "tung_tung_tamburino", tier: .common)
         svc.collect(drumrotId: "bombardino_crashcino", tier: .epic)
         svc.collect(drumrotId: "lirili_beatlarila", tier: .mythic)
@@ -34,7 +36,6 @@ struct DrumrotApp: App {
         let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"; fmt.timeZone = TimeZone(identifier: "UTC")
         svc.recordPlayDay(fmt.string(from: Date()))
         svc.unlock("first_hit"); svc.unlock("groove_master")
-        try? container.mainContext.save()
         store.selectedTab = .drops
 
         if let tabArg = CommandLine.arguments.first(where: {
