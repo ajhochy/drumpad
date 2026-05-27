@@ -9,6 +9,34 @@ final class AppStore: ObservableObject {
     @Published var selectedTab: RootView.Tab = .play
     @Published var showSettings = false
 
+    /// A drumrot drop awaiting its reveal overlay.
+    struct RevealItem: Identifiable, Equatable {
+        let id = UUID()
+        let drumrot: Drumrot
+        let tier: DrumrotTier
+        let fromAchievement: String
+        let isNew: Bool
+    }
+
+    @Published var currentReveal: RevealItem?
+    private var revealQueue: [RevealItem] = []
+
+    /// Queue a reveal; shows immediately if nothing is on screen.
+    func enqueueReveal(_ item: RevealItem) {
+        revealQueue.append(item)
+        showNextRevealIfIdle()
+    }
+
+    func dismissCurrentReveal() {
+        currentReveal = nil
+        showNextRevealIfIdle()
+    }
+
+    private func showNextRevealIfIdle() {
+        guard currentReveal == nil, !revealQueue.isEmpty else { return }
+        currentReveal = revealQueue.removeFirst()
+    }
+
     /// Set once the SwiftData context is available (Phase 4 wires persistence here).
     private(set) var modelContext: ModelContext?
 

@@ -37,6 +37,9 @@ struct RootView: View {
         .sheet(isPresented: $store.showSettings) {
             SettingsView()
         }
+        .fullScreenCover(item: $store.currentReveal) { item in
+            RevealOverlay(item: item) { store.dismissCurrentReveal() }
+        }
     }
 }
 
