@@ -135,13 +135,13 @@ If this builds on iPad simulator, runs as the iPad app on Apple silicon Mac wher
 
 ## Known ambiguities (resolve before Phase 7 — App Store submission)
 
-- **A1.** Whether the user has an Apple Developer Program enrollment already, or whether enrollment is part of the v1 timeline.
+- **A1. RESOLVED (2026-05-26).** User is already enrolled in the Apple Developer Program. Signing assets exist (App Store Connect API key + Developer ID Application certificates), stored in a local folder **outside this repo** on the user's machine. These must never be committed — load them into CI/TestFlight automation as secrets, not files in the tree.
 - **A2.** Whether the existing **drum sounds** (synthesized at runtime by `js/audio.js` from Web Audio oscillators / noise buffers) translate 1:1 to AVAudioEngine synthesis, OR whether v1 ships pre-rendered sample WAVs. If WAVs: source/license must be confirmed before submission.
 - **A3.** Final **app icon**. Current web favicon is a 404 (open issue [#6](https://github.com/ajhochy/drumpad/issues/6)). App Store requires a 1024×1024 PNG plus a full Asset Catalog set.
 - **A4.** Voxel-art licensing — whether the 31 portraits in `art/drumrots/` are original, commissioned, or sourced, and whether they are commercially redistributable on the App Store.
 - **A5.** Whether any drumrot names / portraits read as direct parody of trademarked characters (review pre-submission).
 
-These five surface before Phase 7. They don't block any earlier phase.
+A1 is resolved (see above); the remaining four (A2 drum-sound translation, A3 app icon, A4 voxel-art licensing, A5 parody-name review) surface before Phase 7. None block any earlier phase.
 
 ## Prior Art (Tier 3 swarm synthesis, 2026-05-20)
 
@@ -421,7 +421,7 @@ Debug-only Settings entry: "Export progress (JSON)" / "Import progress (JSON)" �
 - **Audio latency offset** (`AppSettings.audioLatencyOffsetMs`): user-tunable -50…+50 ms for BLE headphones / hearing aids.
 
 ### App Store compliance
-- Apple Developer Program enrollment ($99/yr; gated on Ambiguity A1).
+- Apple Developer Program: **enrolled** (A1 resolved). Signing assets (App Store Connect API key + Developer ID certificates) live outside the repo on the user's machine; load into CI/TestFlight as secrets, never commit.
 - App Store Connect record: name, subtitle, bundle id, age rating 4+, category Games > Music, screenshots (4-6 per device class), 30 s app preview video.
 - **Privacy nutrition label: "Data Not Collected."**
 - Required device capabilities: `audio-output`.
