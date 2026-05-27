@@ -9,6 +9,22 @@ final class AppStore: ObservableObject {
     @Published var selectedTab: RootView.Tab = .play
     @Published var showSettings = false
 
+    /// Lesson currently loaded into Play (set by Library; defaults to the first).
+    @Published var currentLesson: Lesson?
+    /// Debug: auto-start playback when Play appears (set by the `--play` launch arg).
+    var autoStartPlay = false
+
+    // Shared audio (activated on first Play appearance).
+    let audio = DrumAudioEngine()
+    private lazy var audioSession = AudioSessionManager(engine: audio)
+    private var audioActivated = false
+
+    func activateAudio() {
+        guard !audioActivated else { return }
+        audioActivated = true
+        audioSession.activate()
+    }
+
     /// A drumrot drop awaiting its reveal overlay.
     struct RevealItem: Identifiable, Equatable {
         let id = UUID()

@@ -30,6 +30,13 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - **#13 (prototype) folded forward** — rather than a throwaway 1-screen prototype, the real architecture is proven by the building/launching skeleton; the audio-tap + MIDI-enumeration parts of #13 are delivered for real in Phase 3 (#24) and Phase 8 (#41).
 - **#46 / #6 local asset pass (Codex)** — `scripts/generate-app-icon.py` creates an original SP-style pad-device mark (no external API / no source image). Generated `AppIcon-1024.png` (1024 RGB, no alpha), `LaunchMark.imageset`, `App/LaunchScreen.swift`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`; `index.html` links the favicon. **Now validated inside the Xcode target** (AppIcon compiles in the build above).
 
+## Phase 6 — playback + highway + Play tab (DONE, sim-verified playable)
+- **#31:** `Playback/Clock.swift` (Host/Test) + `Playback/PlaybackEngine.swift` (count-in, 1800ms travel, per-note progress, nearest-in-window dy hit judging, auto-miss, loop rollover/finish). `PlaybackEngineTests` (5) green.
+- **#32:** `Features/Play/HighwayScene.swift` (SKScene drives engine from its own update loop; 6 colored lanes, strike line, note nodes by progress, hit/miss styling) + `HighwayView` (SpriteView host).
+- **#33:** `Features/Play/PlayView.swift` — readout (name/score/combo/acc), progress strip, highway, 6 lane-colored `PadButton`s, transport (Play/Stop/Loop/Click/BpmStepper/MIDI LED).
+- **#34 wiring:** pad tap → `audio.play(lane)` + `engine.registerHit`; count-in beat → metronome click; `.finished` → `persistence.recordPass` + `recordPlayDay`. Audio activated on Play appear (`AppStore.audio`/`activateAudio`).
+- Debug `--play` auto-loads lesson 0 + starts. Verified on iPad (A16) sim: notes scroll the highway, readout/pads/transport render and run.
+
 ## Phase 3 — audio / AVAudioEngine (DONE, synthesis tested; real latency = hardware gate)
 - **#24:** `Audio/VoiceSynth.swift` ports `js/audio.js` drumSound (kick sine sweep 120→40, snare highpass-1500 shaped noise, tom bandpass-350, crash/hihat/ride highpass white noise w/ web durations 0.6/0.08/0.35) via an RBJ `Biquad`; preloaded PCM buffers. `Audio/DrumAudioEngine.swift` (AVAudioEngine + 8-node pool, `play(lane:velocity:)`).
 - **#25:** `Audio/ClickSynth.swift` (square 1800/1100 accent/normal) + `Audio/AudioSessionManager.swift` (.playback + .mixWithOthers, 5ms IO buffer, interruption + route-change handlers → engine stop/restart).

@@ -36,6 +36,11 @@ struct SP808KillaApp: App {
            let og = DrumrotCatalog.all.first(where: { $0.tier == .og }) {
             store.enqueueReveal(.init(drumrot: og, tier: .og, fromAchievement: "First Hit", isNew: true))
         }
+        if CommandLine.arguments.contains("--play") {
+            store.currentLesson = LessonCatalog.all.first
+            store.autoStartPlay = true
+            store.selectedTab = .play
+        }
         #endif
     }
 }
