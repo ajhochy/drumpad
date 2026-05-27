@@ -30,6 +30,12 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - **#13 (prototype) folded forward** — rather than a throwaway 1-screen prototype, the real architecture is proven by the building/launching skeleton; the audio-tap + MIDI-enumeration parts of #13 are delivered for real in Phase 3 (#24) and Phase 8 (#41).
 - **#46 / #6 local asset pass (Codex)** — `scripts/generate-app-icon.py` creates an original SP-style pad-device mark (no external API / no source image). Generated `AppIcon-1024.png` (1024 RGB, no alpha), `LaunchMark.imageset`, `App/LaunchScreen.swift`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`; `index.html` links the favicon. **Now validated inside the Xcode target** (AppIcon compiles in the build above).
 
+## Phase 4 — persistence + AppStore wiring (DONE, round-trip tests green)
+- **#26 models:** `Data/Models/PersistenceModels.swift` — `LessonScore`, `AchievementUnlock`, `PracticeDay`, `ExtraLesson`, `DrumrotCollectionEntry`, `BuilderState`, each with `@Attribute(.unique)` keys + `schemaVersion`. All added to `AppModelContainer.schema`.
+- **#27 wiring:** `Data/PersistenceService.swift` (upsert layer: recordPass = max score + best stars + plays++, unlock once, recordPlayDay once, collect upgrade-only + count++). `AppStore.persistence` exposes it over the live context.
+- **Tests:** `PersistenceRoundTripTests` (5) — upsert keeps best + counts plays, unlock/playday idempotent, collection upgrade-only, and survives across two contexts in one in-memory container. TEST SUCCEEDED.
+- Carry-forward: event-driven `AchievementEngine` (fire rules → unlock → drop roll) still to build atop this in Phase 6/7 wiring.
+
 ## Phase 1 — chassis, design system, Settings, AppStore (DONE, sim-verified)
 - **#16** root TabView (5 tabs) shipped in Phase 0; now bound to `AppStore.selectedTab`.
 - **#17 design system:** `DesignSystem/Theme/ColorHex.swift` (`Color(hex:)` + `DrumrotTier.color`/`PracticeTier.color`), `Typography.swift` (`SPFont` mono/display), controls `LED`, `PadButton`, `BpmStepper` (40–200 clamp). `SPColor` palette from Phase 0.

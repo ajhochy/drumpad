@@ -6,6 +6,12 @@ import SwiftData
 enum AppModelContainer {
     static let schema = Schema([
         AppSettings.self,
+        LessonScore.self,
+        AchievementUnlock.self,
+        PracticeDay.self,
+        ExtraLesson.self,
+        DrumrotCollectionEntry.self,
+        BuilderState.self,
     ])
 
     static func make(inMemory: Bool = false) -> ModelContainer {

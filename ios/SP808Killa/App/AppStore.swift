@@ -15,4 +15,9 @@ final class AppStore: ObservableObject {
     func attach(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
+
+    /// Write/upsert layer over the live context (nil before `attach`).
+    var persistence: PersistenceService? {
+        modelContext.map(PersistenceService.init(context:))
+    }
 }
