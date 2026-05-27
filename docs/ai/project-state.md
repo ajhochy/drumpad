@@ -30,6 +30,10 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - **#13 (prototype) folded forward** — rather than a throwaway 1-screen prototype, the real architecture is proven by the building/launching skeleton; the audio-tap + MIDI-enumeration parts of #13 are delivered for real in Phase 3 (#24) and Phase 8 (#41).
 - **#46 / #6 local asset pass (Codex)** — `scripts/generate-app-icon.py` creates an original SP-style pad-device mark (no external API / no source image). Generated `AppIcon-1024.png` (1024 RGB, no alpha), `LaunchMark.imageset`, `App/LaunchScreen.swift`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`; `index.html` links the favicon. **Now validated inside the Xcode target** (AppIcon compiles in the build above).
 
+## Phase 2 — domain parity (in progress)
+- **Drumrot domain ported (#20-equivalent, compiling).** `scripts`-free port via `/tmp/port_drumrots.py` → `ios/SP808Killa/Resources/Content/Drumrots.json` (31 entries; tier counts 4/4/5/4/4/2/8 match the web). Swift: `Domain/DrumrotTier.swift` (7-case ordered enum + label/color), `Domain/Drumrot.swift` (+ `DrumrotCatalog` bundle loader), `Domain/DropRoller.swift` (verbatim `rollDrumrot` port with injectable RNG + `ogChance` 0.05 + per-difficulty weights + `ACHIEVEMENT_DIFFICULTY`), `Domain/DrumrotCollection.swift` (upgrade-only add). **Verified: BUILD SUCCEEDED with these compiled in.**
+- **Not yet done for Phase 2:** XCTest *parity tests* (need a unit-test target added to the pbxproj — next increment), plus porting lessons (#21), achievements (#22), scoring/streak/tiers (#23).
+
 ## Project structure note (Xcode)
 - `.xcodeproj` lives at `ios/SP808Killa.xcodeproj`; source root is the synchronized folder `ios/SP808Killa/` (App/, DesignSystem/, Features/, Resources/, and later Domain/Audio/MIDI/Playback/Data/). New `.swift`/asset files dropped into that folder are auto-included — no pbxproj edits needed. Target id in pbxproj = `AA0000000000000000000002`.
 
