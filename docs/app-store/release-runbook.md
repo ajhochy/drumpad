@@ -18,12 +18,12 @@ Code-side fixes already landed alongside this doc:
   `PlaceholderScreen`, `DrumrotCardView` card footer, web `index.html`,
   `js/drumrots.js` card markup, `js/main.js`, `package.json` description, and
   the exported MIDI filename (`drumrot-pattern.mid`).
-- `skibidi_tomtomlet` renamed to `trono_tomtomlet` ("Trono Tomtomlet" /
-  👑🥁) across `Drumrots.json` (iOS), `js/drumrots.js` (web), and the asset
-  files in `Assets.xcassets/drumrots/` and `art/drumrots/`. Parody fields
-  pointing to `brainrots/OG/Skibidi_Toilet.png` were dropped from the web
-  entry; the orphaned reference image file is still on disk and can be
-  deleted manually.
+- `skibidi_tomtomlet` → `trono_tomtomlet` ("Trono Tomtomlet" / 👑🥁) renamed
+  across `Drumrots.json` (iOS), `js/drumrots.js` (web), and the asset files.
+  **The portrait art was regenerated as an original crowned porcelain-tom-drum
+  (no toilet/face/character)** — `art/drumrots/trono_tomtomlet.webp` + iOS
+  imageset — and `brainrots/OG/Skibidi_Toilet.png` was deleted. (A content
+  review of the *other* meme-derived portraits is still recommended pre-submit.)
 
 ---
 
@@ -294,7 +294,7 @@ Two prior risks have been resolved in-code (see top of this doc):
 - ✅ `skibidi_tomtomlet` → `trono_tomtomlet` (done; see top of doc).
 - Decide whether to also rename the Xcode project from `Drumrot` to
   `Drumrot` (optional — internal-only name).
-- Delete the now-orphaned `brainrots/OG/Skibidi_Toilet.png` reference image.
+- Content review of the remaining meme-derived portraits (A5): decide which, if any, beyond the already-fixed Skibidi/Trono card need redrawing to fully original art before submission.
 - AI-image license documented.
 
 ---

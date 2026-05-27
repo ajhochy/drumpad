@@ -9,7 +9,7 @@ from PIL import Image
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SRC = ROOT / "art" / "drumrots"
-DEST = ROOT / "ios" / "SP808Killa" / "Resources" / "Assets.xcassets" / "drumrots"
+DEST = ROOT / "ios/Drumrot/Resources" / "Assets.xcassets" / "drumrots"
 DEST.mkdir(parents=True, exist_ok=True)
 
 count = 0
