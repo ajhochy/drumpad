@@ -131,6 +131,13 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - Deviations from spec: None — all real data wiring (@Query, DrumrotCatalog, PlaybackEngine, persistence, MIDI) unchanged; only visual layer reskinned.
 - Concerns: Bundled fonts (Bungee/MajorMonoDisplay/IBMPlexMono/SpecialElite/PermanentMarker) now visible in all reskinned tabs. Real device visual smoke (landscape fidelity, font rendering) is a hardware gate.
 
+### 2026-05-27 — CI: resolve iPad simulator by UDID (fix flaky PR run)
+- File modified: `.github/workflows/ios-build.yml`.
+- Root cause: the job hardcoded `-destination 'platform=iOS Simulator,name=iPad (A16)'`. The preinstalled simulator device set rotates between macOS runner images, so PR #54's `pull_request` run failed with "Unable to find a device matching the provided destination specifier" while the `push` run on the identical commit passed.
+- Fix: new "Pick iPad simulator" step resolves the first available iPad simulator by UDID (`xcrun simctl list devices available | grep iPad`), creating one via `simctl create` if the image ships none, then build + test use `-destination "id=$UDID"`.
+- Checks: PASS YAML parse; PASS local `simctl` resolution (this Mac has no "iPad (A16)" either — resolved "iPad Pro 11-inch (M4)", confirming the old hardcoded name was itself fragile); PASS CI `gh run watch 26536761546 --exit-status` = 0 (build-test green, 2m38s) on commit `34e9cfc`, branch `workflow/run-2026-05-27`.
+- Note: the documented *local* test-runner command elsewhere in this file still names `iPad (A16)`; that is a local convenience string, not the CI gate. CI no longer depends on any specific device name.
+
 ## Risks / known gaps
 - **Pi hardware perf check** — `content-visibility: auto` was removed in PR #8 to fix the blank-portrait regression. The Pi `≥30 fps` gate has not been re-verified after that removal. If perf regresses on the actual Pi, reintroduce `content-visibility: auto` only on the Drops grid cells (not on reveal-popup cards) and re-check.
 - **Playwright smoke** still does not assert pixel painting on portraits — only the manual smoke checklist does. Worth adding a Playwright spec that asserts `naturalWidth > 0` and `rect.width > 0` on `.portrait-img` after the reveal animation.
