@@ -27,6 +27,8 @@ struct PlayView: View {
         }
         .onAppear {
             store.activateAudio()
+            store.midi.onNote = { lane, _ in hit(lane) }
+            store.midi.start()
             if engine.lesson == nil {
                 engine.load(store.currentLesson ?? LessonCatalog.all[0], loop: loop)
             }
@@ -125,7 +127,7 @@ struct PlayView: View {
                 set: { engine.bpm = $0 }
             ))
             HStack(spacing: 6) {
-                LED(on: false); Text("MIDI").font(SPFont.mono(.caption2)).foregroundStyle(.secondary)
+                LED(on: store.midi.activity); Text("MIDI").font(SPFont.mono(.caption2)).foregroundStyle(.secondary)
             }
         }
         .tint(SPColor.accentGreen)

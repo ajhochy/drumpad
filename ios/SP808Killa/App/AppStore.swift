@@ -14,8 +14,9 @@ final class AppStore: ObservableObject {
     /// Debug: auto-start playback when Play appears (set by the `--play` launch arg).
     var autoStartPlay = false
 
-    // Shared audio (activated on first Play appearance).
+    // Shared audio + MIDI input (activated on first Play appearance).
     let audio = DrumAudioEngine()
+    let midi = MIDIInputManager()
     private lazy var audioSession = AudioSessionManager(engine: audio)
     private var audioActivated = false
 

@@ -30,6 +30,12 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - **#13 (prototype) folded forward** — rather than a throwaway 1-screen prototype, the real architecture is proven by the building/launching skeleton; the audio-tap + MIDI-enumeration parts of #13 are delivered for real in Phase 3 (#24) and Phase 8 (#41).
 - **#46 / #6 local asset pass (Codex)** — `scripts/generate-app-icon.py` creates an original SP-style pad-device mark (no external API / no source image). Generated `AppIcon-1024.png` (1024 RGB, no alpha), `LaunchMark.imageset`, `App/LaunchScreen.swift`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`; `index.html` links the favicon. **Now validated inside the Xcode target** (AppIcon compiles in the build above).
 
+## Phase 8 — MIDI file I/O + CoreMIDI input (DONE; live hardware = gate)
+- **#39 parser:** `Domain/MIDIFile.swift` `MIDIFileParser` (SMF header/track, VLQ, running status, note-on, meta/sysex skip, SMPTE rejection) + `lesson(name:events:ppq:)` import (quantize ppq/2). `Domain/GMDrumMapper.swift`.
+- **#40 exporter:** `MIDIFileExporter` (Type-0, ch10, PPQ96, tempo meta, GM notes [49,42,38,36,45,51]) — byte-compatible w/ web. `MIDIFileTests` (6): round-trip, SMF header, SMPTE/non-MIDI rejection, GM map, import quantize. TEST SUCCEEDED.
+- **#41 CoreMIDI input:** `MIDI/MIDIInputManager.swift` (client + input port w/ UMP receive block, source enumeration, Network MIDI enabled, note-on → MainActor → `onNote`). Wired into Play (drives highway) + MIDI activity LED. Live device input is a real-device gate.
+- **#42 BLE + picker:** `MIDI/BluetoothMIDIView.swift` (CABTMIDICentralViewController) + Settings MIDI section (source list + "Pair Bluetooth MIDI"). Import (Library `.fileImporter` → ExtraLesson) + export (Builder ShareSheet `sp808-pattern.mid`). Info.plist Bluetooth + Local Network usage descriptions added to target.
+
 ## Phase 7 — Library + Progress + Builder + achievement wiring (DONE, sim-verified)
 - **#35 Library:** `LessonCardView` (number, New/Played, BPM·genre·difficulty, dot mini-notation, stars, high) + `LibraryView` grid (`@Query LessonScore`); tap → set `currentLesson` + autostart + Play. PlayView reloads on `currentLesson` change.
 - **#36 Progress:** `ProgressTabView` — streak/sessions/best/top-accuracy stat cards, 14-day calendar, 18-achievement grid (unlocked highlighted) from PracticeDay/LessonScore/AchievementUnlock queries.

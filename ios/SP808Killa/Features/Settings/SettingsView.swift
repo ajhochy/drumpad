@@ -2,20 +2,27 @@ import SwiftUI
 import SwiftData
 
 struct SettingsView: View {
+    @EnvironmentObject private var store: AppStore
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Query private var rows: [AppSettings]
+    @State private var showBluetooth = false
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("MIDI") {
-                    LabeledContent("Device") {
-                        Text(settings.midiDeviceUID ?? "None selected")
-                            .foregroundStyle(.secondary)
+                    if store.midi.sources.isEmpty {
+                        Text("No MIDI sources connected.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        ForEach(store.midi.sources) { source in
+                            LabeledContent(source.name) {
+                                Text("uid \(source.id)").font(.caption2).foregroundStyle(.secondary)
+                            }
+                        }
                     }
-                    Text("Device picker + Bluetooth pairing arrive with CoreMIDI (Phase 8).")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Button("Pair Bluetooth MIDI device") { showBluetooth = true }
                 }
 
                 Section("Audio") {
@@ -43,6 +50,14 @@ struct SettingsView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .sheet(isPresented: $showBluetooth) {
+                NavigationStack {
+                    BluetoothMIDIView()
+                        .navigationTitle("Bluetooth MIDI")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .ignoresSafeArea()
+                }
+            }
         }
     }
 
@@ -62,6 +77,7 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
+        .environmentObject(AppStore())
         .modelContainer(AppModelContainer.make(inMemory: true))
         .preferredColorScheme(.dark)
 }
