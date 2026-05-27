@@ -25,8 +25,8 @@ jobs:
       - name: Build (iPad simulator)
         run: |
           xcodebuild \
-            -project ios/SP808Killa.xcodeproj \
-            -scheme SP808Killa \
+            -project ios/Drumrot.xcodeproj \
+            -scheme Drumrot \
             -sdk iphonesimulator \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPad (A16)' \
@@ -35,8 +35,8 @@ jobs:
       - name: Test (iPad simulator)
         run: |
           xcodebuild \
-            -project ios/SP808Killa.xcodeproj \
-            -scheme SP808Killa \
+            -project ios/Drumrot.xcodeproj \
+            -scheme Drumrot \
             -sdk iphonesimulator \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPad (A16)' \
