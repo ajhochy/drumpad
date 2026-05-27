@@ -294,7 +294,7 @@ Two prior risks have been resolved in-code (see top of this doc):
 - ✅ `skibidi_tomtomlet` → `trono_tomtomlet` (done; see top of doc).
 - Decide whether to also rename the Xcode project from `Drumrot` to
   `Drumrot` (optional — internal-only name).
-- Content review of the remaining meme-derived portraits (A5): decide which, if any, beyond the already-fixed Skibidi/Trono card need redrawing to fully original art before submission.
+- Other meme-derived portraits (A5): per 2026-05-26 decision, handled REACTIVELY — only redraw a portrait if App Review flags it. No pre-emptive review needed.
 - AI-image license documented.
 
 ---
