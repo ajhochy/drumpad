@@ -1,7 +1,7 @@
 # Project state
 
 ## Current focus
-iPadOS native port, Phase 0 ready. The app icon / launch mark asset pass for GitHub #46 is complete locally, and the web favicon gap from #6 is closed locally. The plan comparison remains **resolved**: Codex's iPad-first plan won over Claude's Mac Catalyst plan (matches the locked 2026-05-21 direction) and is now the source of truth in `docs/ai/current-plan.md`. Both planning passes preserved as historical artifacts (`codex-ios-plan.md`, `claudes-ios-plan.md`).
+iPadOS native port, Phases 0–9 implemented and sim-verified; Phase 10 local readiness docs for #49–#50 are complete. The remaining release gates are hardware/account-bound: real iPad audio latency, USB/Network/BLE MIDI, VoiceOver, iPad app on Apple silicon Mac, App Store Connect record, TestFlight upload, external tester smoke, and the A4/A5 content/IP review.
 
 Confirmed direction: Swift/SwiftUI, iPad-first, Apple silicon Mac via iPad app availability, hardware MIDI as the main v1 requirement, App Store/TestFlight distribution, exact SP-808 web UI parity, low-latency rhythm response. Audio = AVAudioEngine + synth buffers; highway = SpriteKit; persistence = SwiftData; MIDI transport order USB → Network → BLE.
 
@@ -22,10 +22,11 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 
 ## In progress
 - `docs/ai/current-plan.md` is the canonical iPadOS port plan (promoted from Codex's pass 2026-05-26, with a tightened iPad-only entitlements section grafted from Claude's pass).
-- 41 issues filed (#12–#52); awaiting Phase 0 implementation start.
+- 41 issues filed (#12–#52); #12–#46 implemented locally across Phases 0–9. #49–#50 local checklist/privacy docs are complete. #47–#48 are explicitly deferred; #51–#52 require App Store Connect/TestFlight access and real testers.
 - `docs/ai/decisions.md` records the plan-comparison outcome and issue-filing (2026-05-26 entry).
 
 ## Recently completed (2026-05-26)
+- **Phase 10 local readiness — #49 + #50 (DONE locally; ASC/TestFlight = human/account gate).** Extended `docs/testing/manual-smoke.md` with native iPadOS + iPad-app-on-Mac coverage, including MIDI transports, keyboard shortcuts, Drops/reveal, accessibility, and hardware-only gates. Added `docs/app-store/privacy-label.md` with "Data Not Collected" guidance and `docs/app-store/handoff.md` for hardware/ASC/TestFlight next steps. Replaced generated Info.plist settings with explicit `ios/SP808KillaInfo.plist` so Bluetooth, Local Network, and `NSBonjourServices = ["_apple-midi._udp"]` are emitted in the built app. Verified processed simulator Info.plist contains the Bonjour array.
 - **Phase 0 — #12 + #15 (DONE, sim-verified).** Created `ios/SP808Killa.xcodeproj` (objectVersion 77, synchronized-folder group → `ios/SP808Killa/`). Single SwiftUI iPad-only target: bundle id `com.visaliacrc.drumrot`, iPadOS 17, `TARGETED_DEVICE_FAMILY=2`, landscape-locked via `UIRequiresFullScreen=YES` + landscape orientation keys. 5-tab `RootView` (Play/Library/Progress/Build/Drops) + `SPColor` palette + `PlaceholderScreen`. **Verified: `xcodebuild ... build` = BUILD SUCCEEDED; installed + launched on iPad (A16) sim; screenshot shows the 5-tab shell rendering.** Codex's AppIcon catalog compiles into the target. CI workflow `.github/workflows/ios-build.yml` added (#15). `.gitignore` extended for Xcode + signing material. Build commands: see CI yaml.
 - **#13 (prototype) folded forward** — rather than a throwaway 1-screen prototype, the real architecture is proven by the building/launching skeleton; the audio-tap + MIDI-enumeration parts of #13 are delivered for real in Phase 3 (#24) and Phase 8 (#41).
 - **#46 / #6 local asset pass (Codex)** — `scripts/generate-app-icon.py` creates an original SP-style pad-device mark (no external API / no source image). Generated `AppIcon-1024.png` (1024 RGB, no alpha), `LaunchMark.imageset`, `App/LaunchScreen.swift`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`; `index.html` links the favicon. **Now validated inside the Xcode target** (AppIcon compiles in the build above).
@@ -91,11 +92,21 @@ All 41 port issues are on GitHub as **#12–#52**. Plan IDs in the docs are #20�
 - Test runner: `xcodebuild -project ios/SP808Killa.xcodeproj -scheme SP808Killa -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPad (A16)' test`.
 
 ## Project structure note (Xcode)
-- `.xcodeproj` lives at `ios/SP808Killa.xcodeproj`; source root is the synchronized folder `ios/SP808Killa/` (App/, DesignSystem/, Features/, Resources/, and later Domain/Audio/MIDI/Playback/Data/). New `.swift`/asset files dropped into that folder are auto-included — no pbxproj edits needed. Target id in pbxproj = `AA0000000000000000000002`.
+- `.xcodeproj` lives at `ios/SP808Killa.xcodeproj`; source root is the synchronized folder `ios/SP808Killa/` (App/, DesignSystem/, Features/, Resources/, Domain/Audio/MIDI/Playback/Data/). New `.swift`/asset files dropped into that folder are auto-included — no pbxproj edits needed. Target id in pbxproj = `AA0000000000000000000002`. The app target uses explicit `ios/SP808KillaInfo.plist` outside the synchronized source folder so App Store privacy/network keys can include array values.
+
+## Recent coding-agent runs
+
+### 2026-05-26 — Phase 10 local readiness #49–#50
+- Files modified: `docs/testing/manual-smoke.md` native checklist; `docs/app-store/privacy-label.md` ASC privacy label draft; `docs/app-store/handoff.md` hardware/account handoff; `ios/SP808KillaInfo.plist` explicit app plist; `ios/SP808Killa.xcodeproj/project.pbxproj` target plist wiring; `docs/ai/project-state.md` memory update.
+- Checks run: PASS `xcodebuild -project ios/SP808Killa.xcodeproj -scheme SP808Killa -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPad (A16)' build`; PASS processed Info.plist inspection confirmed `NSBonjourServices` array; PASS `xcodebuild ... test` (42 tests, 0 failures); PASS `node --input-type=module -e "import('./js/drumrots.js').then(m => console.log('count=', m.DRUMROTS.length))"` (`count= 31`); PASS `git diff --check`.
+- Decisions made: explicit plist chosen because `INFOPLIST_KEY_NSBonjourServices` did not emit into the processed app plist as a build setting.
+- Deviations from spec: #47 snapshot tests and #48 XCUITest remain deferred per handoff; #51–#52 cannot be completed without App Store Connect/TestFlight/hardware.
+- Verification recovery: first post-edit `xcodebuild ... test` rerun hit a simulator `FBSOpenApplicationServiceErrorDomain` / preflight `Busy` launch failure, with duplicate `iPad (A16)` simulator runtimes and simulator cleanup still active. No source change was needed; rerunning the same command after cleanup passed 42 tests. No follow-up issue filed.
+- Concerns: real iPad MIDI/audio/VoiceOver and App Store Connect acceptance remain manual gates.
 
 ## Risks / known gaps
 - **Pi hardware perf check** — `content-visibility: auto` was removed in PR #8 to fix the blank-portrait regression. The Pi `≥30 fps` gate has not been re-verified after that removal. If perf regresses on the actual Pi, reintroduce `content-visibility: auto` only on the Drops grid cells (not on reveal-popup cards) and re-check.
 - **Playwright smoke** still does not assert pixel painting on portraits — only the manual smoke checklist does. Worth adding a Playwright spec that asserts `naturalWidth > 0` and `rect.width > 0` on `.portrait-img` after the reveal animation.
 
 ## Next step
-Phases 0 and 2 are DONE + verified. Next: **Phase 1 (#16–#19)** — design-system primitives (port `css/cards.css`/`main.css` tokens), Settings tab + SwiftData `ModelContainer`, `AppStore` ObservableObject DI skeleton. Then **#14 asset pipeline** (webp→PNG into the catalog; Pillow available) feeding **Phase 5** (Drops card chrome + reveal), **Phase 4** (SwiftData models persisting the domain), **Phase 6** (SpriteKit highway + Play UI wired to ScoringEngine/PlaybackEngine), **Phase 7** (Library/Progress/Builder), **Phase 8** (MIDI file I/O + CoreMIDI). Carry-forward: build the event-driven `AchievementEngine` in Phase 4 atop AppStore/State. Hard wall (manual/you): on-device latency/BLE/VoiceOver + all Phase 10 ASC/TestFlight (#49–#52). A1 resolved.
+Next: commit/push the remaining Phase 10 local readiness changes, update/open the workflow PR, then complete the human gates: real iPad latency + USB/Network/BLE MIDI, VoiceOver, iPad app on Apple silicon Mac, App Store Connect record/screenshots/preview (#51), TestFlight upload + external tester smoke (#52), and A4/A5 content/IP review before submission.
