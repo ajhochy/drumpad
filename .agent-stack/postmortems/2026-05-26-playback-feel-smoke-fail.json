@@ -1,0 +1,19 @@
+{
+  "date": "2026-05-26",
+  "issue": "Phase 6 Play (#31-#34) — playback feel",
+  "verification_claimed": "PASS",
+  "smoke_result": "fail",
+  "smoke_environment": "Xcode iPad (A16) simulator, manual play-through by user",
+  "divergence": "build + unit tests + static screenshots were green, but actually PLAYING the app surfaced gameplay defects none of that exercised",
+  "findings": [
+    {"bug": "metronome stops once the beat starts", "expected": "continuous click through count-in AND groove (js/highway.js:119)", "cause": "metronome was wired only to count-in beats via onCountInBeat; groove had none", "category": "C-behavior-not-exercised"},
+    {"bug": "BPM +/- does nothing", "expected": "tempo change rescales note timing live", "cause": "note targetMs was baked at load from bpm; engine.bpm not @Published; readout showed lesson.bpm", "category": "C-behavior-not-exercised"},
+    {"bug": "loop feels like a hard reset, not a reel", "expected": "continuous timeline + shadow notes for seamless rollover (js/highway.js:159)", "cause": "loop reset note positions instead of using loopIteration offset + shadow", "category": "C-behavior-not-exercised"},
+    {"bug": "Play UI fidelity well below the web original", "expected": "SP-808 chassis + v0.3 chrome (exact-UI decision)", "cause": "Play surface built as a functional approximation, not a faithful visual port", "category": "C-scope-gap", "status": "open — separate redesign"}
+  ],
+  "fix": "Reworked PlaybackEngine to mirror js/highway.js animate (continuous metronome, live beat*halfBeatMs timing, seamless loop + shadow notes); added 3 regression tests; all suites green.",
+  "workflow_adherence": {
+    "root_lesson": "Unit tests + a static screenshot are NOT a smoke test of an interactive, time-based app. verification-gate for a rhythm game must include actually playing it (audio on, tempo changed, loop watched) — ideally an automated play-through asserting metronome ticks + note motion, not just that it compiles and renders one frame.",
+    "guard_suggestion": "For time-based/interactive features, require a dynamic verification step (drive the clock + assert motion/audio events) before claiming PASS; a single screenshot proves layout, not behavior."
+  }
+}

@@ -1,7 +1,13 @@
 # Project state
 
 ## Current focus
-iPadOS native port, Phases 0–9 implemented and sim-verified; Phase 10 local readiness docs for #49–#50 are complete. The remaining release gates are hardware/account-bound: real iPad audio latency, USB/Network/BLE MIDI, VoiceOver, iPad app on Apple silicon Mac, App Store Connect record, TestFlight upload, external tester smoke, and the A4/A5 content/IP review.
+iPadOS native port (now **Drumrot**), Phases 0–10-prep done + sim-verified. Manual play-through (2026-05-26) caught and **fixed** three gameplay-feel bugs that static verification missed — see "Playback feel fix" below + `.agent-stack/postmortems/2026-05-26-playback-feel-smoke-fail.json`. Remaining release gates are hardware/account-bound: real iPad audio latency, USB/Network/BLE MIDI, VoiceOver, iPad app on Apple silicon Mac, App Store Connect record, TestFlight, external testers, A4/A5 content review.
+
+**OPEN — Play UI visual fidelity.** The Play surface (and the app's overall chrome) is a *functional approximation*, not a faithful port of the SP-808 chassis / v0.3 web look the user expects ("UI design sucks compared to the original"). This is the next substantial piece — a visual redesign pass to match the web, not new behavior. Not yet started.
+
+## Playback feel fix (2026-05-26, DONE, tests green)
+- `PlaybackEngine` reworked to mirror `js/highway.js animate`: **metronome** ticks every quarter through count-in AND groove (was count-in only), accent on downbeat, gated by Click toggle; **BPM** drives note timing live via `beat*halfBeatMs` (`@Published bpm`, readout reactive) so +/- actually moves notes (was baked at load); **loop** is one continuous timeline (loopIteration offset, flags-only reset) + shadow notes for a seamless reel. Play/restart keep the chosen BPM. Count-in number shown on highway. 3 regression tests added; all suites pass. Commit `d033333`.
+- Lesson for verification-gate: unit tests + one screenshot do NOT smoke an interactive time-based app — a rhythm game needs a dynamic play-through (clock driven, audio/motion asserted) before "done".
 
 Confirmed direction: Swift/SwiftUI, iPad-first, Apple silicon Mac via iPad app availability, hardware MIDI as the main v1 requirement, App Store/TestFlight distribution, exact SP-808 web UI parity, low-latency rhythm response. Audio = AVAudioEngine + synth buffers; highway = SpriteKit; persistence = SwiftData; MIDI transport order USB → Network → BLE.
 
