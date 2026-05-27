@@ -2,6 +2,15 @@
 
 A falling-note drum lesson trainer for Raspberry Pi, running in Chromium via a Python HTTP server.
 
+## Branches
+
+| Branch | Purpose |
+|---|---|
+| `main` | Canonical web app + iOS 17+ native build. The App Store / TestFlight build flows from here. |
+| `release/ios16-only` | **Parallel** native build for older iPads that cap out at iOS 16.x (iPad mini 4, iPad 5th/6th gen, iPad Air 3rd gen, iPad Pro 9.7"/10.5"/12.9" 1st-2nd gen). SwiftData is replaced with a `UserDefaults`-backed `PersistenceStore`. **Never merge into `main`** — the divergence is intentional. See [`IOS16_BRANCH.md`](https://github.com/ajhochy/drumpad/blob/release/ios16-only/IOS16_BRANCH.md) on that branch for details. |
+
+Tag `ios16-build-2` marks the binary that was uploaded to TestFlight from `release/ios16-only`.
+
 ## Requirements
 
 - Raspberry Pi (any model with a desktop environment)
