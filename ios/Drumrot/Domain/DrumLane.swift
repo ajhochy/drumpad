@@ -27,6 +27,30 @@ enum DrumLane: Int, CaseIterable, Codable {
         }
     }
 
+    /// Pad display name (matches the web pad labels).
+    var padName: String {
+        switch self {
+        case .crash: return "Crash"
+        case .hihat: return "Hi-Hat"
+        case .snare: return "Snare"
+        case .kick:  return "Kick"
+        case .tom:   return "Tom"
+        case .ride:  return "Ride"
+        }
+    }
+
+    /// Keyboard hint shown on the pad (web A/S/D/F/J/K mapping).
+    var keyHint: String {
+        switch self {
+        case .crash: return "A"
+        case .hihat: return "S"
+        case .snare: return "D"
+        case .kick:  return "F"
+        case .tom:   return "J"
+        case .ride:  return "K"
+        }
+    }
+
     static func from(key: String) -> DrumLane? {
         allCases.first { $0.key == key }
     }

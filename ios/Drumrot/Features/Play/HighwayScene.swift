@@ -23,7 +23,7 @@ final class HighwayScene: SKScene {
     ]
 
     override func didMove(to view: SKView) {
-        backgroundColor = SKColor(red: 0.03, green: 0.04, blue: 0.05, alpha: 1)
+        backgroundColor = SKColor(red: 0.039, green: 0.078, blue: 0.063, alpha: 1) // LCD #0a1410
         rebuild()
     }
 
@@ -51,9 +51,16 @@ final class HighwayScene: SKScene {
             guide.strokeColor = .clear
             addChild(guide)
         }
-        let strike = SKShapeNode(rect: CGRect(x: 0, y: strikeY - 2, width: size.width, height: 4))
-        strike.fillColor = SKColor.white.withAlphaComponent(0.7)
+        // Red LED hit line + soft glow.
+        let red = SKColor(red: 1.0, green: 0.23, blue: 0.35, alpha: 1)
+        let glow = SKShapeNode(rect: CGRect(x: 0, y: strikeY - 12, width: size.width, height: 24))
+        glow.fillColor = red.withAlphaComponent(0.12)
+        glow.strokeColor = .clear
+        addChild(glow)
+        let strike = SKShapeNode(rect: CGRect(x: 0, y: strikeY - 1.5, width: size.width, height: 3))
+        strike.fillColor = red
         strike.strokeColor = .clear
+        strike.glowWidth = 6
         addChild(strike)
 
         let label = SKLabelNode(text: "")
