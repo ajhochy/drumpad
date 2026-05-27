@@ -1,5 +1,5 @@
 // ===========================================================================
-// SP-808 KILLA — App entry point
+// drumrot — App entry point
 // ===========================================================================
 import { State } from './state.js';
 import { LESSONS, LANE_LABEL, LANES } from './lessons.js';

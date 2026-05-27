@@ -340,14 +340,12 @@ export const DRUMROTS = [
     drumrotImg: 'art/drumrots/meowltronome.webp',
   },
   {
-    id: 'skibidi_tomtomlet', tier: 'og', num: '029', emoji: '🚽🥁',
-    name: 'Skibidi Tomtomlet',
+    id: 'trono_tomtomlet', tier: 'og', num: '029', emoji: '👑🥁',
+    name: 'Trono Tomtomlet',
     sub: 'og · porcelain tom god',
-    flavor: 'A tom drum sealed inside a toilet. Or a toilet sealed inside a tom drum. Nobody knows which came first.',
+    flavor: 'A tom drum cast from cathedral porcelain. Booms like a bell. Cannot be played indoors twice in one century.',
     bpm: 99, groove: 99, power: 99,
-    parody: 'Skibidi Toilet',
-    parodyImg: 'brainrots/OG/Skibidi_Toilet.png',
-    drumrotImg: 'art/drumrots/skibidi_tomtomlet.webp',
+    drumrotImg: 'art/drumrots/trono_tomtomlet.webp',
   },
   {
     id: 'spyder_sousaphant', tier: 'og', num: '030', emoji: '🕷️🐘🎺',
@@ -516,7 +514,7 @@ export function renderDrumrotCard(drumrot, tierKey, locked = false){
             <div class="footer">
               <span class="num">#${num}</span>
               <span class="shine"></span>
-              <span class="logo"><span class="mark"></span>sp-808 killa</span>
+              <span class="logo"><span class="mark"></span>drumrot</span>
             </div>
           </div>
         </article>
@@ -571,7 +569,7 @@ export function renderDrumrotCard(drumrot, tierKey, locked = false){
           <div class="footer">
             <span class="num">${num}</span>
             <span class="shine"></span>
-            <span class="logo"><span class="mark"></span>sp-808 killa</span>
+            <span class="logo"><span class="mark"></span>drumrot</span>
           </div>
         </div>
       </article>

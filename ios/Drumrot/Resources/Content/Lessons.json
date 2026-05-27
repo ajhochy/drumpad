@@ -1,0 +1,100 @@
+[
+  {
+    "name": "Rock Beat 101",
+    "bpm": 80,
+    "tip": "Keep the hi-hat steady on every eighth note. Snare locks in on beats 2 and 4 — that's what makes it groove.",
+    "difficulty": "Beginner",
+    "genre": "Rock",
+    "patterns": [
+      { "lane": "hihat", "pattern": "xxxxxxxxxxxxxxxx" },
+      { "lane": "snare", "pattern": "..x...x...x...x." },
+      { "lane": "kick",  "pattern": "x...x...x...x..." }
+    ]
+  },
+  {
+    "name": "Disco Pulse",
+    "bpm": 100,
+    "tip": "Hi-hat hits on the off-beats (the \"ands\"). That upbeat pulse is what drives disco and funk.",
+    "difficulty": "Beginner",
+    "genre": "Disco",
+    "patterns": [
+      { "lane": "hihat", "pattern": ".x.x.x.x.x.x.x." },
+      { "lane": "snare", "pattern": "..x...x...x...x." },
+      { "lane": "kick",  "pattern": "x...x...x...x..." }
+    ]
+  },
+  {
+    "name": "Half-Time Slap",
+    "bpm": 72,
+    "tip": "The snare only hits once per bar, giving a big heavy feel. Kick fills the space — listen for where beat 1 lands.",
+    "difficulty": "Intermediate",
+    "genre": "Funk",
+    "patterns": [
+      { "lane": "hihat", "pattern": "xxxxxxxxxxxxxxxx" },
+      { "lane": "snare", "pattern": "....x.......x..." },
+      { "lane": "kick",  "pattern": "x..x....x..x...." }
+    ]
+  },
+  {
+    "name": "Tom Fill",
+    "bpm": 90,
+    "tip": "First half is straight time, second half explodes into toms. Keep the kick locked in when the toms come in.",
+    "difficulty": "Intermediate",
+    "genre": "Rock",
+    "patterns": [
+      { "lane": "hihat", "pattern": "xxxxxxxx........" },
+      { "lane": "snare", "pattern": "....x..........." },
+      { "lane": "kick",  "pattern": "x...x..........." },
+      { "lane": "tom",   "pattern": "........xxxxxxxx" }
+    ]
+  },
+  {
+    "name": "Crash & Ride",
+    "bpm": 95,
+    "tip": "Crash on beat 1 signals the top of the form. Ride carries the pulse. Listen to how the crash and ride work together.",
+    "difficulty": "Intermediate",
+    "genre": "Jazz",
+    "patterns": [
+      { "lane": "crash", "pattern": "x..............." },
+      { "lane": "ride",  "pattern": ".x.x.x.x.x.x.x." },
+      { "lane": "snare", "pattern": "..x...x...x...x." },
+      { "lane": "kick",  "pattern": "x...x..........." }
+    ]
+  },
+  {
+    "name": "Shuffle",
+    "bpm": 110,
+    "tip": "The shuffle uses a \"long-short\" pattern on the hi-hat. Feel the triplet swing — it's what separates blues from rock.",
+    "difficulty": "Intermediate",
+    "genre": "Blues",
+    "patterns": [
+      { "lane": "hihat", "pattern": "x.xx.xx.x.xx.xx." },
+      { "lane": "snare", "pattern": "..x...x...x...x." },
+      { "lane": "kick",  "pattern": "x...x..........." }
+    ]
+  },
+  {
+    "name": "Punk Bash",
+    "bpm": 160,
+    "tip": "Fast and aggressive. Hi-hat never lets up. The snare stutters between backbeats — stay relaxed, keep your wrist loose.",
+    "difficulty": "Advanced",
+    "genre": "Punk",
+    "patterns": [
+      { "lane": "hihat", "pattern": "xxxxxxxxxxxxxxxx" },
+      { "lane": "snare", "pattern": "..x.x.x...x.x.x." },
+      { "lane": "kick",  "pattern": "x...x...x...x..." }
+    ]
+  },
+  {
+    "name": "Funk Pocket",
+    "bpm": 96,
+    "tip": "Ghost notes and syncopated kick define the pocket. Every hit matters — listen for the spaces between the notes.",
+    "difficulty": "Advanced",
+    "genre": "Funk",
+    "patterns": [
+      { "lane": "hihat", "pattern": "xxxxxxxxxxxxxxxx" },
+      { "lane": "snare", "pattern": "..x.x..x....x..." },
+      { "lane": "kick",  "pattern": "x..x.x..x..x...." }
+    ]
+  }
+]

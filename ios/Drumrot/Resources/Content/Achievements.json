@@ -1,0 +1,20 @@
+[
+  { "id": "first_hit",     "name": "First Hit",    "desc": "Hit your first note",                 "icon": "★", "cat": "performance" },
+  { "id": "combo_50",      "name": "On a Roll",     "desc": "50× combo unbroken",                  "icon": "⚡", "cat": "performance" },
+  { "id": "combo_100",     "name": "100× Combo",    "desc": "100× combo unbroken",                 "icon": "⚡", "cat": "performance" },
+  { "id": "combo_200",     "name": "Unstoppable",   "desc": "200× combo unbroken",                 "icon": "☄", "cat": "performance" },
+  { "id": "sharpshooter",  "name": "Sharpshooter",  "desc": "90%+ accuracy 3 passes in a row",     "icon": "⊕", "cat": "performance" },
+  { "id": "perfect_pass",  "name": "Flawless",      "desc": "100% accuracy on a full pass",        "icon": "✦", "cat": "performance" },
+  { "id": "first_pass",    "name": "First Patch",   "desc": "Complete your first lesson",          "icon": "●", "cat": "consistency" },
+  { "id": "groove_master", "name": "Groove Master", "desc": "3 stars on any groove",               "icon": "★", "cat": "consistency" },
+  { "id": "all_grooves",   "name": "Full Set",      "desc": "Play every prebuilt lesson",          "icon": "▣", "cat": "consistency" },
+  { "id": "graduate",      "name": "Graduate",      "desc": "3 stars on all prebuilt grooves",     "icon": "♛", "cat": "consistency" },
+  { "id": "streak_3",      "name": "3 Day Streak",  "desc": "Practice 3 days in a row",            "icon": "◆", "cat": "consistency" },
+  { "id": "streak_7",      "name": "7 Day Streak",  "desc": "Practice 7 days in a row",            "icon": "◆", "cat": "consistency" },
+  { "id": "tempo_climber", "name": "Tempo Climber", "desc": "Reach Grooving tier on 3 grooves",    "icon": "↑", "cat": "tempo" },
+  { "id": "full_throttle", "name": "Full Throttle", "desc": "Reach Killing It tier on 5 grooves",  "icon": "⚑", "cat": "tempo" },
+  { "id": "speed_demon",   "name": "Speed Demon",   "desc": "Play any groove at 160+ BPM (80%+)",  "icon": "▶", "cat": "tempo" },
+  { "id": "slow_burn",     "name": "Slow Burn",     "desc": "Play any groove at ≤60 BPM (80%+)",   "icon": "◐", "cat": "tempo" },
+  { "id": "creator",       "name": "Creator",       "desc": "Build your first groove pattern",     "icon": "✎", "cat": "builder" },
+  { "id": "coach",         "name": "Coach",         "desc": "Attach a coach note to a pattern",    "icon": "✍", "cat": "builder" }
+]

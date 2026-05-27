@@ -3,3 +3,23 @@
 node_modules/
 package-lock.json
 *.log
+
+# Xcode
+/build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+.build/
+.swiftpm/
+
+# Signing / secrets — never commit
+*.p12
+*.p8
+*.mobileprovision
+*.cer
+*.certSigningRequest

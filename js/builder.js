@@ -137,7 +137,7 @@ function wireBuilderControls(){
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'sp808-pattern.mid';
+      a.download = 'drumrot-pattern.mid';
       a.click();
       URL.revokeObjectURL(url);
     });
