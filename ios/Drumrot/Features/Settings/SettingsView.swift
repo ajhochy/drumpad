@@ -282,6 +282,10 @@ struct SettingsView: View {
                 }
                 .foregroundStyle(SPColor.text)
             }
+
+            toggleRow("External audio mode",
+                      "suppress in-app samples when triggered by midi — for v-drum / module monitoring",
+                      isOn: bind(\.externalAudioMode))
         }
     }
 

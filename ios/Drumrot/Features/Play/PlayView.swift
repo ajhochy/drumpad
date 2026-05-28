@@ -2,10 +2,13 @@ import SwiftUI
 
 struct PlayView: View {
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var persistence: PersistenceStore
     @StateObject private var engine = PlaybackEngine()
 
     @State private var loop = false
     @State private var clickOn = true
+
+    private var externalAudioMode: Bool { persistence.settings.externalAudioMode }
 
     private let padLanes: [DrumLane] = [.crash, .hihat, .snare, .kick, .tom, .ride]
     private let laneTags = ["CRSH", "HHAT", "SNRE", "KICK", "TOMS", "RIDE"]
@@ -22,8 +25,9 @@ struct PlayView: View {
         .background { transportShortcuts }
         .onAppear {
             store.activateAudio()
-            store.midi.onNote = { lane, _ in hit(lane) }
+            store.midi.onNote = { lane, _ in hit(lane, source: .midi) }
             store.midi.start()
+            store.audio.externalAudioMode = externalAudioMode
             engine.onMetronome = { accent in store.audio.playClick(accent: accent) }
             engine.metronomeEnabled = clickOn
             if engine.lesson == nil {
@@ -33,6 +37,7 @@ struct PlayView: View {
         }
         .onChange(of: clickOn) { on in engine.metronomeEnabled = on }
         .onChange(of: loop) { on in engine.loop = on }
+        .onChange(of: externalAudioMode) { mode in store.audio.externalAudioMode = mode }
         .onChange(of: engine.phase) { phase in if phase == .finished { persistPass() } }
         .onChange(of: store.currentLesson) { lesson in
             guard let lesson else { return }
@@ -232,8 +237,8 @@ struct PlayView: View {
 
     // MARK: - Logic (unchanged behavior)
 
-    private func hit(_ lane: DrumLane) {
-        store.audio.play(lane: lane)
+    private func hit(_ lane: DrumLane, source: DrumAudioEngine.PlaySource = .tap) {
+        store.audio.play(lane: lane, source: source)
         if engine.registerHit(lane: lane.rawValue) != nil {
             store.achievements?.fire(.hit(combo: engine.combo))
         }

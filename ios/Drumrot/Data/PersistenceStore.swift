@@ -60,6 +60,11 @@ struct AppSettings: Codable, Equatable {
     var hapticsEnabled: Bool = true
     var reduceMotionOverride: Bool = false
     var lastTab: String = "play"
+    /// When true, MIDI-triggered note-ons skip in-app sample playback so the
+    /// user can monitor through their drum module's own headphone output
+    /// without a doubled hit. On-screen pad gestures + metronome are
+    /// unaffected (#60).
+    var externalAudioMode: Bool = false
 }
 
 // MARK: - PersistenceStore
