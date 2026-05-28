@@ -292,39 +292,58 @@ struct PlayView: View {
 }
 
 /// Rubber drum pad with a rim, LED that lights on strike, label and key hint.
+///
+/// Uses `DragGesture(minimumDistance: 0)` so the action fires on first contact
+/// (touch DOWN) rather than waiting for finger-lift like a standard `Button`.
+/// This eliminates the 80–200 ms button-confirmation delay that makes drum
+/// pads feel sluggish. An accessibility action restores tap-to-fire for
+/// VoiceOver users.
 private struct PlayPad: View {
     let label: String
     let key: String
     let color: Color
     let action: () -> Void
     @State private var lit = false
+    @State private var didFire = false  // prevents repeat fires during a held drag
 
     var body: some View {
-        Button {
-            action()
-            lit = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { lit = false }
-        } label: {
-            VStack(spacing: 5) {
-                Circle()
-                    .fill(lit ? color : color.opacity(0.25))
-                    .frame(width: 9, height: 9)
-                    .shadow(color: lit ? color : .clear, radius: 6)
-                Text(label).font(SPFont.mono(.caption2, weight: .bold)).foregroundStyle(SPColor.text)
-                Text(key).font(SPFont.mono(.caption2)).foregroundStyle(SPColor.textDim)
-            }
-            .frame(maxWidth: .infinity).frame(height: 78)
-            .background(
-                RadialGradient(colors: [SPColor.rubberHi, SPColor.rubber, SPColor.bgRoom],
-                               center: .init(x: 0.5, y: 0.3), startRadius: 2, endRadius: 60)
+        padShape
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        guard !didFire else { return }
+                        didFire = true
+                        action()
+                        withAnimation(.easeOut(duration: 0.06)) { lit = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                            withAnimation(.easeOut(duration: 0.1)) { lit = false }
+                        }
+                    }
+                    .onEnded { _ in didFire = false }
             )
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(SPColor.ink, lineWidth: 1))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(color.opacity(lit ? 0.8 : 0.2), lineWidth: 1.5))
-            .scaleEffect(lit ? 0.97 : 1)
-            .animation(.easeOut(duration: 0.1), value: lit)
+            .accessibilityLabel("\(label) pad")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { action() }
+    }
+
+    private var padShape: some View {
+        VStack(spacing: 5) {
+            Circle()
+                .fill(lit ? color : color.opacity(0.25))
+                .frame(width: 9, height: 9)
+                .shadow(color: lit ? color : .clear, radius: 6)
+            Text(label).font(SPFont.mono(.caption2, weight: .bold)).foregroundStyle(SPColor.text)
+            Text(key).font(SPFont.mono(.caption2)).foregroundStyle(SPColor.textDim)
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(label) pad")
+        .frame(maxWidth: .infinity).frame(height: 78)
+        .background(
+            RadialGradient(colors: [SPColor.rubberHi, SPColor.rubber, SPColor.bgRoom],
+                           center: .init(x: 0.5, y: 0.3), startRadius: 2, endRadius: 60)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(SPColor.ink, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(color.opacity(lit ? 0.8 : 0.2), lineWidth: 1.5))
+        .scaleEffect(lit ? 0.97 : 1)
+        .contentShape(Rectangle())  // ensures full hit area, not just visible pixels
     }
 }
