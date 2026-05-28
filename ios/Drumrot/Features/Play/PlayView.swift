@@ -132,6 +132,15 @@ struct PlayView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .lcdPanel()
+        .overlay(alignment: .topTrailing) {
+            #if DEBUG
+            MIDIDiagnosticOverlay(midi: store.midi)
+                .padding(.top, 40)
+                .padding(.trailing, 8)
+            #else
+            EmptyView()
+            #endif
+        }
     }
 
     // MARK: pads
