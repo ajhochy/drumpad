@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject private var persistence: PersistenceStore
     @Environment(\.dismiss) private var dismiss
     @State private var showBluetooth = false
+    @State private var showRecentMIDI = false
     @State private var selectedSection: PanelSection = .midi
 
     enum PanelSection: String, CaseIterable, Identifiable {
@@ -221,6 +222,23 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.plain)
             }
+
+            DisclosureGroup(isExpanded: $showRecentMIDI) {
+                MIDIDiagnosticOverlay(midi: store.midi, compact: false)
+                    .padding(.top, 6)
+            } label: {
+                HStack(spacing: 8) {
+                    Text("RECENT ACTIVITY")
+                        .font(SPFont.ui(11, weight: .bold)).tracking(1.4)
+                        .foregroundStyle(SPColor.textDim)
+                    Spacer()
+                    Text("last \(store.midi.recentEvents.count) / 8")
+                        .font(SPFont.monoMicro).tracking(1)
+                        .foregroundStyle(SPColor.lcdDim)
+                }
+            }
+            .tint(SPColor.ledAmberHot)
+            .padding(.horizontal, 10)
         }
     }
 
