@@ -24,10 +24,11 @@
     {
       "id": "w1-required-skill-skipped",
       "category": "W1",
-      "description": "Required skill skipped failures: 6 occurrence(s) across issues ['1,2,3,4', 'SP-808 chassis UI-parity: all non-Play tabs + SPLidBar (workflow/run-2026-05-27)']",
-      "occurrences": 6,
+      "description": "Required skill skipped failures: 8 occurrence(s) across issues ['1,2,3,4', 'Multi-issue parallel-branch run for drumrot: #59 MIDIKit/SwiftMIDI adoption + #58 MIDI diagnostic overlay + #60 External audio mode toggle, landed on both main (iOS 17+/SwiftData) and release/ios16-only (iOS 16.6+/UserDefaults), then TestFlight build 3 uploaded (delivery UUID ee1452f2-ab9a-4848-81ea-ba3289a7a0c5).', 'SP-808 chassis UI-parity: all non-Play tabs + SPLidBar (workflow/run-2026-05-27)']",
+      "occurrences": 8,
       "affected_issues": [
         "1,2,3,4",
+        "Multi-issue parallel-branch run for drumrot: #59 MIDIKit/SwiftMIDI adoption + #58 MIDI diagnostic overlay + #60 External audio mode toggle, landed on both main (iOS 17+/SwiftData) and release/ios16-only (iOS 16.6+/UserDefaults), then TestFlight build 3 uploaded (delivery UUID ee1452f2-ab9a-4848-81ea-ba3289a7a0c5).",
         "SP-808 chassis UI-parity: all non-Play tabs + SPLidBar (workflow/run-2026-05-27)"
       ],
       "affected_skills": [
@@ -40,6 +41,8 @@
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-drumrot-midi-trio-run.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-drumrot-midi-trio-run.json",
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-ui-parity-chassis-reskin.json",
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-ui-parity-chassis-reskin.json"
       ]
@@ -59,6 +62,23 @@
       "suggested_prompt_addition": "Add a Pre-Flight Check that runs FIRST on every entry: if AGENTS.md and docs/ai/project-state.md both exist, the orchestrator must be the entry point \u2014 no Edit/Write/Bash on source code is permitted until orchestrator dispatch has emitted a routing decision. Reject any direct-implementation attempt with a one-line redirect to orchestrator.",
       "evidence_files": [
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json"
+      ]
+    },
+    {
+      "id": "w6-wrong-repo/branch-operation",
+      "category": "W6",
+      "description": "Wrong-repo/branch operation failures: 1 occurrence(s) across issues ['Multi-issue parallel-branch run for drumrot: #59 MIDIKit/SwiftMIDI adoption + #58 MIDI diagnostic overlay + #60 External audio mode toggle, landed on both main (iOS 17+/SwiftData) and release/ios16-only (iOS 16.6+/UserDefaults), then TestFlight build 3 uploaded (delivery UUID ee1452f2-ab9a-4848-81ea-ba3289a7a0c5).']",
+      "occurrences": 1,
+      "affected_issues": [
+        "Multi-issue parallel-branch run for drumrot: #59 MIDIKit/SwiftMIDI adoption + #58 MIDI diagnostic overlay + #60 External audio mode toggle, landed on both main (iOS 17+/SwiftData) and release/ios16-only (iOS 16.6+/UserDefaults), then TestFlight build 3 uploaded (delivery UUID ee1452f2-ab9a-4848-81ea-ba3289a7a0c5)."
+      ],
+      "affected_skills": [
+        "workflow-orchestrator"
+      ],
+      "reason": "Skill targeted agent-stack but commits/PRs went to target project (or vice versa), or branch was not confirmed before a visible operation.",
+      "suggested_prompt_addition": "Add a Repo+Branch Confirmation gate: every skill that performs git push, gh pr create, browser smoke against a deployed URL, or any operation visible outside the local checkout must first emit `git -C <path> remote get-url origin` and `git -C <path> rev-parse --abbrev-ref HEAD`, compare against the skill's intended target, and halt on mismatch.",
+      "evidence_files": [
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-drumrot-midi-trio-run.json"
       ]
     },
     {
@@ -97,7 +117,7 @@
     }
   ],
   "last_updated": "2026-05-27",
-  "total_runs_analyzed": 5,
+  "total_runs_analyzed": 6,
   "min_occurrences_threshold": 2,
   "process_min_occurrences_threshold": 1,
   "workflow_min_occurrences_threshold": 1
