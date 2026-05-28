@@ -55,23 +55,31 @@ struct MIDIDiagnosticOverlay: View {
     }
 
     private func row(_ event: MIDIInputManager.RecentEvent) -> some View {
-        HStack(spacing: 4) {
-            Text(Self.timeFormatter.string(from: event.timestamp))
-                .foregroundStyle(SPColor.lcdDim)
-            Text("n=\(event.note)")
-                .foregroundStyle(SPColor.lcdFG)
-            Text("v=\(event.velocity)")
-                .foregroundStyle(SPColor.lcdFG)
-            Text("→")
-                .foregroundStyle(SPColor.lcdDim)
-            if let lane = event.lane {
-                Text(laneTag(lane))
-                    .foregroundStyle(SPColor.lane(lane.rawValue))
-                    .bold()
-            } else {
-                Text("unmapped")
-                    .foregroundStyle(SPColor.ledAmber)
+        VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 4) {
+                Text(Self.timeFormatter.string(from: event.timestamp))
+                    .foregroundStyle(SPColor.lcdDim)
+                Text("n=\(event.note)")
+                    .foregroundStyle(SPColor.lcdFG)
+                Text("v=\(event.velocity)")
+                    .foregroundStyle(SPColor.lcdFG)
+                Text("→")
+                    .foregroundStyle(SPColor.lcdDim)
+                if let lane = event.lane {
+                    Text(laneTag(lane))
+                        .foregroundStyle(SPColor.lane(lane.rawValue))
+                        .bold()
+                } else {
+                    Text("unmapped")
+                        .foregroundStyle(SPColor.ledAmber)
+                }
             }
+            // Show which endpoint the event came from so WiFi-network
+            // idle vs. real hardware is immediately distinguishable.
+            Text(event.sourceName)
+                .foregroundStyle(SPColor.lcdDim)
+                .lineLimit(1)
+                .truncationMode(.middle)
         }
         .font(SPFont.mono(.caption2))
     }

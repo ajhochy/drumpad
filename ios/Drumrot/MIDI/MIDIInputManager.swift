@@ -18,7 +18,8 @@ final class MIDIInputManager: ObservableObject {
     /// One incoming MIDI note-on, captured for the on-screen diagnostic overlay
     /// (#58). `lane == nil` means the note is not in the GM drum map — useful
     /// for distinguishing "no CoreMIDI delivery" from "delivery works, mapping
-    /// gap" on real hardware.
+    /// gap" on real hardware. `sourceName` identifies which endpoint sent it so
+    /// you can tell WiFi-network idle noise from real hardware input.
     struct RecentEvent: Identifiable, Equatable {
         let id = UUID()
         let timestamp: Date
@@ -26,6 +27,7 @@ final class MIDIInputManager: ObservableObject {
         let note: Int
         let velocity: Int
         let lane: DrumLane?     // nil = unmapped
+        let sourceName: String  // display name of the originating MIDI endpoint
     }
 
     @Published private(set) var sources: [Source] = []
@@ -59,8 +61,11 @@ final class MIDIInputManager: ObservableObject {
             try manager.addInputConnection(
                 to: .allOutputs,
                 tag: inputTag,
-                receiver: .events { [weak self] events, _, _ in
-                    Task { @MainActor in self?.receive(events) }
+                receiver: .events { [weak self] events, _, source in
+                    // Capture the source endpoint name so the diagnostic overlay
+                    // can show which device each note came from.
+                    let name = source?.displayName ?? "unknown"
+                    Task { @MainActor in self?.receive(events, from: name) }
                 }
             )
             print("[MIDI] MIDIKit started OK — listening on all outputs")
@@ -90,7 +95,7 @@ final class MIDIInputManager: ObservableObject {
         sources = updated
     }
 
-    private func receive(_ events: [MIDIEvent]) {
+    private func receive(_ events: [MIDIEvent], from sourceName: String) {
         var fired = false
         for e in events {
             guard case .noteOn(let n) = e else { continue }
@@ -100,13 +105,16 @@ final class MIDIInputManager: ObservableObject {
 
             // Log every note-on (mapped or not) into the diagnostic ring so
             // the on-screen overlay can distinguish "no events" from
-            // "events arriving but no GM mapping".
+            // "events arriving but no GM mapping". Source name included so
+            // WiFi-network events are visually distinct from USB hardware.
             let lane = GMDrumMapper.lane(forNote: note)
-            let entry = RecentEvent(timestamp: Date(), status: 0x90, note: note, velocity: velocity, lane: lane)
+            let entry = RecentEvent(timestamp: Date(), status: 0x90, note: note,
+                                    velocity: velocity, lane: lane, sourceName: sourceName)
             recentEvents.append(entry)
             if recentEvents.count > recentEventsCap {
                 recentEvents.removeFirst(recentEvents.count - recentEventsCap)
             }
+            print("[MIDI] n=\(note) v=\(velocity) from '\(sourceName)' → \(lane.map(\.rawValue.description) ?? "unmapped")")
 
             if let lane {
                 onNote?(lane, velocity)
