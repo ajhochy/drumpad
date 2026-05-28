@@ -32,6 +32,15 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>drumrot uses your local network to receive MIDI from network MIDI sources.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Bungee-Regular.ttf</string>
+		<string>MajorMonoDisplay-Regular.ttf</string>
+		<string>IBMPlexMono-Regular.ttf</string>
+		<string>IBMPlexMono-Medium.ttf</string>
+		<string>SpecialElite-Regular.ttf</string>
+		<string>PermanentMarker-Regular.ttf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

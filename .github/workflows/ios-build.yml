@@ -22,6 +22,28 @@ jobs:
       - name: Show versions
         run: xcodebuild -version
 
+      # Resolve an iPad simulator that actually exists on this runner. The
+      # set of preinstalled simulator devices rotates between macOS runner
+      # images, so hardcoding a device name (e.g. "iPad (A16)") fails
+      # intermittently with "Unable to find a device matching the provided
+      # destination specifier". Pick the first available iPad by UDID, and
+      # create one if the image ships none.
+      - name: Pick iPad simulator
+        id: sim
+        run: |
+          set -euo pipefail
+          udid_re='[0-9A-Fa-f]{8}-([0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12}'
+          UDID="$(xcrun simctl list devices available | grep -m1 'iPad' | grep -oE "$udid_re" || true)"
+          if [ -z "$UDID" ]; then
+            echo "No iPad simulator available — creating one."
+            RUNTIME="$(xcrun simctl list runtimes available | grep -oE 'com.apple.CoreSimulator.SimRuntime.iOS[^ ]*' | tail -1)"
+            DEVTYPE="$(xcrun simctl list devicetypes | grep -oE 'com.apple.CoreSimulator.SimDeviceType.iPad[^ )]*' | tail -1)"
+            echo "Creating iPad sim: devicetype=$DEVTYPE runtime=$RUNTIME"
+            UDID="$(xcrun simctl create ci-ipad "$DEVTYPE" "$RUNTIME")"
+          fi
+          echo "Using iPad simulator UDID=$UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
       - name: Build (iPad simulator)
         run: |
           xcodebuild \
@@ -29,7 +51,7 @@ jobs:
             -scheme Drumrot \
             -sdk iphonesimulator \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPad (A16)' \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
             build
 
       - name: Test (iPad simulator)
@@ -39,5 +61,5 @@ jobs:
             -scheme Drumrot \
             -sdk iphonesimulator \
             -configuration Debug \
-            -destination 'platform=iOS Simulator,name=iPad (A16)' \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
             test || echo "No test target yet — build is the gate until Phase 2 adds tests."
