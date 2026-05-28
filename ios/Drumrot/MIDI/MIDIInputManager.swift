@@ -63,10 +63,9 @@ final class MIDIInputManager: ObservableObject {
                     Task { @MainActor in self?.receive(events) }
                 }
             )
+            print("[MIDI] MIDIKit started OK — listening on all outputs")
         } catch {
-            #if DEBUG
-            print("[MIDIInputManager] SwiftMIDI start failed: \(error)")
-            #endif
+            print("[MIDI] SwiftMIDI start FAILED: \(error)")
             return
         }
 
@@ -75,14 +74,20 @@ final class MIDIInputManager: ObservableObject {
         let session = MIDINetworkSession.default()
         session.isEnabled = true
         session.connectionPolicy = .anyone
+        print("[MIDI] Network session enabled, policy=anyone")
 
         refreshSources()
+        print("[MIDI] Initial source count: \(sources.count)")
     }
 
     private func refreshSources() {
-        sources = manager.endpoints.outputs.map { ep in
+        let updated = manager.endpoints.outputs.map { ep in
             Source(id: ep.uniqueID, name: ep.displayName)
         }
+        if updated != sources {
+            print("[MIDI] Sources updated (\(updated.count)): \(updated.map(\.name))")
+        }
+        sources = updated
     }
 
     private func receive(_ events: [MIDIEvent]) {
