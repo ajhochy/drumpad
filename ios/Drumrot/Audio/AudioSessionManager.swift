@@ -22,6 +22,14 @@ final class AudioSessionManager {
             // Non-fatal: engine can still run at default latency.
             print("AudioSession configuration failed: \(error)")
         }
+        // Diagnostic: log the buffer size the system actually granted.
+        // If ioBufferDuration > 0.010 on your device, the system isn't honouring
+        // the 5 ms preference — look into AudioUnit for lower latency.
+        #if DEBUG
+        let granted = session.ioBufferDuration * 1_000
+        let outLatency = session.outputLatency * 1_000
+        print("🎵 AudioSession — buffer: \(String(format: "%.2f", granted)) ms  |  output latency: \(String(format: "%.2f", outLatency)) ms")
+        #endif
         installObservers()
         engine.start()
     }
