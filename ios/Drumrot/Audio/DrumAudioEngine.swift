@@ -4,6 +4,11 @@ import AVFoundation
 /// schedules them on a small pool of player nodes for polyphony.
 @MainActor
 final class DrumAudioEngine {
+    /// Identifies whether a `play(lane:)` call comes from an on-screen pad
+    /// gesture or from the MIDI receive path. External-audio mode (#60)
+    /// suppresses only `.midi` calls.
+    enum PlaySource { case tap, midi }
+
     private let engine = AVAudioEngine()
     private let mixer = AVAudioMixerNode()
     private var pool: [AVAudioPlayerNode] = []
@@ -12,6 +17,12 @@ final class DrumAudioEngine {
     private var laneBuffers: [DrumLane: AVAudioPCMBuffer] = [:]
     private var clickBuffers: [Bool: AVAudioPCMBuffer] = [:]
     private(set) var isRunning = false
+
+    /// When true, MIDI-triggered `play(lane:velocity:source:.midi)` calls
+    /// are dropped before scheduling a buffer. PlayView keeps this in sync
+    /// with `AppSettings.externalAudioMode` (#60). On-screen pad gestures
+    /// (`.tap`) and the metronome are unaffected.
+    var externalAudioMode = false
 
     private let poolSize = 8
 
@@ -54,7 +65,8 @@ final class DrumAudioEngine {
         isRunning = false
     }
 
-    func play(lane: DrumLane, velocity: Int = 127) {
+    func play(lane: DrumLane, velocity: Int = 127, source: PlaySource = .tap) {
+        if source == .midi, externalAudioMode { return }
         guard isRunning, let buffer = laneBuffers[lane] else { return }
         schedule(buffer, volume: Float(max(1, min(velocity, 127))) / 127)
     }
