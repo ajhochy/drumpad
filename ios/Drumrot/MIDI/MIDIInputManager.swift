@@ -1,9 +1,16 @@
 import CoreMIDI
 import Foundation
+import SwiftMIDI
 
-/// CoreMIDI input: enumerates sources (USB / Network / BLE), receives note-on
-/// messages on the RT callback and marshals GM-mapped hits to the MainActor.
-/// Live hardware input is a real-device gate; this compiles + enumerates on the sim.
+/// MIDI input layer built on orchetect/MIDIKit (`SwiftMIDI`).
+///
+/// Replaces the hand-rolled CoreMIDI plumbing from build 1 so iOS 16 USB devices
+/// that fail UMP translation fall back through the legacy receive path SwiftMIDI
+/// selects automatically — the root cause for the silent-receive symptom on the
+/// TD-50X (#57).
+///
+/// Public API preserved: PlayView and SettingsView keep using `.sources`,
+/// `.activity`, `.onNote`, and `start()` exactly as before.
 @MainActor
 final class MIDIInputManager: ObservableObject {
     struct Source: Identifiable, Equatable { let id: Int32; let name: String }
@@ -14,21 +21,42 @@ final class MIDIInputManager: ObservableObject {
     /// Called on the MainActor for each incoming drum note-on.
     var onNote: ((DrumLane, Int) -> Void)?
 
-    private var client = MIDIClientRef()
-    private var inputPort = MIDIPortRef()
+    private let manager = MIDIManager(
+        clientName: "Drumrot",
+        model: "Drumrot",
+        manufacturer: "VCRC"
+    )
+    private let inputTag = "drumrot-in"
     private var started = false
 
     func start() {
         guard !started else { refreshSources(); return }
         started = true
 
-        MIDIClientCreateWithBlock("Drumrot" as CFString, &client) { [weak self] _ in
+        // System notifications: hot-plug, rename, removal. Mirrors what
+        // MIDIClientCreateWithBlock's callback gave us in build 1.
+        manager.notificationHandler = { [weak self] _ in
             Task { @MainActor in self?.refreshSources() }
         }
-        MIDIInputPortCreateWithProtocol(client, "in" as CFString, ._1_0, &inputPort) { [weak self] eventList, _ in
-            self?.receive(eventList)
+
+        do {
+            try manager.start()
+            try manager.addInputConnection(
+                to: .allOutputs,
+                tag: inputTag,
+                receiver: .events { [weak self] events, _, _ in
+                    Task { @MainActor in self?.receive(events) }
+                }
+            )
+        } catch {
+            #if DEBUG
+            print("[MIDIInputManager] SwiftMIDI start failed: \(error)")
+            #endif
+            return
         }
 
+        // Network MIDI: kept as an explicit CoreMIDI call so behavior on the
+        // existing "Network Session 1" source matches build 1 exactly.
         let session = MIDINetworkSession.default()
         session.isEnabled = true
         session.connectionPolicy = .anyone
@@ -37,49 +65,22 @@ final class MIDIInputManager: ObservableObject {
     }
 
     private func refreshSources() {
-        var list: [Source] = []
-        let count = MIDIGetNumberOfSources()
-        for i in 0..<count {
-            let src = MIDIGetSource(i)
-            MIDIPortConnectSource(inputPort, src, nil)
-            var uid: Int32 = 0
-            MIDIObjectGetIntegerProperty(src, kMIDIPropertyUniqueID, &uid)
-            var name: Unmanaged<CFString>?
-            MIDIObjectGetStringProperty(src, kMIDIPropertyDisplayName, &name)
-            list.append(Source(id: uid, name: (name?.takeRetainedValue() as String?) ?? "MIDI \(i)"))
+        sources = manager.endpoints.outputs.map { ep in
+            Source(id: ep.uniqueID, name: ep.displayName)
         }
-        sources = list
     }
 
-    /// RT-thread callback. Decodes UMP MIDI-1.0 channel-voice note-ons.
-    private nonisolated func receive(_ eventList: UnsafePointer<MIDIEventList>) {
-        var hits: [(DrumLane, Int)] = []
-        var packet = eventList.pointee.packet
-        for _ in 0..<eventList.pointee.numPackets {
-            let wordCount = Int(packet.wordCount)
-            withUnsafePointer(to: packet.words) { tuplePtr in
-                tuplePtr.withMemoryRebound(to: UInt32.self, capacity: 64) { words in
-                    for w in 0..<min(wordCount, 64) {
-                        let word = words[w]
-                        guard (word >> 28) & 0xF == 0x2 else { continue }   // MIDI 1.0 channel voice
-                        let status = (word >> 16) & 0xFF
-                        let note = Int((word >> 8) & 0xFF)
-                        let vel = Int(word & 0xFF)
-                        if status & 0xF0 == 0x90, vel > 0, let lane = GMDrumMapper.lane(forNote: note) {
-                            hits.append((lane, vel))
-                        }
-                    }
-                }
-            }
-            packet = MIDIEventPacketNext(&packet).pointee
+    private func receive(_ events: [MIDIEvent]) {
+        var fired = false
+        for e in events {
+            guard case .noteOn(let n) = e else { continue }
+            let velocity = n.velocity.midi1Value.intValue
+            let note = n.note.number.intValue
+            guard velocity > 0, let lane = GMDrumMapper.lane(forNote: note) else { continue }
+            onNote?(lane, velocity)
+            fired = true
         }
-        guard !hits.isEmpty else { return }
-        let captured = hits
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            for (lane, vel) in captured { self.onNote?(lane, vel) }
-            self.flashActivity()
-        }
+        if fired { flashActivity() }
     }
 
     private func flashActivity() {

@@ -6,6 +6,10 @@
 	objectVersion = 71;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		24079EBE2FC7F80C00AC9544 /* SwiftMIDI in Frameworks */ = {isa = PBXBuildFile; productRef = 24079EBD2FC7F80C00AC9544 /* SwiftMIDI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		BB0000000000000000000010 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -31,6 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				24079EBE2FC7F80C00AC9544 /* SwiftMIDI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,11 +49,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		24079EBC2FC7F78500AC9544 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		AA0000000000000000000008 = {
 			isa = PBXGroup;
 			children = (
 				AA0000000000000000000007 /* Drumrot */,
 				BB0000000000000000000007 /* DrumrotTests */,
+				24079EBC2FC7F78500AC9544 /* Frameworks */,
 				AA0000000000000000000009 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -135,6 +148,9 @@
 			);
 			mainGroup = AA0000000000000000000008;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				24079EBB2FC7F54600AC9544 /* XCRemoteSwiftPackageReference "MIDIKit" */,
+			);
 			productRefGroup = AA0000000000000000000009 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -350,6 +366,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		24079EBB2FC7F54600AC9544 /* XCRemoteSwiftPackageReference "MIDIKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/orchetect/MIDIKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		24079EBD2FC7F80C00AC9544 /* SwiftMIDI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24079EBB2FC7F54600AC9544 /* XCRemoteSwiftPackageReference "MIDIKit" */;
+			productName = SwiftMIDI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA0000000000000000000001 /* Project object */;
 }
