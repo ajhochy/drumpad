@@ -66,10 +66,17 @@ final class AudioSessionManager {
     private func handleRouteChange(_ note: Notification) {
         guard let raw = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
               let reason = AVAudioSession.RouteChangeReason(rawValue: raw) else { return }
-        if reason == .oldDeviceUnavailable {
-            // e.g. headphones unplugged — restart cleanly.
+        switch reason {
+        case .oldDeviceUnavailable,   // headphones/BT unplugged
+             .newDeviceAvailable,     // headphones/BT plugged in
+             .override,              // inter-device audio mode toggled
+             .categoryChange:        // session category changed externally
+            print("AudioSession route change (\(reason.rawValue)) — restarting engine")
             engine.stop()
+            try? AVAudioSession.sharedInstance().setActive(true)
             engine.start()
+        default:
+            break
         }
     }
 }
