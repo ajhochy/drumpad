@@ -1,11 +1,17 @@
 import SwiftUI
+import SwiftData
 
 struct PlayView: View {
     @EnvironmentObject private var store: AppStore
     @StateObject private var engine = PlaybackEngine()
+    @Query private var settingsRows: [AppSettings]
 
     @State private var loop = false
     @State private var clickOn = true
+
+    private var externalAudioMode: Bool {
+        settingsRows.first?.externalAudioMode ?? false
+    }
 
     private let padLanes: [DrumLane] = [.crash, .hihat, .snare, .kick, .tom, .ride]
     private let laneTags = ["CRSH", "HHAT", "SNRE", "KICK", "TOMS", "RIDE"]
@@ -22,8 +28,9 @@ struct PlayView: View {
         .background { transportShortcuts }
         .onAppear {
             store.activateAudio()
-            store.midi.onNote = { lane, _ in hit(lane) }
+            store.midi.onNote = { lane, _ in hit(lane, source: .midi) }
             store.midi.start()
+            store.audio.externalAudioMode = externalAudioMode
             engine.onMetronome = { accent in store.audio.playClick(accent: accent) }
             engine.metronomeEnabled = clickOn
             if engine.lesson == nil {
@@ -33,6 +40,7 @@ struct PlayView: View {
         }
         .onChange(of: clickOn) { _, on in engine.metronomeEnabled = on }
         .onChange(of: loop) { _, on in engine.loop = on }
+        .onChange(of: externalAudioMode) { _, mode in store.audio.externalAudioMode = mode }
         .onChange(of: engine.phase) { _, phase in if phase == .finished { persistPass() } }
         .onChange(of: store.currentLesson) { _, lesson in
             guard let lesson else { return }
@@ -232,8 +240,8 @@ struct PlayView: View {
 
     // MARK: - Logic (unchanged behavior)
 
-    private func hit(_ lane: DrumLane) {
-        store.audio.play(lane: lane)
+    private func hit(_ lane: DrumLane, source: DrumAudioEngine.PlaySource = .tap) {
+        store.audio.play(lane: lane, source: source)
         if engine.registerHit(lane: lane.rawValue) != nil {
             store.achievements?.fire(.hit(combo: engine.combo))
         }

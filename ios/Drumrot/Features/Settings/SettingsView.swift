@@ -30,11 +30,16 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Audio") {
+                Section {
                     Stepper(
                         "Latency offset: \(settings.audioLatencyOffsetMs) ms",
                         value: bind(\.audioLatencyOffsetMs), in: -50...50
                     )
+                    Toggle("External audio mode", isOn: bind(\.externalAudioMode))
+                } header: {
+                    Text("Audio")
+                } footer: {
+                    Text("Suppress in-app drum samples when triggered by MIDI. Use only when monitoring through your drum module's own headphone output. MIDI scoring, visual highway, click, and on-screen pad taps remain active.")
                 }
 
                 Section("Feel") {
