@@ -223,6 +223,15 @@ struct SettingsView: View {
                 .buttonStyle(.plain)
             }
 
+            toggleRow(
+                "WiFi MIDI Network",
+                "accept connections from mac / network session — disable if a daw on the same network is injecting events",
+                isOn: Binding(
+                    get: { store.midi.networkMIDIEnabled },
+                    set: { store.midi.networkMIDIEnabled = $0 }
+                )
+            )
+
             DisclosureGroup(isExpanded: $showRecentMIDI) {
                 MIDIDiagnosticOverlay(midi: store.midi, compact: false)
                     .padding(.top, 6)

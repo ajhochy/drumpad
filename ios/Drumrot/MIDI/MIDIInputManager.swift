@@ -38,6 +38,19 @@ final class MIDIInputManager: ObservableObject {
     /// Called on the MainActor for each incoming drum note-on.
     var onNote: ((DrumLane, Int) -> Void)?
 
+    /// Allow/block the WiFi Network MIDI session from auto-accepting connections.
+    /// Default is `false` (`.noOne`) so a background Ableton or DAW session on the
+    /// same network can't inject events. Set to `true` only when the user explicitly
+    /// wants Network MIDI (e.g. testing from a Mac).
+    var networkMIDIEnabled: Bool = false {
+        didSet {
+            let policy: MIDINetworkConnectionPolicy = networkMIDIEnabled ? .anyone : .noOne
+            MIDINetworkSession.default().connectionPolicy = policy
+            print("[MIDI] Network policy → \(networkMIDIEnabled ? "anyone" : "noOne")")
+            refreshSources()
+        }
+    }
+
     private let manager = MIDIManager(
         clientName: "Drumrot",
         model: "Drumrot",
@@ -74,12 +87,13 @@ final class MIDIInputManager: ObservableObject {
             return
         }
 
-        // Network MIDI: kept as an explicit CoreMIDI call so behavior on the
-        // existing "Network Session 1" source matches build 1 exactly.
+        // Network MIDI: enable the session but require explicit connection via
+        // Audio MIDI Setup rather than auto-accepting any device on the network.
+        // Use .anyone only when the user explicitly enables WiFi MIDI in Settings.
         let session = MIDINetworkSession.default()
         session.isEnabled = true
-        session.connectionPolicy = .anyone
-        print("[MIDI] Network session enabled, policy=anyone")
+        session.connectionPolicy = .noOne   // upgraded to .anyone via enableNetworkMIDI()
+        print("[MIDI] Network session enabled, policy=noOne (explicit connect required)")
 
         refreshSources()
         print("[MIDI] Initial source count: \(sources.count)")
@@ -98,6 +112,11 @@ final class MIDIInputManager: ObservableObject {
     private func receive(_ events: [MIDIEvent], from sourceName: String) {
         var fired = false
         for e in events {
+            // Log ALL event types so we can see what the hardware actually sends —
+            // non-noteOn messages (CC, SysEx, noteOn vel=0, etc.) are visible in
+            // the console even though only mapped noteOns drive the game.
+            print("[MIDI] \(sourceName): \(e)")
+
             guard case .noteOn(let n) = e else { continue }
             let velocity = n.velocity.midi1Value.intValue
             let note = n.note.number.intValue
@@ -114,7 +133,6 @@ final class MIDIInputManager: ObservableObject {
             if recentEvents.count > recentEventsCap {
                 recentEvents.removeFirst(recentEvents.count - recentEventsCap)
             }
-            print("[MIDI] n=\(note) v=\(velocity) from '\(sourceName)' → \(lane.map(\.rawValue.description) ?? "unmapped")")
 
             if let lane {
                 onNote?(lane, velocity)
