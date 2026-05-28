@@ -1,0 +1,43 @@
+{
+  "date": "2026-05-27",
+  "issue": "workflow-retrospective (ui-parity run) pushed skill edits but never synced — W7 P0",
+  "verification_claimed": "skill edits committed + pushed",
+  "smoke_result": "fail",
+  "smoke_environment": "agent-stack repo; canonical claude/skills/{acceptance-contract,coding-agent}/SKILL.md edited at commit 4deef91 (2026-05-27 08:41), pushed to origin/main; install targets checked in the follow-up retrospective session",
+  "divergence": "After committing and pushing canonical skill edits, the prior retrospective session did NOT run `ai-workflow sync-globals` as the immediate next command. All three install targets (~/.claude/skills, ~/.codex/skills, ~/.config/opencode/skills) silently ran the STALE versions of acceptance-contract and coding-agent — the exact fixes meant to prevent the run's own W1/W5 drift were dormant. Detected and remediated in the next session by diffing canonical HEAD against each install target, then running sync-globals (now IN SYNC across all targets).",
+  "findings": [
+    "The W7 Sync Guard is written as maximally strong prose ('P0', 'non-negotiable', 'immediate next command') in workflow-retrospective/SKILL.md, yet was still skipped. Prose cannot defeat an agent forgetting a trailing manual step.",
+    "The drift is self-healing only at the NEXT SessionStart hook (git pull --ff-only + sync-globals). Any skill dispatch in the interim — possibly hours — runs stale skills, including on other machines until they pull.",
+    "No structural safeguard existed: sync depended entirely on the agent remembering to type one command after push."
+  ],
+  "fix": "Add a tracked git post-commit hook (githooks/post-commit) in the agent-stack repo that runs `ai-workflow sync-globals` automatically whenever a commit touches claude/skills/ or codex/skills/. Wire it via `make install-hooks` (git config core.hooksPath githooks) and install.sh so every clone activates it. This corrects local install targets at commit time (before push), removing the agent-memory dependency; the push still propagates to other machines via their SessionStart sync.",
+  "workflow_adherence": {
+    "expected_chain": [
+      "workflow-retrospective: write postmortem",
+      "workflow-retrospective: mine-patterns",
+      "workflow-retrospective: edit canonical skills",
+      "workflow-retrospective: commit",
+      "workflow-retrospective: push",
+      "workflow-retrospective: ai-workflow sync-globals (immediate next command)"
+    ],
+    "observed_chain": [
+      "workflow-retrospective: write postmortem",
+      "workflow-retrospective: mine-patterns",
+      "workflow-retrospective: edit canonical skills (acceptance-contract + coding-agent)",
+      "workflow-retrospective: commit 4deef91",
+      "workflow-retrospective: push origin main",
+      "(sync-globals SKIPPED — session ended)"
+    ],
+    "skipped_skills": [],
+    "issues": [
+      {
+        "workflow_category": "W7",
+        "affected_skill": "workflow-retrospective",
+        "description": "Canonical skill edits were committed (4deef91) and pushed to origin/main, but `ai-workflow sync-globals` was never run as the immediate next command. Diffing canonical HEAD against ~/.claude/skills, ~/.codex/skills, and ~/.config/opencode/skills confirmed all three were DRIFTED (running the pre-edit versions of acceptance-contract and coding-agent). This is the P0 failure the W7 Sync Guard explicitly names. Remediated in the follow-up session by running sync-globals; all targets now IN SYNC.",
+        "detected_by": "follow-up retrospective: diff of canonical HEAD vs each install target"
+      }
+    ],
+    "overall_score": "partial",
+    "notes": "The substantive skill edits were correct and are now live. The single defect was the missing sync, which left the fixes dormant. Durable fix is structural (post-commit hook), not more prose — the guard text was already as strong as prose can be."
+  }
+}

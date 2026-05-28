@@ -1,14 +1,35 @@
 {
-  "patterns": [],
+  "patterns": [
+    {
+      "id": "c3-wrong-implementation",
+      "category": "C3",
+      "description": "Wrong implementation failures: 2 occurrence(s) across issues ['PR#5-regression']",
+      "occurrences": 2,
+      "affected_issues": [
+        "PR#5-regression"
+      ],
+      "affected_skills": [
+        "coding-agent"
+      ],
+      "reason": "A correct test failed due to a code error. The coding-agent should have caught this before handing off.",
+      "suggested_prompt_addition": "Before claiming done, re-run all contract tests and confirm each one passes with a real behavioral assertion, not just exit code 0.",
+      "evidence_files": [
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-21-portrait-blank-after-pr5.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-21-portrait-blank-after-pr5.json"
+      ]
+    }
+  ],
   "process_patterns": [],
   "workflow_patterns": [
     {
       "id": "w1-required-skill-skipped",
       "category": "W1",
-      "description": "Required skill skipped failures: 4 occurrence(s) across issues ['1,2,3,4']",
-      "occurrences": 4,
+      "description": "Required skill skipped failures: 8 occurrence(s) across issues ['1,2,3,4', 'Multi-issue parallel-branch run for drumrot: #59 MIDIKit/SwiftMIDI adoption + #58 MIDI diagnostic overlay + #60 External audio mode toggle, landed on both main (iOS 17+/SwiftData) and release/ios16-only (iOS 16.6+/UserDefaults), then TestFlight build 3 uploaded (delivery UUID ee1452f2-ab9a-4848-81ea-ba3289a7a0c5).', 'SP-808 chassis UI-parity: all non-Play tabs + SPLidBar (workflow/run-2026-05-27)']",
+      "occurrences": 8,
       "affected_issues": [
-        "1,2,3,4"
+        "1,2,3,4",
+        "Multi-issue parallel-branch run for drumrot: #59 MIDIKit/SwiftMIDI adoption + #58 MIDI diagnostic overlay + #60 External audio mode toggle, landed on both main (iOS 17+/SwiftData) and release/ios16-only (iOS 16.6+/UserDefaults), then TestFlight build 3 uploaded (delivery UUID ee1452f2-ab9a-4848-81ea-ba3289a7a0c5).",
+        "SP-808 chassis UI-parity: all non-Play tabs + SPLidBar (workflow/run-2026-05-27)"
       ],
       "affected_skills": [
         "workflow-orchestrator"
@@ -19,7 +40,11 @@
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
-        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json"
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-drumrot-midi-trio-run.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-drumrot-midi-trio-run.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-ui-parity-chassis-reskin.json",
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-ui-parity-chassis-reskin.json"
       ]
     },
     {
@@ -38,11 +63,62 @@
       "evidence_files": [
         "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-20-retro-drumrot-v0.3-card-system.json"
       ]
+    },
+    {
+      "id": "w6-wrong-repo/branch-operation",
+      "category": "W6",
+      "description": "Wrong-repo/branch operation failures: 1 occurrence(s) across issues ['Multi-issue parallel-branch run for drumrot: #59 MIDIKit/SwiftMIDI adoption + #58 MIDI diagnostic overlay + #60 External audio mode toggle, landed on both main (iOS 17+/SwiftData) and release/ios16-only (iOS 16.6+/UserDefaults), then TestFlight build 3 uploaded (delivery UUID ee1452f2-ab9a-4848-81ea-ba3289a7a0c5).']",
+      "occurrences": 1,
+      "affected_issues": [
+        "Multi-issue parallel-branch run for drumrot: #59 MIDIKit/SwiftMIDI adoption + #58 MIDI diagnostic overlay + #60 External audio mode toggle, landed on both main (iOS 17+/SwiftData) and release/ios16-only (iOS 16.6+/UserDefaults), then TestFlight build 3 uploaded (delivery UUID ee1452f2-ab9a-4848-81ea-ba3289a7a0c5)."
+      ],
+      "affected_skills": [
+        "workflow-orchestrator"
+      ],
+      "reason": "Skill targeted agent-stack but commits/PRs went to target project (or vice versa), or branch was not confirmed before a visible operation.",
+      "suggested_prompt_addition": "Add a Repo+Branch Confirmation gate: every skill that performs git push, gh pr create, browser smoke against a deployed URL, or any operation visible outside the local checkout must first emit `git -C <path> remote get-url origin` and `git -C <path> rev-parse --abbrev-ref HEAD`, compare against the skill's intended target, and halt on mismatch.",
+      "evidence_files": [
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-drumrot-midi-trio-run.json"
+      ]
+    },
+    {
+      "id": "w5-premature-completion-claim",
+      "category": "W5",
+      "description": "Premature completion claim failures: 1 occurrence(s) across issues ['SP-808 chassis UI-parity: all non-Play tabs + SPLidBar (workflow/run-2026-05-27)']",
+      "occurrences": 1,
+      "affected_issues": [
+        "SP-808 chassis UI-parity: all non-Play tabs + SPLidBar (workflow/run-2026-05-27)"
+      ],
+      "affected_skills": [
+        "verification-gate"
+      ],
+      "reason": "Agent claimed work done, fixed, passing, or opened a PR without verification-gate evidence captured in the transcript.",
+      "suggested_prompt_addition": "Strengthen the Required Evidence section: completion claims (the words 'done', 'fixed', 'ready', 'passing', 'shipped', or opening a PR) are FORBIDDEN unless preceded in the SAME response by a captured tool-call output block showing the check command and its exit-zero/green result. Add this as a hard rule in the Red Flags table.",
+      "evidence_files": [
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-ui-parity-chassis-reskin.json"
+      ]
+    },
+    {
+      "id": "w7-sync-step-skipped-after-canonical-edit",
+      "category": "W7",
+      "description": "Sync step skipped after canonical edit failures: 1 occurrence(s) across issues ['workflow-retrospective (ui-parity run) pushed skill edits but never synced \u2014 W7 P0']",
+      "occurrences": 1,
+      "affected_issues": [
+        "workflow-retrospective (ui-parity run) pushed skill edits but never synced \u2014 W7 P0"
+      ],
+      "affected_skills": [
+        "workflow-retrospective"
+      ],
+      "reason": "Canonical skills were edited but ai-workflow sync-globals was not run, so install targets stayed stale.",
+      "suggested_prompt_addition": "After every commit to claude/skills/ or codex/skills/ in agent-stack, the immediate next command MUST be `ai-workflow sync-globals`. Add this as a non-skippable step at the end of the Completion Checklist of workflow-retrospective and prompt-evolver (post-merge). Make the failure mode of 'edited but did not sync' a P0 in the checklist.",
+      "evidence_files": [
+        "/Users/ajhochhalter/Documents/drumrot/.agent-stack/postmortems/2026-05-27-retro-w7-sync-skip-after-skill-push.json"
+      ]
     }
   ],
-  "last_updated": "2026-05-20",
-  "total_runs_analyzed": 1,
-  "min_occurrences_threshold": 1,
+  "last_updated": "2026-05-27",
+  "total_runs_analyzed": 6,
+  "min_occurrences_threshold": 2,
   "process_min_occurrences_threshold": 1,
   "workflow_min_occurrences_threshold": 1
 }
