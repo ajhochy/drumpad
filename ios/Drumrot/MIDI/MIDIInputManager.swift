@@ -15,8 +15,23 @@ import SwiftMIDI
 final class MIDIInputManager: ObservableObject {
     struct Source: Identifiable, Equatable { let id: Int32; let name: String }
 
+    /// One incoming MIDI note-on, captured for the on-screen diagnostic overlay
+    /// (#58). `lane == nil` means the note is not in the GM drum map — useful
+    /// for distinguishing "no CoreMIDI delivery" from "delivery works, mapping
+    /// gap" on real hardware.
+    struct RecentEvent: Identifiable, Equatable {
+        let id = UUID()
+        let timestamp: Date
+        let status: UInt8       // 0x90 = note-on (only kind we log today)
+        let note: Int
+        let velocity: Int
+        let lane: DrumLane?     // nil = unmapped
+    }
+
     @Published private(set) var sources: [Source] = []
     @Published private(set) var activity = false
+    @Published private(set) var recentEvents: [RecentEvent] = []
+    private let recentEventsCap = 8
 
     /// Called on the MainActor for each incoming drum note-on.
     var onNote: ((DrumLane, Int) -> Void)?
@@ -76,10 +91,24 @@ final class MIDIInputManager: ObservableObject {
             guard case .noteOn(let n) = e else { continue }
             let velocity = n.velocity.midi1Value.intValue
             let note = n.note.number.intValue
-            guard velocity > 0, let lane = GMDrumMapper.lane(forNote: note) else { continue }
-            onNote?(lane, velocity)
-            fired = true
+            guard velocity > 0 else { continue }
+
+            // Log every note-on (mapped or not) into the diagnostic ring so
+            // the on-screen overlay can distinguish "no events" from
+            // "events arriving but no GM mapping".
+            let lane = GMDrumMapper.lane(forNote: note)
+            let entry = RecentEvent(timestamp: Date(), status: 0x90, note: note, velocity: velocity, lane: lane)
+            recentEvents.append(entry)
+            if recentEvents.count > recentEventsCap {
+                recentEvents.removeFirst(recentEvents.count - recentEventsCap)
+            }
+
+            if let lane {
+                onNote?(lane, velocity)
+                fired = true
+            }
         }
+        // Activity LED is gated to mapped notes (preserves build-1 behavior).
         if fired { flashActivity() }
     }
 

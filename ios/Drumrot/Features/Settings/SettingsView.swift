@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var rows: [AppSettings]
     @State private var showBluetooth = false
+    @State private var showRecentMIDI = false
 
     var body: some View {
         NavigationStack {
@@ -23,6 +24,10 @@ struct SettingsView: View {
                         }
                     }
                     Button("Pair Bluetooth MIDI device") { showBluetooth = true }
+                    DisclosureGroup("Recent activity", isExpanded: $showRecentMIDI) {
+                        MIDIDiagnosticOverlay(midi: store.midi, compact: false)
+                            .padding(.vertical, 4)
+                    }
                 }
 
                 Section("Audio") {
