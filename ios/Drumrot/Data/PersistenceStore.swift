@@ -65,6 +65,41 @@ struct AppSettings: Codable, Equatable {
     /// without a doubled hit. On-screen pad gestures + metronome are
     /// unaffected (#60).
     var externalAudioMode: Bool = false
+
+    init(schemaVersion: Int = 1,
+         midiDeviceUID: String? = nil,
+         audioLatencyOffsetMs: Int = 0,
+         hapticsEnabled: Bool = true,
+         reduceMotionOverride: Bool = false,
+         lastTab: String = "play",
+         externalAudioMode: Bool = false) {
+        self.schemaVersion = schemaVersion
+        self.midiDeviceUID = midiDeviceUID
+        self.audioLatencyOffsetMs = audioLatencyOffsetMs
+        self.hapticsEnabled = hapticsEnabled
+        self.reduceMotionOverride = reduceMotionOverride
+        self.lastTab = lastTab
+        self.externalAudioMode = externalAudioMode
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, midiDeviceUID, audioLatencyOffsetMs,
+             hapticsEnabled, reduceMotionOverride, lastTab, externalAudioMode
+    }
+
+    /// Tolerates missing keys so additive schema changes don't reset
+    /// users' existing settings to defaults on first launch of the new
+    /// build. Each field falls back to its declared default if absent.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion        = (try? c.decode(Int.self,    forKey: .schemaVersion)) ?? 1
+        midiDeviceUID        =  try? c.decode(String.self, forKey: .midiDeviceUID)
+        audioLatencyOffsetMs = (try? c.decode(Int.self,    forKey: .audioLatencyOffsetMs)) ?? 0
+        hapticsEnabled       = (try? c.decode(Bool.self,   forKey: .hapticsEnabled)) ?? true
+        reduceMotionOverride = (try? c.decode(Bool.self,   forKey: .reduceMotionOverride)) ?? false
+        lastTab              = (try? c.decode(String.self, forKey: .lastTab)) ?? "play"
+        externalAudioMode    = (try? c.decode(Bool.self,   forKey: .externalAudioMode)) ?? false
+    }
 }
 
 // MARK: - PersistenceStore
