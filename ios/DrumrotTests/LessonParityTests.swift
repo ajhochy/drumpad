@@ -12,21 +12,30 @@ final class LessonParityTests: XCTestCase {
         ])
     }
 
-    /// beatsPerBar = length of the first pattern. Disco Pulse's first pattern is
-    /// 15 chars (the web quirk), every other lesson is 16.
+    /// beatsPerBar = length of the first pattern. Every lesson is 16 or 32.
     func testBeatsPerBar() {
-        var byName: [String: Int] = [:]
-        for l in LessonCatalog.all { byName[l.name] = l.beatsPerBar }
-        XCTAssertEqual(byName["Disco Pulse"], 15)
-        for (name, bpb) in byName where name != "Disco Pulse" {
-            XCTAssertEqual(bpb, 16, "\(name) beatsPerBar")
+        for l in LessonCatalog.all {
+            XCTAssertTrue(l.beatsPerBar == 16 || l.beatsPerBar == 32,
+                          "\(l.name) beatsPerBar=\(l.beatsPerBar) (expected 16 or 32)")
+        }
+    }
+
+    /// All per-lane patterns within a lesson must share the same length as the
+    /// first pattern, otherwise notes from short rows get truncated.
+    func testPatternsUniformLength() {
+        for l in LessonCatalog.all {
+            let len = l.beatsPerBar
+            for p in l.patterns {
+                let n = p.pattern.filter { !$0.isWhitespace }.count
+                XCTAssertEqual(n, len, "\(l.name) lane \(p.lane) length")
+            }
         }
     }
 
     func testNoteCounts() {
         let expected: [String: Int] = [
-            "Rock Beat 101": 24, "Disco Pulse": 15, "Half-Time Slap": 22,
-            "Tom Fill": 19, "Crash & Ride": 14, "Shuffle": 16,
+            "Rock Beat 101": 24, "Disco Pulse": 16, "Half-Time Slap": 22,
+            "Tom Fill": 20, "Crash & Ride": 15, "Shuffle": 16,
             "Punk Bash": 26, "Funk Pocket": 25,
         ]
         for l in LessonCatalog.all {
