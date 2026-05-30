@@ -173,12 +173,43 @@ final class PlaybackEngine: ObservableObject {
         let grooveElapsed = (clock.nowMs - startMs) - countInMs
         var bestIndex: Int?
         var bestError = Double.greatestFiniteMagnitude
-        for i in notes.indices where !notes[i].hit && !notes[i].missed && notes[i].lane == lane {
+        var hitIsInNextIteration = false
+
+        // ── Current iteration ──────────────────────────────────────────────
+        for i in notes.indices where !notes[i].hit && !notes[i].missed
+                                  && notes[i].lane == lane {
             let tAbs = noteTimeMs(notes[i].beat) + Double(loopIteration) * grooveMs
             let err = abs(grooveElapsed - tAbs)
-            if err < bestError { bestError = err; bestIndex = i }
+            if err < bestError { bestError = err; bestIndex = i; hitIsInNextIteration = false }
         }
+
+        // ── Next iteration (shadow notes) ──────────────────────────────────
+        // The user can hit the shadow of beat 0 before update() has had a
+        // chance to fire the loop rollover.  When that happens the note object
+        // still carries hit=true from the current pass and the hit is silently
+        // discarded.  Fix: also judge against loopIteration+1 so the earliest
+        // legal shadow tap wins over a stale same-iteration match.
+        if loop {
+            for i in notes.indices where notes[i].lane == lane {
+                let tAbsNext = noteTimeMs(notes[i].beat)
+                             + Double(loopIteration + 1) * grooveMs
+                let err = abs(grooveElapsed - tAbsNext)
+                if err < bestError { bestError = err; bestIndex = i; hitIsInNextIteration = true }
+            }
+        }
+
         guard let idx = bestIndex, bestError <= Self.hitWindowMs else { return nil }
+
+        // If the winning note lives in the next iteration, pre-advance the loop
+        // so the note can be marked hit cleanly.  update() will see pass ==
+        // loopIteration and skip the rollover on its next tick.
+        if hitIsInNextIteration {
+            savePass()
+            loopIteration += 1
+            for i in notes.indices { notes[i].hit = false; notes[i].missed = false }
+            scoring.resetPassCounts()
+        }
+
         notes[idx].hit = true
         return scoring.recordHit(dy: bestError * Self.pxPerMs)
     }

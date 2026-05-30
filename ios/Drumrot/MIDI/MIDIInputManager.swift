@@ -36,7 +36,14 @@ final class MIDIInputManager: ObservableObject {
     private let recentEventsCap = 8
 
     /// Called on the MainActor for each incoming drum note-on.
+    /// Use this for game logic (scoring, achievements). Audio is fired earlier
+    /// via `audioCallback` directly on the CoreMIDI thread.
     var onNote: ((DrumLane, Int) -> Void)?
+
+    /// Called immediately on the CoreMIDI callback thread — no main-actor hop.
+    /// Set this to a thread-safe closure (e.g. `DrumAudioEngine.playImmediate`).
+    /// Must not touch any `@MainActor` state directly.
+    nonisolated(unsafe) var audioCallback: ((DrumLane, Int) -> Void)?
 
     /// Allow/block the WiFi Network MIDI session from auto-accepting connections.
     /// Default is `false` (`.noOne`) so a background Ableton or DAW session on the
@@ -75,8 +82,23 @@ final class MIDIInputManager: ObservableObject {
                 to: .allOutputs,
                 tag: inputTag,
                 receiver: .events { [weak self] events, _, source in
-                    // Capture the source endpoint name so the diagnostic overlay
-                    // can show which device each note came from.
+                    // ── Fast path (CoreMIDI thread, no main-actor hop) ──────────────
+                    // Fire audio immediately so the buffer schedules within
+                    // microseconds of the event. This eliminates the ~16 ms stall
+                    // that occurs when waiting for the next main run-loop tick.
+                    if let cb = self?.audioCallback {
+                        for event in events {
+                            guard case .noteOn(let n) = event else { continue }
+                            let vel = n.velocity.midi1Value.intValue
+                            guard vel > 0 else { continue }
+                            let note = n.note.number.intValue
+                            if let lane = GMDrumMapper.lane(forNote: note) {
+                                cb(lane, vel)
+                            }
+                        }
+                    }
+                    // ── Slow path (main actor) ──────────────────────────────────────
+                    // Diagnostics overlay, activity LED, and game-logic callbacks.
                     let name = source?.displayName ?? "unknown"
                     Task { @MainActor in self?.receive(events, from: name) }
                 }

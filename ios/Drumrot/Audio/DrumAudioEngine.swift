@@ -1,5 +1,28 @@
 import AVFoundation
 
+/// Thread-safe buffer scheduler — the only state the CoreMIDI callback thread
+/// touches.  Written once (on the main actor, inside `start()`), then treated
+/// as read-only for `pool` and `laneBuffers`.  The `nextIdx` rotation has a
+/// benign data race: worst case is two simultaneous hits sharing a player node,
+/// which produces an `.interrupts`-style cut rather than a crash.
+internal final class AudioScheduler: @unchecked Sendable {
+    var pool: [AVAudioPlayerNode] = []
+    var laneBuffers: [DrumLane: AVAudioPCMBuffer] = [:]
+    var isReady = false
+    var isExternalAudio = false
+    private var nextIdx: Int = 0
+
+    func schedule(lane: DrumLane, velocity: Int) {
+        guard isReady, !isExternalAudio, !pool.isEmpty else { return }
+        guard let buffer = laneBuffers[lane] else { return }
+        let node = pool[nextIdx % pool.count]
+        nextIdx &+= 1
+        node.volume = Float(max(1, min(velocity, 127))) / 127
+        // AVAudioPlayerNode.scheduleBuffer is documented thread-safe.
+        node.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
+    }
+}
+
 /// AVAudioEngine drum + click playback. Preloads one PCM buffer per voice and
 /// schedules them on a small pool of player nodes for polyphony.
 @MainActor
@@ -18,11 +41,17 @@ final class DrumAudioEngine {
     private var clickBuffers: [Bool: AVAudioPCMBuffer] = [:]
     private(set) var isRunning = false
 
+    /// Thread-safe scheduler shared with the CoreMIDI callback thread.
+    /// `let` so `playImmediate` can access it from a `nonisolated` context.
+    let scheduler = AudioScheduler()
+
     /// When true, MIDI-triggered `play(lane:velocity:source:.midi)` calls
     /// are dropped before scheduling a buffer. PlayView keeps this in sync
     /// with `AppSettings.externalAudioMode` (#60). On-screen pad gestures
     /// (`.tap`) and the metronome are unaffected.
-    var externalAudioMode = false
+    var externalAudioMode = false {
+        didSet { scheduler.isExternalAudio = externalAudioMode }
+    }
 
     private let poolSize = 8
 
@@ -52,6 +81,10 @@ final class DrumAudioEngine {
             try engine.start()
             pool.forEach { $0.play() }
             isRunning = true
+            // Arm the nonisolated fast path used by the CoreMIDI callback thread.
+            scheduler.pool = pool
+            scheduler.laneBuffers = laneBuffers
+            scheduler.isReady = true
         } catch {
             isRunning = false
             assertionFailure("AVAudioEngine start failed: \(error)")
@@ -63,6 +96,15 @@ final class DrumAudioEngine {
         pool.forEach { $0.stop() }
         engine.stop()
         isRunning = false
+        scheduler.isReady = false
+    }
+
+    /// Nonisolated fast path — may be called from any thread, including the
+    /// CoreMIDI callback thread.  Bypasses the main-actor hop so audio fires
+    /// within microseconds of the event arriving rather than waiting up to
+    /// ~16 ms for the next main run-loop tick.
+    nonisolated func playImmediate(lane: DrumLane, velocity: Int) {
+        scheduler.schedule(lane: lane, velocity: velocity)
     }
 
     func play(lane: DrumLane, velocity: Int = 127, source: PlaySource = .tap) {
