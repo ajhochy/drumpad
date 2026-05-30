@@ -233,6 +233,24 @@ final class PersistenceStore: ObservableObject {
         persist(extraLessons, key: Key.extraLessons)
     }
 
+    /// Removes a user-authored lesson by name. No-op if absent.
+    func deleteExtraLesson(name: String) {
+        let before = extraLessons.count
+        extraLessons.removeAll { $0.name == name }
+        guard extraLessons.count != before else { return }
+        persist(extraLessons, key: Key.extraLessons)
+    }
+
+    /// Decoded view of the user-authored lessons in store order.
+    /// Rows whose JSON fails to decode are silently skipped — a single
+    /// corrupt blob shouldn't hide the rest of the library.
+    func extraLessonsAsLessons() -> [Lesson] {
+        extraLessons.compactMap { row in
+            guard let data = row.lessonJSON.data(using: .utf8) else { return nil }
+            return try? decoder.decode(Lesson.self, from: data)
+        }
+    }
+
     func updateSettings(_ block: (inout AppSettings) -> Void) {
         block(&settings)
         persist(settings, key: Key.settings)

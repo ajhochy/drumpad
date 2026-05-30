@@ -8,6 +8,8 @@ struct BuildView: View {
     @State private var grid = Array(repeating: Array(repeating: false, count: 16), count: 6)
     @State private var bpm = 90
     @State private var coach = ""
+    @State private var grooveName = ""
+    @State private var saveToast: String?
     @State private var exportFile: ExportFile?
 
     private let lanes: [DrumLane] = DrumLane.allCases
@@ -21,6 +23,21 @@ struct BuildView: View {
         }
         .padding(.horizontal, 14).padding(.vertical, 12)
         .sheet(item: $exportFile) { ShareSheet(items: [$0.url]) }
+        .overlay(alignment: .top) {
+            if let saveToast {
+                Text(saveToast.uppercased())
+                    .font(SPFont.monoSmall).tracking(1.6)
+                    .foregroundStyle(SPColor.ledGreen)
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(SPColor.ink)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(SPColor.ledGreen, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .shadow(color: SPColor.ledGreen.opacity(0.4), radius: 6)
+                    .padding(.top, 18)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .onAppear(perform: seedFromEditingLessonIfAny)
     }
 
     // MARK: - Left: sequencer face
@@ -48,13 +65,24 @@ struct BuildView: View {
             Text("PAT").font(SPFont.monoSmall).tracking(2).foregroundColor(SPColor.ledAmber)
             + Text(" BUILD").font(SPFont.monoSmall).tracking(2).foregroundColor(SPColor.lcdFG)
 
-            Text("CUSTOM PATTERN")
-                .font(SPFont.ui(15, weight: .bold)).tracking(0.6)
-                .foregroundStyle(SPColor.lcdFG)
-                .shadow(color: SPColor.lcdFG.opacity(0.5), radius: 4)
-                .lineLimit(1)
+            ZStack(alignment: .leading) {
+                if grooveName.isEmpty {
+                    Text("NAME THIS GROOVE…")
+                        .font(SPFont.ui(15, weight: .bold)).tracking(0.6)
+                        .foregroundStyle(SPColor.lcdDim)
+                }
+                TextField("", text: $grooveName)
+                    .font(SPFont.ui(15, weight: .bold)).tracking(0.6)
+                    .foregroundStyle(SPColor.lcdFG)
+                    .shadow(color: SPColor.lcdFG.opacity(0.5), radius: 4)
+                    .textInputAutocapitalization(.words)
+                    .submitLabel(.done)
+                    .accessibilityLabel("Groove name")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .lineLimit(1)
 
-            Spacer()
+            Spacer(minLength: 4)
 
             statBlock(label: "STEPS", value: "\(steps)")
             statBlock(label: "BPM", value: "\(bpm)", warn: true)
@@ -121,28 +149,27 @@ struct BuildView: View {
     // MARK: - Sequencer grid
 
     private var sequencerGrid: some View {
-        HStack(alignment: .top, spacing: 8) {
-            // Lane labels
-            VStack(spacing: 6) {
-                ForEach(lanes, id: \.self) { lane in
-                    laneLabel(lane)
-                }
-            }
-            .frame(width: 90)
-
-            // Grid
-            VStack(spacing: 6) {
+        VStack(spacing: 6) {
+            // Top: step numbers, indented past the label gutter so they sit
+            // directly above the grid cells (not over the lane labels).
+            HStack(spacing: 8) {
+                Color.clear.frame(width: laneLabelWidth, height: 1)
                 stepNumberRow
-                ForEach(lanes, id: \.self) { lane in
+            }
+            // Body: each lane is one HStack of (label, row of step cells) so
+            // the label and its cells are guaranteed to share a vertical row.
+            ForEach(lanes, id: \.self) { lane in
+                HStack(alignment: .center, spacing: 8) {
+                    laneLabel(lane)
                     HStack(spacing: 4) {
                         ForEach(0..<steps, id: \.self) { step in
                             stepCell(lane: lane, step: step)
                                 .onTapGesture { grid[lane.rawValue][step].toggle() }
                         }
                     }
+                    .frame(maxWidth: .infinity)
                 }
             }
-            .frame(maxWidth: .infinity)
         }
         .padding(10)
         .background(LinearGradient(colors: [SPColor.roomBG, SPColor.plastic],
@@ -150,6 +177,8 @@ struct BuildView: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(SPColor.ink, lineWidth: 1))
     }
+
+    private let laneLabelWidth: CGFloat = 90
 
     private func laneLabel(_ lane: DrumLane) -> some View {
         HStack {
@@ -167,7 +196,7 @@ struct BuildView: View {
             Spacer()
         }
         .padding(.horizontal, 8)
-        .frame(height: 42)
+        .frame(width: laneLabelWidth, height: 42)
         .background(LinearGradient(colors: [Color(hex: 0x2C2F36), SPColor.chassis2],
                                    startPoint: .top, endPoint: .bottom))
         .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -268,6 +297,23 @@ struct BuildView: View {
             .disabled(isEmpty)
             .accessibilityLabel("Export MIDI file")
 
+            // Save to Library
+            Button { saveToLibrary() } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "tray.and.arrow.down.fill")
+                    Text("ADD TO LIBRARY").font(SPFont.ui(11, weight: .bold)).tracking(1.4)
+                }
+                .foregroundStyle(isEmpty ? SPColor.textDim : SPColor.ledGreen)
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(LinearGradient(colors: [Color(hex: 0x34383F), Color(hex: 0x1F2127)],
+                                           startPoint: .top, endPoint: .bottom))
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(SPColor.ink, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .disabled(isEmpty)
+            .accessibilityLabel("Save groove to library")
+
             // Load into Play
             SPPushButton(.primary, action: { loadIntoPlayer() }) {
                 HStack(spacing: 6) {
@@ -324,6 +370,8 @@ struct BuildView: View {
                 spacing: 6
             ) {
                 toolBtn(icon: "eraser", label: "Clear", tint: SPColor.ledRed, action: { clear() })
+                toolBtn(icon: "tray.and.arrow.down.fill", label: "Save Lib", tint: SPColor.ledGreen,
+                        action: { saveToLibrary() }, disabled: isEmpty)
                 toolBtn(icon: "square.and.arrow.up", label: "Export", tint: SPColor.ledAmberHot,
                         action: { exportMIDI() }, disabled: isEmpty)
                 toolBtn(icon: "play.fill", label: "Load Play", tint: SPColor.ledGreen,
@@ -379,17 +427,50 @@ struct BuildView: View {
     }
 
     private func loadIntoPlayer() {
-        guard let lesson = BuilderLessonFactory.lesson(grid: grid, bpm: bpm, coach: coach) else { return }
+        guard let lesson = currentLesson() else { return }
         persistBuilderState()
-        if let data = try? JSONEncoder().encode(lesson),
-           let json = String(data: data, encoding: .utf8) {
-            upsertExtraLesson(name: lesson.name, json: json)
-        }
-        store.achievements?.fire(.creator)
-        if !coach.isEmpty { store.achievements?.fire(.coach) }
         store.currentLesson = lesson
         store.autoStartPlay = false
         store.selectedTab = .play
+    }
+
+    /// Builds the in-memory Lesson without persisting it to the library.
+    /// Used by `Load Play` (transient) and `Save to Library` (then persisted
+    /// + creator/coach achievements fired).
+    private func currentLesson() -> Lesson? {
+        let name = resolvedName()
+        return BuilderLessonFactory.lesson(grid: grid, bpm: bpm, coach: coach, name: name)
+    }
+
+    private func saveToLibrary() {
+        guard let lesson = currentLesson() else { return }
+        persistBuilderState()
+        guard let data = try? JSONEncoder().encode(lesson),
+              let json = String(data: data, encoding: .utf8) else { return }
+        persistence.saveExtraLesson(name: lesson.name, lessonJSON: json)
+        store.achievements?.fire(.creator)
+        if !coach.isEmpty { store.achievements?.fire(.coach) }
+        showSaveToast("Saved “\(lesson.name)” to library")
+    }
+
+    private func showSaveToast(_ message: String) {
+        withAnimation(.easeOut(duration: 0.25)) { saveToast = message }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_800_000_000)
+            withAnimation(.easeIn(duration: 0.25)) { saveToast = nil }
+        }
+    }
+
+    /// Falls back to a unique auto-numbered "My Groove N" when the user hasn't
+    /// typed a name. N is the smallest integer that doesn't already exist in
+    /// the user's extra-lesson list so saves don't silently overwrite.
+    private func resolvedName() -> String {
+        let trimmed = grooveName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty { return trimmed }
+        let existing = Set(persistence.extraLessons.map(\.name))
+        var n = 1
+        while existing.contains("\(BuilderLessonFactory.builderLessonName) \(n)") { n += 1 }
+        return "\(BuilderLessonFactory.builderLessonName) \(n)"
     }
 
     private func persistBuilderState() {
@@ -398,8 +479,15 @@ struct BuildView: View {
         persistence.saveBuilder(BuilderState(steps: steps, patternJSON: json, bpm: bpm, coachNote: coach))
     }
 
-    private func upsertExtraLesson(name: String, json: String) {
-        persistence.saveExtraLesson(name: name, lessonJSON: json)
+    private func seedFromEditingLessonIfAny() {
+        guard let lesson = store.editingLesson else { return }
+        let decoded = BuilderLessonFactory.grid(from: lesson)
+        steps = decoded.steps
+        grid = decoded.grid
+        bpm = decoded.bpm
+        coach = decoded.coach
+        grooveName = lesson.name
+        store.editingLesson = nil
     }
 }
 

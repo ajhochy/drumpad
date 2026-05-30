@@ -15,13 +15,24 @@ struct LibraryView: View {
         Dictionary(scores.map { ($0.lessonKey, $0) }, uniquingKeysWith: { a, _ in a })
     }
 
+    /// Built-in catalog + user-authored (groove-builder + MIDI-import) lessons.
+    /// Extras come after built-ins so the featured slot stays a catalog lesson
+    /// unless filters/search narrow the list to extras only.
+    private var allLessons: [Lesson] {
+        LessonCatalog.all + persistence.extraLessonsAsLessons()
+    }
+
+    private var extraNames: Set<String> {
+        Set(persistence.extraLessons.map(\.name))
+    }
+
     private var allGenres: [String] {
-        let g = Array(Set(LessonCatalog.all.map(\.genre))).sorted()
+        let g = Array(Set(allLessons.map(\.genre))).sorted()
         return ["All"] + g
     }
 
     private var filteredLessons: [Lesson] {
-        LessonCatalog.all.filter { lesson in
+        allLessons.filter { lesson in
             let genreOK = filterGenre == "All" || lesson.genre == filterGenre
             let searchOK = searchText.isEmpty || lesson.name.localizedCaseInsensitiveContains(searchText)
             return genreOK && searchOK
@@ -54,7 +65,7 @@ struct LibraryView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(LessonCatalog.all.count) PATCHES LOADED · TAP TO INJECT INTO PLAY")
+                Text(headerCountLine)
                     .font(SPFont.monoMicro).tracking(1.8).foregroundStyle(SPColor.textDim)
                 if let err = importError {
                     Text(err.uppercased())
@@ -147,6 +158,7 @@ struct LibraryView: View {
             if let featured = filteredLessons.first {
                 featuredCard(featured, score: scoreByName[featured.name])
                     .frame(maxWidth: 310)
+                    .contextMenu { extraMenuItems(for: featured) }
             }
 
             if !filteredLessons.isEmpty {
@@ -160,6 +172,7 @@ struct LibraryView: View {
                             : Array(filteredLessons)
                         ForEach(Array(rest.enumerated()), id: \.element.id) { idx, lesson in
                             lessonGridCell(lesson, index: idx + 2, score: scoreByName[lesson.name])
+                                .contextMenu { extraMenuItems(for: lesson) }
                         }
                     }
                 }
@@ -180,6 +193,9 @@ struct LibraryView: View {
                 .offset(y: -6)
 
             HStack(spacing: 8) {
+                if extraNames.contains(lesson.name) {
+                    statusStamp("USER", style: .pink)
+                }
                 statusStamp(score == nil ? "NEW" : "CURRENT", style: .amber)
                 if score != nil { statusStamp("PLAYED", style: .green) }
             }
@@ -261,8 +277,13 @@ struct LibraryView: View {
     private func lessonGridCell(_ lesson: Lesson, index: Int, score: LessonScore?) -> some View {
         Button { load(lesson) } label: {
             VStack(alignment: .leading, spacing: 10) {
-                statusStamp(score == nil ? "NEW" : "PLAYED",
-                            style: score == nil ? .pink : .green)
+                HStack(spacing: 6) {
+                    if extraNames.contains(lesson.name) {
+                        statusStamp("USER", style: .pink)
+                    }
+                    statusStamp(score == nil ? "NEW" : "PLAYED",
+                                style: score == nil ? .pink : .green)
+                }
 
                 Text(lesson.name)
                     .font(SPFont.ui(15, weight: .bold))
@@ -404,6 +425,42 @@ struct LibraryView: View {
         store.currentLesson = lesson
         store.autoStartPlay = true
         store.selectedTab = .play
+    }
+
+    /// Context-menu items that appear ONLY on user-authored lessons.
+    /// For built-ins this returns an empty view, so the menu is suppressed.
+    @ViewBuilder
+    private func extraMenuItems(for lesson: Lesson) -> some View {
+        if extraNames.contains(lesson.name) {
+            Button {
+                editGroove(lesson)
+            } label: {
+                Label("Edit Groove", systemImage: "slider.horizontal.3")
+            }
+            Button(role: .destructive) {
+                deleteGroove(lesson)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+    }
+
+    private func editGroove(_ lesson: Lesson) {
+        store.editingLesson = lesson
+        store.selectedTab = .build
+    }
+
+    private func deleteGroove(_ lesson: Lesson) {
+        persistence.deleteExtraLesson(name: lesson.name)
+    }
+
+    private var headerCountLine: String {
+        let total = allLessons.count
+        let userCount = persistence.extraLessons.count
+        if userCount == 0 {
+            return "\(total) PATCHES LOADED · TAP TO INJECT INTO PLAY"
+        }
+        return "\(total) PATCHES · \(userCount) YOURS · LONG-PRESS TO EDIT"
     }
 
     private func importMIDI(_ result: Result<URL, Error>) {
