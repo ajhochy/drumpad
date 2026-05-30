@@ -27,8 +27,7 @@ struct Lesson: Codable, Equatable, Identifiable {
     /// Built-in lessons are a single bar (`bars = 1`), matching the web `lesson()` helper.
     var bars: Int { 1 }
 
-    /// beatsPerBar = whitespace-stripped length of the FIRST pattern (web behavior —
-    /// note this makes Disco Pulse 15, not 16).
+    /// beatsPerBar = whitespace-stripped length of the FIRST pattern.
     var beatsPerBar: Int {
         guard let first = patterns.first else { return 0 }
         return first.pattern.filter { !$0.isWhitespace }.count

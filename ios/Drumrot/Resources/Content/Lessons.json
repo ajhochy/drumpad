@@ -18,7 +18,7 @@
     "difficulty": "Beginner",
     "genre": "Disco",
     "patterns": [
-      { "lane": "hihat", "pattern": ".x.x.x.x.x.x.x." },
+      { "lane": "hihat", "pattern": ".x.x.x.x.x.x.x.x" },
       { "lane": "snare", "pattern": "..x...x...x...x." },
       { "lane": "kick",  "pattern": "x...x...x...x..." }
     ]
@@ -43,7 +43,7 @@
     "genre": "Rock",
     "patterns": [
       { "lane": "hihat", "pattern": "xxxxxxxx........" },
-      { "lane": "snare", "pattern": "....x..........." },
+      { "lane": "snare", "pattern": "..x...x........." },
       { "lane": "kick",  "pattern": "x...x..........." },
       { "lane": "tom",   "pattern": "........xxxxxxxx" }
     ]
@@ -56,7 +56,7 @@
     "genre": "Jazz",
     "patterns": [
       { "lane": "crash", "pattern": "x..............." },
-      { "lane": "ride",  "pattern": ".x.x.x.x.x.x.x." },
+      { "lane": "ride",  "pattern": ".x.x.x.x.x.x.x.x" },
       { "lane": "snare", "pattern": "..x...x...x...x." },
       { "lane": "kick",  "pattern": "x...x..........." }
     ]
