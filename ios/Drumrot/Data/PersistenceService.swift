@@ -61,6 +61,37 @@ struct PersistenceService {
         (try? context.fetchCount(FetchDescriptor<DrumrotCollectionEntry>())) ?? 0
     }
 
+    /// Upserts a user-authored lesson (groove-builder save or MIDI import) by
+    /// name. Mirrors the ios16 PersistenceStore.saveExtraLesson semantics.
+    func saveExtraLesson(name: String, lessonJSON: String) {
+        if let row = fetchOne(ExtraLesson.self, #Predicate { $0.name == name }) {
+            row.lessonJSON = lessonJSON
+            row.createdAt = .now
+        } else {
+            context.insert(ExtraLesson(name: name, lessonJSON: lessonJSON))
+        }
+        try? context.save()
+    }
+
+    /// Removes a user-authored lesson by name. No-op if absent.
+    func deleteExtraLesson(name: String) {
+        guard let row = fetchOne(ExtraLesson.self, #Predicate { $0.name == name }) else { return }
+        context.delete(row)
+        try? context.save()
+    }
+
+    /// Decoded view of every user-authored lesson. Rows whose JSON fails to
+    /// decode are silently skipped — a single corrupt blob shouldn't hide the
+    /// rest of the library.
+    func extraLessonsAsLessons() -> [Lesson] {
+        let rows = (try? context.fetch(FetchDescriptor<ExtraLesson>())) ?? []
+        let decoder = JSONDecoder()
+        return rows.compactMap { row in
+            guard let data = row.lessonJSON.data(using: .utf8) else { return nil }
+            return try? decoder.decode(Lesson.self, from: data)
+        }
+    }
+
     private func fetchOne<T: PersistentModel>(_ type: T.Type, _ predicate: Predicate<T>) -> T? {
         var descriptor = FetchDescriptor<T>(predicate: predicate)
         descriptor.fetchLimit = 1

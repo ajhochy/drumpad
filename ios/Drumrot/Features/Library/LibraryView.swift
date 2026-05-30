@@ -7,6 +7,7 @@ struct LibraryView: View {
     @Environment(\.modelContext) private var context
     @Query private var scores: [LessonScore]
     @Query private var playDays: [PracticeDay]
+    @Query private var extraLessons: [ExtraLesson]
     @State private var showImporter = false
     @State private var importError: String?
     @State private var searchText = ""
@@ -16,13 +17,34 @@ struct LibraryView: View {
         Dictionary(scores.map { ($0.lessonKey, $0) }, uniquingKeysWith: { a, _ in a })
     }
 
+    /// Decoded user-authored lessons. Rows whose JSON fails to decode are
+    /// silently skipped — a single corrupt blob shouldn't hide the rest.
+    private var decodedExtras: [Lesson] {
+        let decoder = JSONDecoder()
+        return extraLessons.compactMap { row in
+            guard let data = row.lessonJSON.data(using: .utf8) else { return nil }
+            return try? decoder.decode(Lesson.self, from: data)
+        }
+    }
+
+    /// Built-in catalog + user-authored (groove-builder + MIDI-import) lessons.
+    /// Extras come after built-ins so the featured slot stays a catalog lesson
+    /// unless filters/search narrow the list to extras only.
+    private var allLessons: [Lesson] {
+        LessonCatalog.all + decodedExtras
+    }
+
+    private var extraNames: Set<String> {
+        Set(extraLessons.map(\.name))
+    }
+
     private var allGenres: [String] {
-        let g = Array(Set(LessonCatalog.all.map(\.genre))).sorted()
+        let g = Array(Set(allLessons.map(\.genre))).sorted()
         return ["All"] + g
     }
 
     private var filteredLessons: [Lesson] {
-        LessonCatalog.all.filter { lesson in
+        allLessons.filter { lesson in
             let genreOK = filterGenre == "All" || lesson.genre == filterGenre
             let searchOK = searchText.isEmpty || lesson.name.localizedCaseInsensitiveContains(searchText)
             return genreOK && searchOK
@@ -55,7 +77,7 @@ struct LibraryView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(LessonCatalog.all.count) PATCHES LOADED · TAP TO INJECT INTO PLAY")
+                Text(headerCountLine)
                     .font(SPFont.monoMicro).tracking(1.8).foregroundStyle(SPColor.textDim)
                 if let err = importError {
                     Text(err.uppercased())
@@ -148,6 +170,7 @@ struct LibraryView: View {
             if let featured = filteredLessons.first {
                 featuredCard(featured, score: scoreByName[featured.name])
                     .frame(maxWidth: 310)
+                    .contextMenu { extraMenuItems(for: featured) }
             }
 
             if !filteredLessons.isEmpty {
@@ -161,6 +184,7 @@ struct LibraryView: View {
                             : Array(filteredLessons)
                         ForEach(Array(rest.enumerated()), id: \.element.id) { idx, lesson in
                             lessonGridCell(lesson, index: idx + 2, score: scoreByName[lesson.name])
+                                .contextMenu { extraMenuItems(for: lesson) }
                         }
                     }
                 }
@@ -181,6 +205,9 @@ struct LibraryView: View {
                 .offset(y: -6)
 
             HStack(spacing: 8) {
+                if extraNames.contains(lesson.name) {
+                    statusStamp("USER", style: .pink)
+                }
                 statusStamp(score == nil ? "NEW" : "CURRENT", style: .amber)
                 if score != nil { statusStamp("PLAYED", style: .green) }
             }
@@ -262,8 +289,13 @@ struct LibraryView: View {
     private func lessonGridCell(_ lesson: Lesson, index: Int, score: LessonScore?) -> some View {
         Button { load(lesson) } label: {
             VStack(alignment: .leading, spacing: 10) {
-                statusStamp(score == nil ? "NEW" : "PLAYED",
-                            style: score == nil ? .pink : .green)
+                HStack(spacing: 6) {
+                    if extraNames.contains(lesson.name) {
+                        statusStamp("USER", style: .pink)
+                    }
+                    statusStamp(score == nil ? "NEW" : "PLAYED",
+                                style: score == nil ? .pink : .green)
+                }
 
                 Text(lesson.name)
                     .font(SPFont.ui(15, weight: .bold))
@@ -407,6 +439,44 @@ struct LibraryView: View {
         store.selectedTab = .play
     }
 
+    /// Context-menu items that appear ONLY on user-authored lessons.
+    /// For built-ins this returns an empty view, so the menu is suppressed.
+    @ViewBuilder
+    private func extraMenuItems(for lesson: Lesson) -> some View {
+        if extraNames.contains(lesson.name) {
+            Button {
+                editGroove(lesson)
+            } label: {
+                Label("Edit Groove", systemImage: "slider.horizontal.3")
+            }
+            Button(role: .destructive) {
+                deleteGroove(lesson)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+    }
+
+    private func editGroove(_ lesson: Lesson) {
+        store.editingLesson = lesson
+        store.selectedTab = .build
+    }
+
+    private func deleteGroove(_ lesson: Lesson) {
+        guard let row = extraLessons.first(where: { $0.name == lesson.name }) else { return }
+        context.delete(row)
+        try? context.save()
+    }
+
+    private var headerCountLine: String {
+        let total = allLessons.count
+        let userCount = extraLessons.count
+        if userCount == 0 {
+            return "\(total) PATCHES LOADED · TAP TO INJECT INTO PLAY"
+        }
+        return "\(total) PATCHES · \(userCount) YOURS · LONG-PRESS TO EDIT"
+    }
+
     private func importMIDI(_ result: Result<URL, Error>) {
         importError = nil
         guard case let .success(url) = result else { return }
@@ -419,7 +489,14 @@ struct LibraryView: View {
             let lesson = MIDIFileParser.lesson(name: name, events: parsed.events, ppq: parsed.ppq)
             if let json = try? JSONEncoder().encode(lesson),
                let str = String(data: json, encoding: .utf8) {
-                context.insert(ExtraLesson(name: name, lessonJSON: str))
+                // Upsert so re-importing the same .mid doesn't crash on the
+                // @Attribute(.unique) name uniqueness constraint.
+                if let row = extraLessons.first(where: { $0.name == name }) {
+                    row.lessonJSON = str
+                    row.createdAt = .now
+                } else {
+                    context.insert(ExtraLesson(name: name, lessonJSON: str))
+                }
                 try? context.save()
             }
             load(lesson)

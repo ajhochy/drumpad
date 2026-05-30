@@ -14,6 +14,11 @@ final class AppStore: ObservableObject {
     /// Debug: auto-start playback when Play appears (set by the `--play` launch arg).
     var autoStartPlay = false
 
+    /// One-shot handoff: when set, BuildView seeds its grid/bpm/coach/name from
+    /// this lesson on appear and clears the slot. Library writes it when the
+    /// user picks "Edit" on a saved groove.
+    @Published var editingLesson: Lesson?
+
     // Shared audio + MIDI input (activated on first Play appearance).
     let audio = DrumAudioEngine()
     let midi = MIDIInputManager()
