@@ -28,7 +28,17 @@ struct PlayView: View {
         .background { transportShortcuts }
         .onAppear {
             store.activateAudio()
-            store.midi.onNote = { lane, _ in hit(lane, source: .midi) }
+            // Fast path: audio fires directly on the CoreMIDI thread via
+            // playImmediate, bypassing the main-actor hop (~16 ms saved).
+            store.midi.audioCallback = { [audio = store.audio] lane, vel in
+                audio.playImmediate(lane: lane, velocity: vel)
+            }
+            // Slow path (main actor): game logic only — audio already fired above.
+            store.midi.onNote = { lane, vel in
+                if engine.registerHit(lane: lane.rawValue) != nil {
+                    store.achievements?.fire(.hit(combo: engine.combo))
+                }
+            }
             store.midi.start()
             store.audio.externalAudioMode = externalAudioMode
             engine.onMetronome = { accent in store.audio.playClick(accent: accent) }

@@ -34,7 +34,14 @@ final class MIDIInputManager: ObservableObject {
     private let recentEventsCap = 8
 
     /// Called on the MainActor for each incoming drum note-on.
+    /// Use this for game logic (scoring, achievements). Audio is fired earlier
+    /// via `audioCallback` directly on the CoreMIDI thread.
     var onNote: ((DrumLane, Int) -> Void)?
+
+    /// Called immediately on the CoreMIDI callback thread — no main-actor hop.
+    /// Set this to a thread-safe closure (e.g. `DrumAudioEngine.playImmediate`).
+    /// Must not touch any `@MainActor` state directly.
+    nonisolated(unsafe) var audioCallback: ((DrumLane, Int) -> Void)?
 
     private let manager = MIDIManager(
         clientName: "Drumrot",
@@ -60,6 +67,21 @@ final class MIDIInputManager: ObservableObject {
                 to: .allOutputs,
                 tag: inputTag,
                 receiver: .events { [weak self] events, _, _ in
+                    // ── Fast path (CoreMIDI thread, no main-actor hop) ──────────────
+                    // Fire audio immediately so the buffer schedules within
+                    // microseconds of the event. This eliminates the ~16 ms stall
+                    // that occurs when waiting for the next main run-loop tick.
+                    if let cb = self?.audioCallback {
+                        for event in events {
+                            guard case .noteOn(let n) = event else { continue }
+                            let vel = n.velocity.midi1Value.intValue
+                            guard vel > 0 else { continue }
+                            let note = n.note.number.intValue
+                            if let lane = GMDrumMapper.lane(forNote: note) {
+                                cb(lane, vel)
+                            }
+                        }
+                    }
                     Task { @MainActor in self?.receive(events) }
                 }
             )
