@@ -63,6 +63,17 @@ iPad (A16+) sim or a connected device. Debug args: `--play`, `--demo`,
 - [ ] Progress: streak, 14-day calendar, sessions/best/accuracy, achievement grid update.
 - [ ] Build: 16/32 grid → Load into Play creates "My Groove"; Export `.mid` shares a file; Creator/Coach unlock.
 
+### Groove Library + Edit (2026-05-30)
+- [ ] Build → tap cells → leave name blank → "ADD TO LIBRARY" → green toast; switch to Library and see "My Groove 1" (or next N) with USER stamp.
+- [ ] Build → type "My Test" → "ADD TO LIBRARY" → Library shows "My Test" with USER stamp.
+- [ ] Build → "LOAD INTO PLAY" without "ADD TO LIBRARY" → Play receives the lesson but nothing new appears in Library (no implicit save).
+- [ ] Library → long-press a USER cell → menu shows **Edit Groove** + **Delete** → Edit opens Build with grid / BPM / coach / name pre-populated.
+- [ ] Edit a saved groove → tap "ADD TO LIBRARY" without renaming → Library cell updates in place (same name, same slot).
+- [ ] Library → long-press USER cell → Delete → cell disappears; switch tabs and back → still gone.
+- [ ] Library → "IMPORT .MID" → pick any `.mid` → groove appears with USER stamp under the Import genre chip; tap plays it.
+- [ ] Library → long-press a built-in (e.g. Rock Beat 101) → no Edit/Delete menu surfaces (built-ins immutable).
+- [ ] Header line reads "N PATCHES · K YOURS · LONG-PRESS TO EDIT" while at least one extra exists; reverts to "N PATCHES LOADED…" after deleting all extras.
+
 ## Drops / achievements
 - [ ] Achievement unlock → toast → drop reveal (NEW/UPGRADED/FIRST OG).
 - [ ] Drops shows N/31, locked `???`, collected portraits; OG shows ∞/MAX.
