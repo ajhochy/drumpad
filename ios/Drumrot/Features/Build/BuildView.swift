@@ -21,6 +21,11 @@ struct BuildView: View {
     @StateObject private var recorder = BuilderRecordEngine()
     @State private var showRecordPanel = false
 
+    // Overwrite-confirm state (issue #71)
+    @State private var overwriteCandidateName: String?
+    @State private var overwriteCandidateJSON: String?
+    @State private var showOverwriteAlert = false
+
     // Record mode
     @StateObject private var recorder = BuilderRecordEngine()
     @State private var showRecordPanel = false
