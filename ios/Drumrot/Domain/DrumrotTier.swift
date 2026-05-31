@@ -1,11 +1,30 @@
 import Foundation
 
-/// The 7 collection tiers, in ascending order. Mirrors `TIERS_ORDER` / `TIER_CONFIG`
-/// in `js/drumrots.js`. Declaration order IS the tier order (index 0...6).
+/// The 5 collection tiers, in ascending order. Collapsed from the original 7:
+/// - legendary absorbs mythic
+/// - og absorbs god (both are ultra-rare; one holofoil tier is more impactful)
+///
+/// Migration: old `mythic` raw values decode to `legendary`; old `god` raw values
+/// decode to `og`. The `init(from:)` custom decoder handles legacy data gracefully.
 enum DrumrotTier: String, CaseIterable, Codable, Equatable {
-    case common, rare, epic, legendary, mythic, god, og
+    case common, rare, epic, legendary, og
 
-    /// Order index 0...6 (matches the web `idx`).
+    // MARK: - Codable migration from 7-tier legacy data
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        switch raw {
+        case "common":    self = .common
+        case "rare":      self = .rare
+        case "epic":      self = .epic
+        case "legendary", "mythic": self = .legendary   // collapse mythic → legendary
+        case "god", "og":           self = .og           // collapse god → og
+        default:          self = .common                 // safe fallback
+        }
+    }
+
+    /// Order index 0...4 (ascending rarity).
     var index: Int { Self.allCases.firstIndex(of: self)! }
 
     /// Ascending tier order: common … og.
@@ -13,38 +32,33 @@ enum DrumrotTier: String, CaseIterable, Codable, Equatable {
 
     var displayName: String {
         switch self {
-        case .common: return "Common"
-        case .rare: return "Rare"
-        case .epic: return "Epic"
+        case .common:    return "Common"
+        case .rare:      return "Rare"
+        case .epic:      return "Epic"
         case .legendary: return "Legendary"
-        case .mythic: return "Mythic"
-        case .god: return "Drumrot God"
-        case .og: return "OG"
+        case .og:        return "OG"
         }
     }
 
     var label: String {
         switch self {
-        case .common: return "COMMON"
-        case .rare: return "RARE"
-        case .epic: return "EPIC"
+        case .common:    return "COMMON"
+        case .rare:      return "RARE"
+        case .epic:      return "EPIC"
         case .legendary: return "LEGENDARY"
-        case .mythic: return "MYTHIC"
-        case .god: return "DRUMROT GOD"
-        case .og: return "OG · PRISMATIC"
+        case .og:        return "OG · PRISMATIC"
         }
     }
 
-    /// Tier accent color hex (from `TIER_CONFIG`).
+    /// Tier accent color (from original `TIER_CONFIG`, mythic/god colors merged up).
     var hexColor: String {
         switch self {
-        case .common: return "#9aa5b4"
-        case .rare: return "#3b82f6"
-        case .epic: return "#a855f7"
+        case .common:    return "#9aa5b4"
+        case .rare:      return "#3b82f6"
+        case .epic:      return "#a855f7"
         case .legendary: return "#f59e0b"
-        case .mythic: return "#ec4899"
-        case .god: return "#ff3a5a"
-        case .og: return "#ffffff"
+        case .og:        return "#ffffff"
         }
     }
+
 }

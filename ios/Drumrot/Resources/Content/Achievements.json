@@ -1,20 +1,182 @@
 [
-  { "id": "first_hit",     "name": "First Hit",    "desc": "Hit your first note",                 "icon": "★", "cat": "performance" },
-  { "id": "combo_50",      "name": "On a Roll",     "desc": "50× combo unbroken",                  "icon": "⚡", "cat": "performance" },
-  { "id": "combo_100",     "name": "100× Combo",    "desc": "100× combo unbroken",                 "icon": "⚡", "cat": "performance" },
-  { "id": "combo_200",     "name": "Unstoppable",   "desc": "200× combo unbroken",                 "icon": "☄", "cat": "performance" },
-  { "id": "sharpshooter",  "name": "Sharpshooter",  "desc": "90%+ accuracy 3 passes in a row",     "icon": "⊕", "cat": "performance" },
-  { "id": "perfect_pass",  "name": "Flawless",      "desc": "100% accuracy on a full pass",        "icon": "✦", "cat": "performance" },
-  { "id": "first_pass",    "name": "First Patch",   "desc": "Complete your first lesson",          "icon": "●", "cat": "consistency" },
-  { "id": "groove_master", "name": "Groove Master", "desc": "3 stars on any groove",               "icon": "★", "cat": "consistency" },
-  { "id": "all_grooves",   "name": "Full Set",      "desc": "Play every prebuilt lesson",          "icon": "▣", "cat": "consistency" },
-  { "id": "graduate",      "name": "Graduate",      "desc": "3 stars on all prebuilt grooves",     "icon": "♛", "cat": "consistency" },
-  { "id": "streak_3",      "name": "3 Day Streak",  "desc": "Practice 3 days in a row",            "icon": "◆", "cat": "consistency" },
-  { "id": "streak_7",      "name": "7 Day Streak",  "desc": "Practice 7 days in a row",            "icon": "◆", "cat": "consistency" },
-  { "id": "tempo_climber", "name": "Tempo Climber", "desc": "Reach Grooving tier on 3 grooves",    "icon": "↑", "cat": "tempo" },
-  { "id": "full_throttle", "name": "Full Throttle", "desc": "Reach Killing It tier on 5 grooves",  "icon": "⚑", "cat": "tempo" },
-  { "id": "speed_demon",   "name": "Speed Demon",   "desc": "Play any groove at 160+ BPM (80%+)",  "icon": "▶", "cat": "tempo" },
-  { "id": "slow_burn",     "name": "Slow Burn",     "desc": "Play any groove at ≤60 BPM (80%+)",   "icon": "◐", "cat": "tempo" },
-  { "id": "creator",       "name": "Creator",       "desc": "Build your first groove pattern",     "icon": "✎", "cat": "builder" },
-  { "id": "coach",         "name": "Coach",         "desc": "Attach a coach note to a pattern",    "icon": "✍", "cat": "builder" }
+  {
+    "id": "first_hit",
+    "name": "First Hit",
+    "desc": "Hit your first note",
+    "icon": "★",
+    "cat": "on_the_kit",
+    "difficulty": "entry",
+    "isSecret": false,
+    "hint": "Hit any note while playing a groove"
+  },
+  {
+    "id": "combo_50",
+    "name": "On a Roll",
+    "desc": "50× combo unbroken",
+    "icon": "⚡",
+    "cat": "on_the_kit",
+    "difficulty": "easy",
+    "isSecret": false,
+    "hint": "Hit 50 notes in a row without missing"
+  },
+  {
+    "id": "combo_100",
+    "name": "100× Combo",
+    "desc": "100× combo unbroken",
+    "icon": "⚡",
+    "cat": "on_the_kit",
+    "difficulty": "medium",
+    "isSecret": false,
+    "hint": "Hit 100 notes in a row without missing"
+  },
+  {
+    "id": "combo_200",
+    "name": "Unstoppable",
+    "desc": "200× combo unbroken",
+    "icon": "☄",
+    "cat": "on_the_kit",
+    "difficulty": "elite",
+    "isSecret": false,
+    "hint": "Hit 200 notes in a row without missing"
+  },
+  {
+    "id": "sharpshooter",
+    "name": "Sharpshooter",
+    "desc": "90%+ accuracy 3 passes in a row",
+    "icon": "⊕",
+    "cat": "on_the_kit",
+    "difficulty": "hard",
+    "isSecret": false,
+    "hint": "Get 90% accuracy or better on 3 passes in a row"
+  },
+  {
+    "id": "perfect_pass",
+    "name": "Flawless",
+    "desc": "100% accuracy on a full pass",
+    "icon": "✦",
+    "cat": "on_the_kit",
+    "difficulty": "elite",
+    "isSecret": false,
+    "hint": "Hit every single note on a full pass — no misses"
+  },
+  {
+    "id": "first_pass",
+    "name": "First Patch",
+    "desc": "Complete your first lesson",
+    "icon": "●",
+    "cat": "showing_up",
+    "difficulty": "entry",
+    "isSecret": false,
+    "hint": "Complete any groove lesson from start to finish"
+  },
+  {
+    "id": "groove_master",
+    "name": "Groove Master",
+    "desc": "3 stars on any groove",
+    "icon": "★",
+    "cat": "showing_up",
+    "difficulty": "medium",
+    "isSecret": false,
+    "hint": "Score 95% accuracy or better on any groove for 3 stars"
+  },
+  {
+    "id": "all_grooves",
+    "name": "Full Set",
+    "desc": "Play every prebuilt lesson",
+    "icon": "▣",
+    "cat": "showing_up",
+    "difficulty": "hard",
+    "isSecret": false,
+    "hint": "Play all 8 built-in grooves at least once"
+  },
+  {
+    "id": "graduate",
+    "name": "Graduate",
+    "desc": "3 stars on all prebuilt grooves",
+    "icon": "♛",
+    "cat": "showing_up",
+    "difficulty": "elite",
+    "isSecret": false,
+    "hint": "Score 3 stars on every single built-in groove"
+  },
+  {
+    "id": "streak_3",
+    "name": "3 Day Streak",
+    "desc": "Practice 3 days in a row",
+    "icon": "◆",
+    "cat": "showing_up",
+    "difficulty": "easy",
+    "isSecret": false,
+    "hint": "Practice on 3 consecutive days"
+  },
+  {
+    "id": "streak_7",
+    "name": "7 Day Streak",
+    "desc": "Practice 7 days in a row",
+    "icon": "◆",
+    "cat": "showing_up",
+    "difficulty": "medium",
+    "isSecret": false,
+    "hint": "Practice every day for a full week — don't skip!"
+  },
+  {
+    "id": "tempo_climber",
+    "name": "Tempo Climber",
+    "desc": "Reach Grooving tier on 3 grooves",
+    "icon": "↑",
+    "cat": "speed_runs",
+    "difficulty": "hard",
+    "isSecret": false,
+    "hint": "Push 3 different grooves to the Grooving tempo tier (80%+ at BPM+20)"
+  },
+  {
+    "id": "full_throttle",
+    "name": "Full Throttle",
+    "desc": "Reach Killing It tier on 5 grooves",
+    "icon": "⚑",
+    "cat": "speed_runs",
+    "difficulty": "elite",
+    "isSecret": false,
+    "hint": "Dominate 5 different grooves at the Killing It tempo tier (90%+ at BPM+60)"
+  },
+  {
+    "id": "speed_demon",
+    "name": "Speed Demon",
+    "desc": "Play any groove at 160+ BPM (80%+)",
+    "icon": "▶",
+    "cat": "speed_runs",
+    "difficulty": "hard",
+    "isSecret": false,
+    "hint": "Play any groove faster than 160 BPM with 80% accuracy or better"
+  },
+  {
+    "id": "slow_burn",
+    "name": "Slow Burn",
+    "desc": "Play any groove at ≤60 BPM (80%+)",
+    "icon": "◐",
+    "cat": "speed_runs",
+    "difficulty": "easy",
+    "isSecret": true,
+    "hint": ""
+  },
+  {
+    "id": "creator",
+    "name": "Creator",
+    "desc": "Save 3 custom groove patterns",
+    "icon": "✎",
+    "cat": "craft_crew",
+    "difficulty": "entry",
+    "isSecret": false,
+    "hint": "Build and save 3 custom grooves in the Builder tab"
+  },
+  {
+    "id": "coach",
+    "name": "Coach",
+    "desc": "Add coach notes to 3 grooves",
+    "icon": "✍",
+    "cat": "craft_crew",
+    "difficulty": "easy",
+    "isSecret": true,
+    "hint": ""
+  }
 ]
