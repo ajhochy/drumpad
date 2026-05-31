@@ -8,6 +8,7 @@ struct PlayView: View {
 
     @State private var loop = false
     @State private var clickOn = true
+    @State private var subdivision: MetronomeSubdivision = .quarter
 
     private var externalAudioMode: Bool {
         settingsRows.first?.externalAudioMode ?? false
@@ -43,12 +44,14 @@ struct PlayView: View {
             store.audio.externalAudioMode = externalAudioMode
             engine.onMetronome = { accent in store.audio.playClick(accent: accent) }
             engine.metronomeEnabled = clickOn
+            engine.metronomeSubdivision = subdivision
             if engine.lesson == nil {
                 engine.load(store.currentLesson ?? LessonCatalog.all[0], loop: loop)
             }
             if store.autoStartPlay { engine.start(); store.autoStartPlay = false }
         }
         .onChange(of: clickOn) { _, on in engine.metronomeEnabled = on }
+        .onChange(of: subdivision) { _, sub in engine.metronomeSubdivision = sub }
         .onChange(of: loop) { _, on in engine.loop = on }
         .onChange(of: externalAudioMode) { _, mode in store.audio.externalAudioMode = mode }
         .onChange(of: engine.phase) { _, phase in if phase == .finished { persistPass() } }
@@ -231,6 +234,23 @@ struct PlayView: View {
             Toggle(isOn: $clickOn) {
                 Label("Click", systemImage: "metronome").font(SPFont.mono(.caption))
             }.tint(SPColor.ledAmber)
+            // Subdivision picker — only meaningful when click is on
+            if clickOn {
+                HStack {
+                    Text("SUBDIV").font(SPFont.mono(.caption2)).foregroundStyle(SPColor.textDim)
+                    Spacer()
+                    Picker("Subdivision", selection: $subdivision) {
+                        ForEach(MetronomeSubdivision.allCases) { sub in
+                            Text(sub.label)
+                                .font(SPFont.mono(.caption2))
+                                .tag(sub)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: 140)
+                    .colorScheme(.dark)
+                }
+            }
             Toggle(isOn: $loop) {
                 Label("Loop", systemImage: "repeat").font(SPFont.mono(.caption))
             }.tint(SPColor.ledAmber)
