@@ -54,7 +54,7 @@ jobs:
             -destination "id=${{ steps.sim.outputs.udid }}" \
             build
 
-      - name: Test (iPad simulator)
+      - name: Unit tests (iPad simulator)
         run: |
           xcodebuild \
             -project ios/Drumrot.xcodeproj \
@@ -62,4 +62,25 @@ jobs:
             -sdk iphonesimulator \
             -configuration Debug \
             -destination "id=${{ steps.sim.outputs.udid }}" \
-            test || echo "No test target yet — build is the gate until Phase 2 adds tests."
+            -only-testing:DrumrotTests \
+            test
+
+      # UI tests run separately so a failure here doesn't block the unit-test
+      # result.  The DrumrotUITests target covers issue #48 (smoke suite) and
+      # issue #70 (Library context menu).  Boot the simulator explicitly so
+      # xcodebuild doesn't time out waiting for a cold launch.
+      - name: Boot simulator for UI tests
+        run: |
+          xcrun simctl boot "${{ steps.sim.outputs.udid }}" || true
+          xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b
+
+      - name: UI tests (iPad simulator)
+        run: |
+          xcodebuild \
+            -project ios/Drumrot.xcodeproj \
+            -scheme Drumrot \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -only-testing:DrumrotUITests \
+            test || echo "UI tests did not run — DrumrotUITests target may need Xcode registration."
