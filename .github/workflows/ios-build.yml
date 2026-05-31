@@ -84,3 +84,39 @@ jobs:
             -destination "id=${{ steps.sim.outputs.udid }}" \
             -only-testing:DrumrotUITests \
             test || echo "UI tests did not run — DrumrotUITests target may need Xcode registration."
+
+      # Snapshot regression tests (issue #47).
+      # swift-snapshot-testing is already resolved as an SPM dep in the
+      # Drumrot.xcodeproj.  Baseline images are committed under
+      # ios/DrumrotSnapshotTests/__Snapshots__/.
+      # On the first run (no baselines yet) the test records new images and
+      # exits with a non-zero status; we treat that as a soft failure so the
+      # overall build is not broken.  Once baselines are committed the step
+      # will fail hard on any visual regression.
+      - name: Snapshot tests (iPad simulator)
+        run: |
+          set -euo pipefail
+          BASELINE_COUNT=$(find ios/DrumrotSnapshotTests/__Snapshots__ -name '*.png' 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$BASELINE_COUNT" -eq 0 ]; then
+            echo "No baseline snapshots found — running in record mode (first-time setup)."
+            xcodebuild \
+              -project ios/Drumrot.xcodeproj \
+              -scheme Drumrot \
+              -sdk iphonesimulator \
+              -configuration Debug \
+              -destination "id=${{ steps.sim.outputs.udid }}" \
+              -only-testing:DrumrotSnapshotTests \
+              -testArguments "SNAPSHOT_ARTIFACTS=$(pwd)/ios/DrumrotSnapshotTests/__Snapshots__" \
+              test \
+              RECORD_SNAPSHOTS=1 || echo "Snapshot record pass complete — commit the generated images."
+          else
+            echo "Baseline snapshots found ($BASELINE_COUNT images) — running diff mode."
+            xcodebuild \
+              -project ios/Drumrot.xcodeproj \
+              -scheme Drumrot \
+              -sdk iphonesimulator \
+              -configuration Debug \
+              -destination "id=${{ steps.sim.outputs.udid }}" \
+              -only-testing:DrumrotSnapshotTests \
+              test
+          fi

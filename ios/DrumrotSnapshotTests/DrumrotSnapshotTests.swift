@@ -5,21 +5,28 @@ import SwiftUI
 
 /// Snapshot regression tests (issue #47).
 ///
-/// Uses pointfreeco/swift-snapshot-testing.  The SPM dependency must be added
-/// to Drumrot.xcodeproj before these compile:
-///   URL: https://github.com/pointfreeco/swift-snapshot-testing
-///   Version: 1.17 or later
-///   Product: SnapshotTesting
+/// Uses pointfreeco/swift-snapshot-testing (>= 1.17) which is already
+/// declared as an SPM dependency in Drumrot.xcodeproj.
 ///
-/// First run (record mode):
-///   Set `isRecording = true` on each test, or use
-///   `withSnapshotTesting(record: .all) { ... }` once globally, then commit
-///   the generated `__Snapshots__/` folder.
+/// # Record mode (first run / update baselines)
+///   Pass the environment variable `RECORD_SNAPSHOTS=1` when invoking
+///   xcodebuild (the CI workflow does this automatically on first run).
+///   The generated PNG files are written to
+///   `__Snapshots__/DrumrotSnapshotTests/` next to this file.
+///   Commit them so subsequent CI runs can diff against the baseline.
 ///
-/// CI: subsequent runs with `isRecording = false` (default) will diff against
-/// the committed baseline and fail the build on regression.
+/// # CI (diff mode)
+///   When `RECORD_SNAPSHOTS` is absent or empty the tests use `.missing` —
+///   brand-new snapshots are recorded automatically; any mismatch against an
+///   existing baseline fails the build.
 ///
+@MainActor
 final class DrumrotSnapshotTests: XCTestCase {
+
+    /// Recording policy derived from the `RECORD_SNAPSHOTS` environment variable.
+    private var recordPolicy: SnapshotTestingConfiguration.Record {
+        ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] == "1" ? .all : .missing
+    }
 
     // MARK: - DropsView
 
@@ -30,7 +37,8 @@ final class DrumrotSnapshotTests: XCTestCase {
             .frame(width: 1024, height: 768)
 
         assertSnapshot(of: view, as: .image(layout: .fixed(width: 1024, height: 768)),
-                       named: "DropsView")
+                       named: "DropsView",
+                       record: recordPolicy)
     }
 
     // MARK: - ProgressTabView
@@ -42,33 +50,38 @@ final class DrumrotSnapshotTests: XCTestCase {
             .frame(width: 1024, height: 768)
 
         assertSnapshot(of: view, as: .image(layout: .fixed(width: 1024, height: 768)),
-                       named: "ProgressTabView")
+                       named: "ProgressTabView",
+                       record: recordPolicy)
     }
 
     // MARK: - LibraryView
 
     func testLibraryViewSnapshot() throws {
+        let store = AppStore()
         let view = LibraryView()
-            .environmentObject(AppStore())
+            .environmentObject(store)
             .modelContainer(AppModelContainer.make(inMemory: true))
             .preferredColorScheme(.dark)
             .frame(width: 1024, height: 768)
 
         assertSnapshot(of: view, as: .image(layout: .fixed(width: 1024, height: 768)),
-                       named: "LibraryView")
+                       named: "LibraryView",
+                       record: recordPolicy)
     }
 
     // MARK: - BuildView
 
     func testBuildViewSnapshot() throws {
+        let store = AppStore()
         let view = BuildView()
-            .environmentObject(AppStore())
+            .environmentObject(store)
             .modelContainer(AppModelContainer.make(inMemory: true))
             .preferredColorScheme(.dark)
             .frame(width: 1024, height: 768)
 
         assertSnapshot(of: view, as: .image(layout: .fixed(width: 1024, height: 768)),
-                       named: "BuildView")
+                       named: "BuildView",
+                       record: recordPolicy)
     }
 
     // MARK: - Achievement tile (locked vs unlocked)
@@ -81,6 +94,7 @@ final class DrumrotSnapshotTests: XCTestCase {
             .frame(width: 1024, height: 900)
 
         assertSnapshot(of: view, as: .image(layout: .fixed(width: 1024, height: 900)),
-                       named: "ProgressTabView_NoUnlocks")
+                       named: "ProgressTabView_NoUnlocks",
+                       record: recordPolicy)
     }
 }
