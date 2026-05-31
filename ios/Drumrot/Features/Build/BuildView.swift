@@ -14,6 +14,10 @@ struct BuildView: View {
     @State private var exportFile: ExportFile?
     @Query private var extraLessons: [ExtraLesson]
 
+    // Record mode
+    @StateObject private var recorder = BuilderRecordEngine()
+    @State private var showRecordPanel = false
+
     private let lanes: [DrumLane] = DrumLane.allCases
     private var isEmpty: Bool { !grid.contains { $0.contains(true) } }
 
@@ -39,7 +43,16 @@ struct BuildView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .onAppear(perform: seedFromEditingLessonIfAny)
+        .onAppear {
+            seedFromEditingLessonIfAny()
+            store.activateAudio()
+        }
+        .onDisappear { recorder.stop() }
+        .sheet(isPresented: $showRecordPanel, onDismiss: { recorder.stop() }) {
+            RecordPanelView(recorder: recorder, bpm: bpm, steps: steps) { mergedGrid in
+                mergeRecordedGrid(mergedGrid)
+            }
+        }
     }
 
     // MARK: - Left: sequencer face
@@ -125,6 +138,26 @@ struct BuildView: View {
             }
 
             Spacer(minLength: 4)
+
+            // Record button
+            Button { showRecordPanel = true } label: {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(SPColor.ledRed)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: SPColor.ledRed.opacity(0.8), radius: 4)
+                    Text("REC").font(SPFont.ui(11, weight: .bold)).tracking(1.4)
+                }
+                .foregroundStyle(SPColor.ledRed)
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(LinearGradient(colors: [Color(hex: 0x34383F), Color(hex: 0x1F2127)],
+                                           startPoint: .top, endPoint: .bottom))
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(SPColor.ledRed.opacity(0.4), lineWidth: 1))
+                .shadow(color: SPColor.ledRed.opacity(0.2), radius: 6)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open real-time record mode")
 
             // Clear button
             Button(role: .destructive) { clear() } label: {
@@ -380,6 +413,8 @@ struct BuildView: View {
                         action: { loadIntoPlayer() }, disabled: isEmpty)
                 toolBtn(icon: "arrow.clockwise", label: "Resize", tint: SPColor.stickerCyan,
                         action: { steps = steps == 16 ? 32 : 16; resize(to: steps) })
+                toolBtn(icon: "record.circle", label: "Record", tint: SPColor.ledRed,
+                        action: { showRecordPanel = true })
             }
         }
         .chassisModule()
@@ -405,6 +440,23 @@ struct BuildView: View {
         }
         .buttonStyle(.plain)
         .disabled(disabled)
+    }
+
+    // MARK: - Record-mode merge
+
+    /// Merges hits captured in real-time recording into the current grid.
+    /// Existing steps are OR-ed with recorded ones so manual edits survive.
+    private func mergeRecordedGrid(_ recorded: [[Bool]]) {
+        guard recorded.count == grid.count else { return }
+        for laneIdx in grid.indices {
+            guard laneIdx < recorded.count else { continue }
+            let recordedRow = recorded[laneIdx]
+            for stepIdx in grid[laneIdx].indices {
+                if stepIdx < recordedRow.count, recordedRow[stepIdx] {
+                    grid[laneIdx][stepIdx] = true
+                }
+            }
+        }
     }
 
     // MARK: - Business logic (unchanged)
