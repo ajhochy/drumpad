@@ -86,7 +86,7 @@ struct LibraryView: View {
                             .shadow(color: SPColor.lcdFG.opacity(0.5), radius: 4)
                             .textInputAutocapitalization(.words)
                             .submitLabel(.done)
-                            .onChange(of: renameDraft) { _, _ in renameError = nil }
+                            .onChange(of: renameDraft) { _ in renameError = nil }
                     }
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .lcdPanel(cornerRadius: 8)

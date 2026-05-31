@@ -219,6 +219,11 @@ final class PersistenceStore: ObservableObject {
 
     func collectedCount() -> Int { collection.count }
 
+    /// Returns a map of drumrot id -> pull count for the pity mechanic.
+    func collectionCounts() -> [String: Int] {
+        Dictionary(collection.map { ($0.drumrotId, $0.count) }, uniquingKeysWith: max)
+    }
+
     func saveBuilder(_ state: BuilderState) {
         builder = state
         persist(builder, key: Key.builder)

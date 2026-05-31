@@ -252,12 +252,12 @@ struct RecordPanelView: View {
 
 #Preview {
     let engine = BuilderRecordEngine()
-    return RecordPanelView(
+    RecordPanelView(
         recorder: engine,
         bpm: 90,
         steps: 16,
         onLoopComplete: { _ in }
     )
-    .environmentObject(AppStore())
+    .environmentObject(AppStore(persistence: PersistenceStore(defaults: nil)))
     .preferredColorScheme(.dark)
 }

@@ -12,7 +12,7 @@ struct PlayView: View {
     private var externalAudioMode: Bool { persistence.settings.externalAudioMode }
 
     private var audioLatencyOffsetMs: Double {
-        Double(settingsRows.first?.audioLatencyOffsetMs ?? 0)
+        Double(persistence.settings.audioLatencyOffsetMs)
     }
 
     private let padLanes: [DrumLane] = [.crash, .hihat, .snare, .kick, .tom, .ride]

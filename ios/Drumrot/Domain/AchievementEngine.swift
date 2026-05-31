@@ -85,16 +85,15 @@ final class AchievementEngine {
     }
 
     private func allScores() -> [LessonScore] {
-        (try? context.fetch(FetchDescriptor<LessonScore>())) ?? []
+        persistence.scores
     }
 
     private func playDaySet() -> Set<String> {
-        Set(((try? context.fetch(FetchDescriptor<PracticeDay>())) ?? []).map(\.day))
+        Set(persistence.playDays.map(\.day))
     }
 
     /// Returns a map of drumrot id -> pull count for the pity mechanic.
     private func collectionCounts() -> [String: Int] {
-        let entries = (try? context.fetch(FetchDescriptor<DrumrotCollectionEntry>())) ?? []
-        return Dictionary(entries.map { ($0.drumrotId, $0.count) }, uniquingKeysWith: max)
+        persistence.collectionCounts()
     }
 }
