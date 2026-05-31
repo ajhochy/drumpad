@@ -21,6 +21,10 @@ struct ScoringEngine: Equatable {
     private(set) var maxCombo = 0
     private(set) var hits = 0
     private(set) var misses = 0
+    /// Ghost hits: taps that found no valid in-window note.
+    /// Each ghost hit counts as a miss-equivalent in the accuracy denominator,
+    /// so spamming produces worse accuracy than playing nothing at all.
+    private(set) var ghostHits = 0
 
     /// Judgment for a distance, or nil if outside the hit window.
     static func judgment(dy: Double) -> Judgment? {
@@ -49,15 +53,26 @@ struct ScoringEngine: Equatable {
         combo = 0
     }
 
+    /// A pad tap that found no matching in-window note (spam / ghost hit).
+    /// Counts in the accuracy denominator so spamming lowers accuracy
+    /// proportional to how many real notes the lesson has.
+    mutating func recordGhostHit() {
+        ghostHits += 1
+        combo = 0
+    }
+
     /// Reset per-pass hit/miss tallies at a loop rollover (score + combo persist).
     mutating func resetPassCounts() {
         hits = 0
         misses = 0
+        ghostHits = 0
     }
 
-    /// Live accuracy over attempted notes (hits + misses), rounded like `Math.round`.
+    /// Live accuracy over attempted events (hits + misses + ghost hits), rounded
+    /// like `Math.round`.  Ghost hits are included in the denominator so spam
+    /// produces worse accuracy than playing nothing at all.
     var accuracy: Int {
-        let total = hits + misses
+        let total = hits + misses + ghostHits
         guard total > 0 else { return 0 }
         return Int((Double(hits) / Double(total) * 100).rounded())
     }

@@ -14,6 +14,10 @@ struct PlayView: View {
         settingsRows.first?.externalAudioMode ?? false
     }
 
+    private var audioLatencyOffsetMs: Double {
+        Double(settingsRows.first?.audioLatencyOffsetMs ?? 0)
+    }
+
     private let padLanes: [DrumLane] = [.crash, .hihat, .snare, .kick, .tom, .ride]
     private let laneTags = ["CRSH", "HHAT", "SNRE", "KICK", "TOMS", "RIDE"]
 
@@ -42,6 +46,7 @@ struct PlayView: View {
             }
             store.midi.start()
             store.audio.externalAudioMode = externalAudioMode
+            engine.latencyOffsetMs = audioLatencyOffsetMs
             engine.onMetronome = { accent in store.audio.playClick(accent: accent) }
             engine.metronomeEnabled = clickOn
             engine.metronomeSubdivision = subdivision
@@ -54,6 +59,7 @@ struct PlayView: View {
         .onChange(of: subdivision) { _, sub in engine.metronomeSubdivision = sub }
         .onChange(of: loop) { _, on in engine.loop = on }
         .onChange(of: externalAudioMode) { _, mode in store.audio.externalAudioMode = mode }
+        .onChange(of: audioLatencyOffsetMs) { _, offsetMs in engine.latencyOffsetMs = offsetMs }
         .onChange(of: engine.phase) { _, phase in if phase == .finished { persistPass() } }
         .onChange(of: store.currentLesson) { _, lesson in
             guard let lesson else { return }

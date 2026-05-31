@@ -3,6 +3,8 @@ import XCTest
 
 final class ScoringParityTests: XCTestCase {
 
+    // MARK: - Existing parity tests
+
     func testJudgmentBoundaries() {
         XCTAssertEqual(ScoringEngine.judgment(dy: 0), .perfect)
         XCTAssertEqual(ScoringEngine.judgment(dy: 19.9), .perfect)
@@ -32,7 +34,8 @@ final class ScoringParityTests: XCTestCase {
         s.recordMiss()
         XCTAssertEqual(s.combo, 0)
         XCTAssertEqual(s.misses, 1)
-        // An out-of-window tap changes nothing.
+        // An out-of-window tap via ScoringEngine directly changes nothing
+        // (only PlaybackEngine.registerHit calls recordGhostHit on no-match taps).
         let before = s
         XCTAssertNil(s.recordHit(dy: 80))
         XCTAssertEqual(s, before)
@@ -76,5 +79,56 @@ final class ScoringParityTests: XCTestCase {
         XCTAssertEqual(PracticeStreak.current(playDays: [key(0), key(-2)], today: today), 1, "gap breaks streak")
         XCTAssertEqual(PracticeStreak.current(playDays: [key(-1), key(-2)], today: today), 0, "no today = 0")
         XCTAssertEqual(PracticeStreak.current(playDays: [], today: today), 0)
+    }
+
+    // MARK: - Anti-spam / ghost hit tests (issue #68)
+
+    func testGhostHitLowersAccuracy() {
+        // Spam simulation: ghost hits count in the accuracy denominator.
+        var s = ScoringEngine()
+        s.recordHit(dy: 0)           // 1 real hit
+        for _ in 0..<9 { s.recordGhostHit() }   // 9 ghost hits
+        // accuracy = 1 / (1 + 0 misses + 9 ghosts) = 10%
+        XCTAssertEqual(s.accuracy, 10)
+        XCTAssertEqual(s.ghostHits, 9)
+        XCTAssertEqual(s.combo, 0, "last ghost hit should break combo")
+    }
+
+    func testGhostHitBreaksCombo() {
+        var s = ScoringEngine()
+        for _ in 0..<5 { s.recordHit(dy: 0) }
+        XCTAssertEqual(s.combo, 5)
+        s.recordGhostHit()
+        XCTAssertEqual(s.combo, 0)
+        XCTAssertEqual(s.maxCombo, 5, "maxCombo should preserve the pre-ghost run")
+    }
+
+    func testResetPassCountsClearsGhosts() {
+        var s = ScoringEngine()
+        for _ in 0..<3 { s.recordGhostHit() }
+        XCTAssertEqual(s.ghostHits, 3)
+        s.resetPassCounts()
+        XCTAssertEqual(s.ghostHits, 0)
+    }
+
+    // MARK: - Latency offset (issue #56)
+
+    @MainActor
+    func testLatencyOffsetDoesNotBreakHitOnTime() {
+        // Verify that a hit arriving exactly at the note time still registers
+        // when a latency offset is set (offset shifts window but perfect hits still land).
+        let lesson = Lesson(name: "Offset Test", bpm: 120, tip: "", difficulty: "easy", genre: "test",
+                            patterns: [PatternLine(lane: "kick", pattern: "....x...........")])
+        let clock = TestClock()
+        let engine = PlaybackEngine(clock: clock)
+        engine.load(lesson, bpm: 120)
+        engine.latencyOffsetMs = 30   // simulate 30 ms device-side output latency
+
+        // bpm=120 → halfBeatMs=250 → countInMs=8×250=2000; note at beat 4 → 4×250=1000.
+        clock.nowMs = 0; engine.start()
+        let noteTime = 2000.0 + 1000.0
+        clock.nowMs = noteTime; engine.tick()
+        let j = engine.registerHit(lane: DrumLane.kick.rawValue)
+        XCTAssertNotNil(j, "Hit exactly at note time should register a judgment even with offset active")
     }
 }
