@@ -29,7 +29,7 @@ struct DrumrotApp: App {
         let svc = store.persistence
         svc.collect(drumrotId: "tung_tung_tamburino", tier: .common)
         svc.collect(drumrotId: "bombardino_crashcino", tier: .epic)
-        svc.collect(drumrotId: "lirili_beatlarila", tier: .mythic)
+        svc.collect(drumrotId: "lirili_beatlarila", tier: .legendary) // formerly mythic, now legendary (issue #72)
         svc.collect(drumrotId: "grande_maestro_drumbeano", tier: .og)
         svc.recordPass(lessonKey: "Rock Beat 101", score: 5400, accuracy: 96,
                        tier: PracticeTier.grooving.rawValue)

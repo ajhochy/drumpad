@@ -32,6 +32,9 @@ struct DropsView: View {
                 .font(SPFont.monoMicro).tracking(1.8)
                 .foregroundStyle(SPColor.textDim).lineSpacing(2)
 
+            // OG tier explanation card (issue #72)
+            ogInfoCard
+
             // Progress LCD panel
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -91,6 +94,27 @@ struct DropsView: View {
                                    startPoint: .top, endPoint: .bottom))
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(SPColor.ink, lineWidth: 1))
+    }
+
+    // MARK: - OG explanation card (issue #72)
+
+    private var ogInfoCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Text("✨").font(.body)
+                Text("WHAT IS OG?")
+                    .font(SPFont.monoSmall).tracking(1.8)
+                    .foregroundStyle(SPColor.og)
+                    .shadow(color: SPColor.og.opacity(0.5), radius: 4)
+            }
+            Text("Every achievement has a 5% flat chance to upgrade your drop to the OG (Prismatic) tier — the rarest tier in the game. Complete Graduate or Full Throttle for a 10% OG chance. OG characters have MAX stats and a holofoil finish.")
+                .font(SPFont.monoMicro).tracking(0.8)
+                .foregroundStyle(SPColor.textDim).lineSpacing(2)
+        }
+        .padding(10)
+        .background(SPColor.og.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(SPColor.og.opacity(0.3), lineWidth: 1))
     }
 
     private var liveIndicator: some View {

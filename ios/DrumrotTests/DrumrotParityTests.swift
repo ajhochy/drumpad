@@ -1,7 +1,12 @@
 import XCTest
 @testable import Drumrot
 
-/// Parity tests: the ported Swift roster + drop-roll math must match `js/drumrots.js`.
+/// Parity tests: the ported Swift roster + drop-roll math for the 5-tier system (issue #72).
+///
+/// Tier collapse:
+///   - mythic → legendary (4 chars moved up)
+///   - god    → og        (2 chars moved up)
+/// New roster counts: common=4, rare=4, epic=5, legendary=8, og=10.
 final class DrumrotParityTests: XCTestCase {
 
     func testRosterCountAndTiers() {
@@ -9,13 +14,18 @@ final class DrumrotParityTests: XCTestCase {
         XCTAssertEqual(all.count, 31, "expected 31 drumrots")
 
         let counts = Dictionary(grouping: all, by: \.tier).mapValues(\.count)
-        XCTAssertEqual(counts[.common], 4)
-        XCTAssertEqual(counts[.rare], 4)
-        XCTAssertEqual(counts[.epic], 5)
-        XCTAssertEqual(counts[.legendary], 4)
-        XCTAssertEqual(counts[.mythic], 4)
-        XCTAssertEqual(counts[.god], 2)
-        XCTAssertEqual(counts[.og], 8)
+        XCTAssertEqual(counts[.common],    4,  "common count")
+        XCTAssertEqual(counts[.rare],      4,  "rare count")
+        XCTAssertEqual(counts[.epic],      5,  "epic count")
+        // legendary now includes former mythic (4+4=8)
+        XCTAssertEqual(counts[.legendary], 8,  "legendary count (mythic merged in)")
+        // og now includes former god (8+2=10)
+        XCTAssertEqual(counts[.og],       10,  "og count (god merged in)")
+    }
+
+    func testTierCount() {
+        // After collapse: 5 tiers, not 7.
+        XCTAssertEqual(DrumrotTier.allCases.count, 5)
     }
 
     func testUniqueIdsAndNumbers() {
@@ -27,9 +37,9 @@ final class DrumrotParityTests: XCTestCase {
     }
 
     func testTierOrderIndices() {
-        XCTAssertEqual(DrumrotTier.order.map(\.index), Array(0...6))
+        XCTAssertEqual(DrumrotTier.order.map(\.index), Array(0...4))
         XCTAssertEqual(DrumrotTier.common.index, 0)
-        XCTAssertEqual(DrumrotTier.og.index, 6)
+        XCTAssertEqual(DrumrotTier.og.index, 4)
     }
 
     // MARK: - Drop roll
@@ -44,26 +54,55 @@ final class DrumrotParityTests: XCTestCase {
         XCTAssertEqual(roll.drumrot.tier, .og)
     }
 
-    /// easy weights = [55,35,8,2,0,0,0]; rng past OG check, then a weight roll
-    /// landing in the first bucket → common.
-    func testEasyRollLandsCommon() {
-        // rng order: OG check (>=0.05 to skip), weight roll (*100 < 55 → common), pool pick
+    /// graduate and full_throttle get 10% OG chance (issue #72).
+    func testEliteHighOGChance() {
+        XCTAssertEqual(DropRoller.ogChance(for: "graduate"),     0.10, accuracy: 0.001)
+        XCTAssertEqual(DropRoller.ogChance(for: "full_throttle"), 0.10, accuracy: 0.001)
+        XCTAssertEqual(DropRoller.ogChance(for: "first_hit"),    0.05, accuracy: 0.001)
+    }
+
+    /// entry weights = [60,32,8,0,0]; rng past OG check, weight roll < 60 → common.
+    func testEntryRollLandsCommon() {
+        // rng order: OG check (>=0.05 to skip), weight roll (*100 = 10 < 60 → common), pool pick
         var values = [0.5, 0.10, 0.0]
         let roll = DropRoller.roll(achievementId: "first_hit") { values.removeFirst() }
         XCTAssertEqual(roll.tier, .common)
     }
 
-    /// elite weights = [0,5,20,35,25,15,0]; a high weight roll lands in god (last
-    /// non-zero bucket before og).
-    func testEliteHighRollLandsGod() {
-        // OG check skipped; weight roll *100 = 99 → cumulative falls in god bucket (85..100)
-        var values = [0.9, 0.99, 0.0]
+    /// Elite weights = [0,0,15,60,25]; a high weight roll lands in legendary bucket.
+    func testEliteRollLandsLegendary() {
+        // OG check skipped (0.9 >= 0.1); weight roll *100 = 50 → cumulative:
+        //   [0,0,15,...] → 50 falls in legendary bucket (15..75)
+        var values = [0.9, 0.50, 0.0]
         let roll = DropRoller.roll(achievementId: "full_throttle") { values.removeFirst() }
-        XCTAssertEqual(roll.tier, .god)
+        XCTAssertEqual(roll.tier, .legendary)
     }
 
-    /// Distribution check: many easy rolls (no OG) should be ~55% common, within tolerance.
-    func testEasyDistributionApproxWeights() {
+    /// Elite weights = [0,0,15,60,25]; a very high roll lands in og (non-OG-bonus).
+    func testEliteHighRollLandsOG() {
+        // OG check skipped (0.9 >= 0.1); weight roll *100 = 99 → cumulative:
+        //   [0+0+15+60=75..100) → og bucket
+        var values = [0.9, 0.99, 0.0]
+        let roll = DropRoller.roll(achievementId: "full_throttle") { values.removeFirst() }
+        XCTAssertEqual(roll.tier, .og)
+    }
+
+    /// Elite floor: entry roll must never land common/rare (weights both 0).
+    func testEliteNeverDropsCommonOrRare() {
+        var rngState: UInt64 = 0xDEADBEEFCAFEBABE
+        func lcg() -> Double {
+            rngState = rngState &* 6364136223846793005 &+ 1442695040888963407
+            return Double(rngState >> 11) / Double(1 << 53)
+        }
+        for _ in 0..<5_000 {
+            let roll = DropRoller.roll(achievementId: "combo_200", rng: lcg)
+            XCTAssertNotEqual(roll.tier, .common, "elite should never drop common")
+            XCTAssertNotEqual(roll.tier, .rare,   "elite should never drop rare")
+        }
+    }
+
+    /// Distribution check: entry rolls should be ~60% common (before OG), within tolerance.
+    func testEntryDistributionApproxWeights() {
         var rngState: UInt64 = 0x9E3779B97F4A7C15
         func lcg() -> Double {
             rngState = rngState &* 6364136223846793005 &+ 1442695040888963407
@@ -72,14 +111,33 @@ final class DrumrotParityTests: XCTestCase {
         var commons = 0
         let n = 20_000
         for _ in 0..<n {
-            // skip OG by consuming a value >= 0.05 first is not possible with single rng;
-            // instead count only non-og outcomes.
             let roll = DropRoller.roll(achievementId: "first_hit", rng: lcg)
             if roll.tier == .common { commons += 1 }
         }
-        // Expected ≈ 0.95 (non-og) * 0.55 ≈ 0.5225. Allow generous tolerance.
+        // Expected ≈ 0.95 (non-og) * 0.60 = 0.57. Allow generous tolerance.
         let frac = Double(commons) / Double(n)
-        XCTAssertEqual(frac, 0.52, accuracy: 0.06, "common fraction \(frac) off expected ~0.52")
+        XCTAssertEqual(frac, 0.57, accuracy: 0.08, "common fraction \(frac) off expected ~0.57")
+    }
+
+    // MARK: - Pity mechanic
+
+    func testPityMechanicPrefersLowCountCharacters() {
+        let catalog = DrumrotCatalog.all.filter { $0.tier == .og }
+        guard !catalog.isEmpty else { return }
+        let firstId = catalog[0].id
+        // Simulate having pulled the first OG character 5 times.
+        let counts: [String: Int] = [firstId: 5]
+        // With OG-check forced (rng < 0.01), pity should prefer characters with 0 pulls.
+        var values = [0.01, 0.0]
+        let roll = DropRoller.roll(achievementId: "first_hit", collectionCounts: counts) {
+            values.isEmpty ? Double.random(in: 0..<1) : values.removeFirst()
+        }
+        XCTAssertEqual(roll.tier, .og)
+        // The result should not be the over-pulled character (if pool > 1).
+        if catalog.count > 1 {
+            XCTAssertNotEqual(roll.drumrot.id, firstId,
+                "pity mechanic should prefer un-pulled characters over heavily-pulled ones")
+        }
     }
 
     // MARK: - Collection upgrade rule

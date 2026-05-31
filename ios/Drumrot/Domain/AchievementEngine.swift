@@ -2,6 +2,11 @@ import Foundation
 
 /// Evaluates achievement rules on game events (port of `checkAchievements`),
 /// unlocks new ones, and fires toast + drop-reveal through the AppStore.
+///
+/// Issue #72 changes:
+/// - `creator` threshold raised to 3 saved grooves (was 1)
+/// - `coach` threshold raised to 3 grooved with coach notes (was 1)
+/// - drop roller now receives collection counts for the pity mechanic
 @MainActor
 final class AchievementEngine {
     private let persistence: PersistenceStore
@@ -12,8 +17,10 @@ final class AchievementEngine {
     enum Event {
         case hit(combo: Int)
         case pass(accuracy: Int, stars: Int, bpm: Int, lessonKey: String, lessonBpm: Int?, isPrebuilt: Bool)
-        case creator
-        case coach
+        /// `savedCount`: total number of grooves the user has ever saved.
+        case creator(savedCount: Int)
+        /// `coachedCount`: total number of grooves that have a coach note attached.
+        case coach(coachedCount: Int)
     }
 
     func fire(_ event: Event) {
@@ -21,7 +28,7 @@ final class AchievementEngine {
         switch event {
         case .hit(let combo):
             ids.append("first_hit")
-            if combo >= 50 { ids.append("combo_50") }
+            if combo >= 50  { ids.append("combo_50") }
             if combo >= 100 { ids.append("combo_100") }
             if combo >= 200 { ids.append("combo_200") }
 
@@ -30,7 +37,7 @@ final class AchievementEngine {
             if acc == 100 { ids.append("perfect_pass") }
             if stars == 3 { ids.append("groove_master") }
             if acc >= 80 && bpm >= 160 { ids.append("speed_demon") }
-            if acc >= 80 && bpm <= 60 { ids.append("slow_burn") }
+            if acc >= 80 && bpm <= 60  { ids.append("slow_burn") }
 
             if let store {
                 store.consecutiveAccuratePasses = acc >= 90 ? store.consecutiveAccuratePasses + 1 : 0
@@ -40,7 +47,6 @@ final class AchievementEngine {
             if isPrebuilt, let lessonBpm,
                let tier = PracticeTier.forPass(accuracy: acc, bpm: bpm, lessonBpm: lessonBpm) {
                 persistence.recordPass(lessonKey: key, score: 0, accuracy: 0, tier: tier.rawValue)
-                // (score/accuracy already recorded by the caller; this only lifts the tier)
             }
 
             let streak = PracticeStreak.current(playDays: Set(persistence.playDays.map(\.day)))
@@ -55,10 +61,13 @@ final class AchievementEngine {
             if scores.filter({ $0.practiceTier >= PracticeTier.grooving.rawValue }).count >= 3 { ids.append("tempo_climber") }
             if scores.filter({ $0.practiceTier >= PracticeTier.killingIt.rawValue }).count >= 5 { ids.append("full_throttle") }
 
-        case .creator:
-            ids.append("creator")
-        case .coach:
-            ids.append("coach")
+        case .creator(let savedCount):
+            // Threshold raised from 1 to 3 (issue #72)
+            if savedCount >= 3 { ids.append("creator") }
+
+        case .coach(let coachedCount):
+            // Threshold raised from 1 to 3 (issue #72)
+            if coachedCount >= 3 { ids.append("coach") }
         }
 
         ids.forEach(award)
@@ -68,8 +77,24 @@ final class AchievementEngine {
         guard persistence.unlock(id) else { return }
         guard let ach = AchievementCatalog.all.first(where: { $0.id == id }) else { return }
         store?.enqueueToast(ach)
-        let roll = DropRoller.roll(achievementId: id) { Double.random(in: 0..<1) }
+        // Pass collection counts for the pity mechanic.
+        let counts = collectionCounts()
+        let roll = DropRoller.roll(achievementId: id, collectionCounts: counts) { Double.random(in: 0..<1) }
         let isNew = persistence.collect(drumrotId: roll.drumrot.id, tier: roll.tier)
         store?.enqueueReveal(.init(drumrot: roll.drumrot, tier: roll.tier, fromAchievement: ach.name, isNew: isNew))
+    }
+
+    private func allScores() -> [LessonScore] {
+        (try? context.fetch(FetchDescriptor<LessonScore>())) ?? []
+    }
+
+    private func playDaySet() -> Set<String> {
+        Set(((try? context.fetch(FetchDescriptor<PracticeDay>())) ?? []).map(\.day))
+    }
+
+    /// Returns a map of drumrot id -> pull count for the pity mechanic.
+    private func collectionCounts() -> [String: Int] {
+        let entries = (try? context.fetch(FetchDescriptor<DrumrotCollectionEntry>())) ?? []
+        return Dictionary(entries.map { ($0.drumrotId, $0.count) }, uniquingKeysWith: max)
     }
 }
