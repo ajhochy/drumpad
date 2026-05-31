@@ -2,51 +2,75 @@
 // Drumrot Collection — characters, drop rolls, card renderer, collection tab
 // ===========================================================================
 
-// ── Tier config ───────────────────────────────────────────────────────────────
+// ── Tier config ─────────────────────────────────────────────────────────────
+// Issue #72: collapsed from 7 tiers to 5.
+//   - mythic  → legendary  (interchangeable at a kid's mental model level)
+//   - god     → og         (both ultra-rare; one holofoil tier is more impactful)
+// Migration: localStorage `tierIndex` values 4+ are remapped on read via
+// normaliseTier() so existing collections survive without data loss.
 export const TIER_CONFIG = {
-  common:    { name: 'Common',      label: 'COMMON',        color: '#9aa5b4', idx: 0 },
-  rare:      { name: 'Rare',        label: 'RARE',          color: '#3b82f6', idx: 1 },
-  epic:      { name: 'Epic',        label: 'EPIC',          color: '#a855f7', idx: 2 },
-  legendary: { name: 'Legendary',   label: 'LEGENDARY',     color: '#f59e0b', idx: 3 },
-  mythic:    { name: 'Mythic',      label: 'MYTHIC',        color: '#ec4899', idx: 4 },
-  god:       { name: 'Drumrot God', label: 'DRUMROT GOD',   color: '#ff3a5a', idx: 5 },
-  og:        { name: 'OG',          label: 'OG · PRISMATIC', color: '#ffffff', idx: 6 },
+  common:    { name: 'Common',    label: 'COMMON',        color: '#9aa5b4', idx: 0 },
+  rare:      { name: 'Rare',      label: 'RARE',          color: '#3b82f6', idx: 1 },
+  epic:      { name: 'Epic',      label: 'EPIC',          color: '#a855f7', idx: 2 },
+  legendary: { name: 'Legendary', label: 'LEGENDARY',     color: '#f59e0b', idx: 3 },
+  og:        { name: 'OG',        label: 'OG · PRISMATIC', color: '#ffffff', idx: 4 },
 };
 
-export const TIERS_ORDER = ['common','rare','epic','legendary','mythic','god','og'];
+export const TIERS_ORDER = ['common','rare','epic','legendary','og'];
 
-// ── Achievement → difficulty ──────────────────────────────────────────────────
+// Migration shim: maps old 7-tier raw values to the new 5-tier names.
+// Called whenever a tier value is read from localStorage.
+export function normaliseTier(raw) {
+  const map = { mythic: 'legendary', god: 'og' };
+  return map[raw] ?? raw;
+}
+
+// ── Achievement → difficulty ─────────────────────────────────────────────────
+// Aligned with the iOS DropRoller.achievementDifficulty table (issue #72).
 const ACHIEVEMENT_DIFFICULTY = {
-  first_hit:     'easy',
-  first_pass:    'easy',
-  creator:       'easy',
-  combo_50:      'medium',
+  // Entry — first-time actions, no skill barrier
+  first_hit:     'entry',
+  first_pass:    'entry',
+  creator:       'entry',
+  // Easy — low-bar combos, short streak, chill BPM exploration
+  combo_50:      'easy',
+  streak_3:      'easy',
+  slow_burn:     'easy',
+  coach:         'easy',
+  // Medium — groove mastery intro, moderate combo, week streak
   groove_master: 'medium',
-  streak_3:      'medium',
-  slow_burn:     'medium',
-  speed_demon:   'medium',
-  coach:         'medium',
-  combo_100:     'hard',
-  sharpshooter:  'hard',
+  combo_100:     'medium',
+  streak_7:      'medium',
+  // Hard — full lesson coverage, high accuracy, speed demon
   all_grooves:   'hard',
+  sharpshooter:  'hard',
+  speed_demon:   'hard',
   tempo_climber: 'hard',
-  streak_7:      'hard',
+  // Elite — sustained mastery
   combo_200:     'elite',
   perfect_pass:  'elite',
   graduate:      'elite',
   full_throttle: 'elite',
 };
 
-// Weights per difficulty: [Common, Rare, Epic, Legendary, Mythic, God, OG]
-// OG column stays 0 here — OG is handled by the separate 5% flat bonus
+// Weights per difficulty: [Common, Rare, Epic, Legendary, OG]
+// OG column stays 0 here — OG is granted by the separate ogChance flat bonus.
+// Elite floor: rare removed so elite achievements never drop the lowest tiers.
+// Probability redistributed to epic + legendary (matches iOS DropRoller).
 const TIER_WEIGHTS = {
-  easy:   [55, 35,  8,  2,  0,  0, 0],
-  medium: [20, 40, 25, 10,  4,  1, 0],
-  hard:   [ 5, 15, 35, 30, 12,  3, 0],
-  elite:  [ 0,  5, 20, 35, 25, 15, 0],
+  entry:  [60, 32,  8,  0, 0],
+  easy:   [30, 45, 20,  5, 0],
+  medium: [ 0, 25, 45, 25, 5],
+  hard:   [ 0,  0, 35, 50,15],
+  elite:  [ 0,  0, 15, 60,25],
 };
 
-const OG_CHANCE = 0.05; // 5% flat upgrade to OG on any achievement
+// Per-achievement OG flat-upgrade chance.
+// graduate and full_throttle get 10% (issue #72: raised from 5%).
+function ogChance(achievementId) {
+  if (achievementId === 'graduate' || achievementId === 'full_throttle') return 0.10;
+  return 0.05;
+}
 
 // ── Drumrot roster ────────────────────────────────────────────────────────────
 // Stats are stored as numbers. The render layer maps 99 → '∞' (bpm/groove on OG)
@@ -228,7 +252,7 @@ export const DRUMROTS = [
   },
   // MYTHIC ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
-    id: 'lirili_beatlarila', tier: 'mythic', num: '018', emoji: '🐘🌊',
+    id: 'lirili_beatlarila', tier: 'legendary', num: '018', emoji: '🐘🌊',
     name: 'Lirili Beatlarila',
     sub: 'mythic · tidal pachyderm',
     flavor: 'Trunk doubles as a kick pedal. Step pattern sounds like an ocean. Has cried during a fill. Twice.',
@@ -238,7 +262,7 @@ export const DRUMROTS = [
     drumrotImg: 'art/drumrots/lirili_beatlarila.webp',
   },
   {
-    id: 'frigo_bassolo_camelini', tier: 'mythic', num: '019', emoji: '🐪❄️',
+    id: 'frigo_bassolo_camelini', tier: 'legendary', num: '019', emoji: '🐪❄️',
     name: 'Frigo Bassolo Camelini',
     sub: 'mythic · cold-storage camel',
     flavor: 'Stores the sub-bass in two humps. Walks the desert in 32-bar phrases. Refuses to play above 60Hz.',
@@ -248,7 +272,7 @@ export const DRUMROTS = [
     drumrotImg: 'art/drumrots/frigo_bassolo_camelini.webp',
   },
   {
-    id: 'sincopato_del_vento', tier: 'mythic', num: '020', emoji: '🌪️🎸',
+    id: 'sincopato_del_vento', tier: 'legendary', num: '020', emoji: '🌪️🎸',
     name: 'Sincopato del Vento',
     sub: 'mythic · off-beat tempest',
     flavor: 'Made entirely of off-beats and dust. Cannot land on the downbeat. Refuses to even attempt the downbeat.',
@@ -258,7 +282,7 @@ export const DRUMROTS = [
     drumrotImg: 'art/drumrots/sincopato_del_vento.webp',
   },
   {
-    id: 'maestro_falsetto_drumini', tier: 'mythic', num: '021', emoji: '🎩🥢',
+    id: 'maestro_falsetto_drumini', tier: 'legendary', num: '021', emoji: '🎩🥢',
     name: 'Il Maestro Falsetto Drumini',
     sub: 'mythic · conductor of chaos',
     flavor: 'Conducts full orchestras using only drumsticks. The strings section weeps. The brass section nods. Both are correct.',
@@ -269,7 +293,7 @@ export const DRUMROTS = [
   },
   // DRUMROT GOD ── ── ── ── ── ── ── ── ── ── ── ── ──
   {
-    id: 'tamburino_cosmico', tier: 'god', num: '022', emoji: '🌌🥁',
+    id: 'tamburino_cosmico', tier: 'og', num: '022', emoji: '🌌🥁',
     name: 'Il Tamburino Cosmico',
     sub: 'drumrot god · galactic drummer',
     flavor: 'Beats the universe. The universe beats back. It is a draw every measure. The reverb tail never ends.',
@@ -279,7 +303,7 @@ export const DRUMROTS = [
     drumrotImg: 'art/drumrots/tamburino_cosmico.webp',
   },
   {
-    id: 'bombardino_quattro_tempi', tier: 'god', num: '023', emoji: '💣🎼',
+    id: 'bombardino_quattro_tempi', tier: 'og', num: '023', emoji: '💣🎼',
     name: 'Bombardino Quattro Tempi',
     sub: 'drumrot god · four-limb prophet',
     flavor: 'Four time signatures at once. Each limb a different planet. Each planet thinks it is the downbeat.',
@@ -370,12 +394,15 @@ export const DRUMROTS = [
 ];
 
 // ── Drop roll ─────────────────────────────────────────────────────────────────
-export function rollDrumrot(achievementId){
-  const difficulty = ACHIEVEMENT_DIFFICULTY[achievementId] || 'easy';
+// Updated for the 5-tier system (issue #72):
+//   - Uses per-achievement ogChance() (10% for graduate/full_throttle, 5% otherwise)
+//   - Pity mechanic: picks from the least-collected cohort in the tier pool
+export function rollDrumrot(achievementId, collection = loadCollection()){
+  const difficulty = ACHIEVEMENT_DIFFICULTY[achievementId] || 'entry';
 
-  // 5% flat chance: straight to OG regardless of difficulty
+  // Per-achievement OG flat upgrade chance (5% or 10%)
   let tierKey;
-  if (Math.random() < OG_CHANCE){
+  if (Math.random() < ogChance(achievementId)){
     tierKey = 'og';
   } else {
     const weights = TIER_WEIGHTS[difficulty];
@@ -389,34 +416,57 @@ export function rollDrumrot(achievementId){
     tierKey = TIERS_ORDER[tierIdx];
   }
 
-  // Pick random drumrot with that tier assignment
-  const pool = DRUMROTS.filter(d => d.tier === tierKey);
-  const source = pool.length > 0 ? pool : DRUMROTS;
-  const drumrot = source[Math.floor(Math.random() * source.length)];
+  // Pick a drumrot from the matching tier, with pity mechanic:
+  // prefer characters the player has collected least.
+  let pool = DRUMROTS.filter(d => d.tier === tierKey);
+  if (pool.length === 0) pool = DRUMROTS;
+
+  // Sort pool by collection count ascending; pick from lowest-count cohort.
+  const counts = pool.map(d => ({ d, count: (collection[d.id]?.count ?? 0) }));
+  counts.sort((a, b) => a.count - b.count);
+  const minCount = counts[0].count;
+  const candidates = counts.filter(x => x.count === minCount).map(x => x.d);
+  const drumrot = candidates[Math.floor(Math.random() * candidates.length)];
   return { drumrot, tierKey };
 }
 
 // ── Collection persistence ────────────────────────────────────────────────────
+// Format: { drumrotId: { tierIdx: 0-4, count: N } }
+// Legacy format { drumrotId: tierIdx (0-6) } is migrated transparently on read.
 export function loadCollection(){
-  return JSON.parse(localStorage.getItem('drum.collection') || '{}');
-  // { drumrotId: tierIdx (0-6) }
+  const raw = JSON.parse(localStorage.getItem('drum.collection') || '{}');
+  // Migration: old format stored a plain integer (tierIdx).
+  // New format stores { tierIdx, count }.
+  // Also maps old 7-tier indices (4=mythic→legendary, 5=god→og, 6=og→og).
+  const OLD_IDX_MAP = { 4: 3, 5: 4, 6: 4 }; // mythic→legendary, god/og→og
+  const migrated = {};
+  for (const [id, v] of Object.entries(raw)){
+    if (typeof v === 'number'){
+      const normIdx = OLD_IDX_MAP[v] ?? Math.min(v, 4);
+      migrated[id] = { tierIdx: normIdx, count: 1 };
+    } else {
+      // Already new format — still normalise the tierIdx in case of old data
+      const normIdx = OLD_IDX_MAP[v.tierIdx] ?? Math.min(v.tierIdx ?? 0, 4);
+      migrated[id] = { tierIdx: normIdx, count: v.count ?? 1 };
+    }
+  }
+  return migrated;
 }
 
 function saveCollection(col){
   localStorage.setItem('drum.collection', JSON.stringify(col));
 }
 
-// Returns true if this is new or an upgrade
+// Returns true if this is new or a tier upgrade.
+// Also increments the pull count (used by the pity mechanic).
 export function addToCollection(drumrotId, tierKey){
   const col = loadCollection();
-  const newIdx = TIER_CONFIG[tierKey]?.idx ?? 0;
-  const curIdx = col[drumrotId] ?? -1;
-  if (newIdx > curIdx){
-    col[drumrotId] = newIdx;
-    saveCollection(col);
-    return true;
-  }
-  return false;
+  const newIdx = TIER_CONFIG[normaliseTier(tierKey)]?.idx ?? 0;
+  const cur = col[drumrotId] ?? { tierIdx: -1, count: 0 };
+  const isUpgrade = newIdx > cur.tierIdx;
+  col[drumrotId] = { tierIdx: Math.max(cur.tierIdx, newIdx), count: cur.count + 1 };
+  saveCollection(col);
+  return isUpgrade || cur.tierIdx < 0;
 }
 
 // ── Card renderer (v0.3 chrome) ───────────────────────────────────────────────
