@@ -13,6 +13,12 @@ struct LibraryView: View {
     @State private var searchText = ""
     @State private var filterGenre = "All"
 
+    // Inline rename state (issue #69)
+    @State private var renameLesson: Lesson?
+    @State private var renameDraft = ""
+    @State private var renameError: String?
+    @State private var showRenameSheet = false
+
     private var scoreByName: [String: LessonScore] {
         Dictionary(scores.map { ($0.lessonKey, $0) }, uniquingKeysWith: { a, _ in a })
     }
@@ -65,6 +71,62 @@ struct LibraryView: View {
         }
         .padding(.horizontal, 22).padding(.vertical, 16)
         .fileImporter(isPresented: $showImporter, allowedContentTypes: [.midi, .data]) { importMIDI($0) }
+        // Inline rename sheet (issue #69)
+        .sheet(isPresented: $showRenameSheet) {
+            renameSheet
+        }
+    }
+
+    // MARK: - Rename sheet
+
+    private var renameSheet: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("RENAME GROOVE")
+                        .font(SPFont.monoSmall).tracking(1.8)
+                        .foregroundStyle(SPColor.textDim)
+                    ZStack(alignment: .leading) {
+                        if renameDraft.isEmpty {
+                            Text("New name...")
+                                .font(SPFont.ui(17, weight: .bold)).tracking(0.4)
+                                .foregroundStyle(SPColor.lcdDim)
+                        }
+                        TextField("", text: $renameDraft)
+                            .font(SPFont.ui(17, weight: .bold)).tracking(0.4)
+                            .foregroundStyle(SPColor.lcdFG)
+                            .shadow(color: SPColor.lcdFG.opacity(0.5), radius: 4)
+                            .textInputAutocapitalization(.words)
+                            .submitLabel(.done)
+                            .onChange(of: renameDraft) { _, _ in renameError = nil }
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .lcdPanel(cornerRadius: 8)
+                    if let err = renameError {
+                        Text(err)
+                            .font(SPFont.monoMicro).tracking(1)
+                            .foregroundStyle(SPColor.ledRed)
+                    }
+                }
+                .padding(.horizontal, 24).padding(.top, 24)
+                Spacer()
+            }
+            .background(SPColor.chassis2.ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        showRenameSheet = false
+                        renameError = nil
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Rename") { commitRename() }
+                        .disabled(renameDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
     }
 
     // MARK: - Page header
@@ -449,6 +511,12 @@ struct LibraryView: View {
             } label: {
                 Label("Edit Groove", systemImage: "slider.horizontal.3")
             }
+            // Inline rename (issue #69)
+            Button {
+                startRename(lesson)
+            } label: {
+                Label("Rename", systemImage: "pencil")
+            }
             Button(role: .destructive) {
                 deleteGroove(lesson)
             } label: {
@@ -466,6 +534,61 @@ struct LibraryView: View {
         guard let row = extraLessons.first(where: { $0.name == lesson.name }) else { return }
         context.delete(row)
         try? context.save()
+    }
+
+    // MARK: - Rename (issue #69)
+
+    private func startRename(_ lesson: Lesson) {
+        renameLesson = lesson
+        renameDraft = lesson.name
+        renameError = nil
+        showRenameSheet = true
+    }
+
+    private func commitRename() {
+        guard let lesson = renameLesson else { return }
+        let newName = renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Reject empty
+        guard !newName.isEmpty else {
+            renameError = "Name cannot be empty."
+            return
+        }
+        // Reject collision with any existing name (built-in or extra)
+        let allNames = Set(allLessons.map(\.name))
+        if newName != lesson.name && allNames.contains(newName) {
+            renameError = "\u{201C}\(newName)\u{201D} is already taken."
+            return
+        }
+        // No change
+        if newName == lesson.name {
+            showRenameSheet = false; return
+        }
+
+        // Atomically rename: decode JSON, swap name, re-encode, delete old row, insert new.
+        guard let oldRow = extraLessons.first(where: { $0.name == lesson.name }),
+              let data = oldRow.lessonJSON.data(using: .utf8),
+              let orig = try? JSONDecoder().decode(Lesson.self, from: data),
+              let encoded = try? JSONEncoder().encode(
+                  Lesson(name: newName, bpm: orig.bpm, tip: orig.tip,
+                         difficulty: orig.difficulty, genre: orig.genre,
+                         patterns: orig.patterns)),
+              let newJSON = String(data: encoded, encoding: .utf8)
+        else {
+            renameError = "Could not rename. Try again."
+            return
+        }
+
+        // SwiftData: delete old (unique constraint), insert new, preserving creation date.
+        let createdAt = oldRow.createdAt
+        context.delete(oldRow)
+        let newRow = ExtraLesson(name: newName, lessonJSON: newJSON, createdAt: createdAt)
+        context.insert(newRow)
+        try? context.save()
+
+        showRenameSheet = false
+        renameLesson = nil
+        renameError = nil
     }
 
     private var headerCountLine: String {
