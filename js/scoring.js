@@ -12,6 +12,7 @@ export function resetStats(){
   State.maxCombo = 0;
   State.hits = 0;
   State.misses = 0;
+  State.ghostHits = 0;
   State.streak = 0;
   setText('scoreVal', '0');
   setText('comboVal', '0x');

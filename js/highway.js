@@ -146,6 +146,7 @@ export function animate(ts){
       _savePassScore();
       State.hits = 0;
       State.misses = 0;
+      State.ghostHits = 0;
       // Clear state flags; positions are re-derived from grooveElapsed naturally
       State.noteStates.forEach(st => { st.hit = false; st.missed = false; });
       State.noteEls.forEach(el => { el.classList.remove('hit','missed'); el.style.opacity = ''; });
@@ -220,7 +221,8 @@ export function animate(ts){
 
 // Save high score / stars for the pass that just ended (called on each loop rollover)
 function _savePassScore(){
-  const total = State.notes.length;
+  // Accuracy denominator includes ghost hits so spam lowers the score (issue #68).
+  const total = State.hits + State.misses + State.ghostHits;
   const acc = total > 0 ? State.hits / total : 0;
   const stars = acc >= 0.95 ? 3 : acc >= 0.8 ? 2 : acc >= 0.5 ? 1 : 0;
   const key = String(State.currentLesson);
@@ -268,7 +270,7 @@ export function hitPad(lane){
       State.score += pts * Math.max(1, Math.floor(State.combo / 4));
       setText('scoreVal', State.score.toLocaleString());
       setText('comboVal', State.combo + 'x');
-      const total = State.hits + State.misses;
+      const total = State.hits + State.misses + State.ghostHits;
       const acc = Math.round(State.hits / total * 100);
       setText('accVal', acc + '%');
       const lbl = pts === 300 ? 'perfect!' : pts === 200 ? 'great!' : 'good';
@@ -278,6 +280,11 @@ export function hitPad(lane){
       return;
     }
   }
+  // No in-window note found on this lane — ghost hit (anti-spam, issue #68).
+  // Count in the accuracy denominator so spamming lowers accuracy.
+  State.ghostHits++;
+  State.combo = 0;
+  setText('comboVal', '0x');
 }
 
 export function startPlay(){
