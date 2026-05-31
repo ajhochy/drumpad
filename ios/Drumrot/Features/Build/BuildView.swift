@@ -14,6 +14,15 @@ struct BuildView: View {
     @State private var exportFile: ExportFile?
     @Query private var extraLessons: [ExtraLesson]
 
+    // Overwrite-confirm state (issue #71)
+    @State private var overwriteCandidateName: String?
+    @State private var overwriteCandidateJSON: String?
+    @State private var showOverwriteAlert = false
+
+    // Record mode
+    @StateObject private var recorder = BuilderRecordEngine()
+    @State private var showRecordPanel = false
+
     private let lanes: [DrumLane] = DrumLane.allCases
     private var isEmpty: Bool { !grid.contains { $0.contains(true) } }
 
@@ -25,6 +34,33 @@ struct BuildView: View {
         }
         .padding(.horizontal, 14).padding(.vertical, 12)
         .sheet(item: $exportFile) { ShareSheet(items: [$0.url]) }
+        // Overwrite-confirm alert (issue #71)
+        .alert("Name Already Taken", isPresented: $showOverwriteAlert) {
+            Button("Replace", role: .destructive) {
+                if let name = overwriteCandidateName, let json = overwriteCandidateJSON {
+                    upsertExtraLesson(name: name, json: json)
+                    store.achievements?.fire(.creator(savedCount: extraLessons.count))
+                    showSaveToast("Replaced “\(name)” in library")
+                }
+                overwriteCandidateName = nil; overwriteCandidateJSON = nil
+            }
+            Button("Save as New") {
+                if let name = overwriteCandidateName, let json = overwriteCandidateJSON {
+                    let uniqueName = uniqueSuffix(for: name)
+                    upsertExtraLesson(name: uniqueName, json: rebrandedJSON(json, newName: uniqueName))
+                    store.achievements?.fire(.creator(savedCount: extraLessons.count + 1))
+                    showSaveToast("Saved “\(uniqueName)” to library")
+                }
+                overwriteCandidateName = nil; overwriteCandidateJSON = nil
+            }
+            Button("Cancel", role: .cancel) {
+                overwriteCandidateName = nil; overwriteCandidateJSON = nil
+            }
+        } message: {
+            if let name = overwriteCandidateName {
+                Text("A groove named “\(name)” already exists. Replace it, save with a new name, or cancel.")
+            }
+        }
         .overlay(alignment: .top) {
             if let saveToast {
                 Text(saveToast.uppercased())
@@ -39,7 +75,16 @@ struct BuildView: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .onAppear(perform: seedFromEditingLessonIfAny)
+        .onAppear {
+            seedFromEditingLessonIfAny()
+            store.activateAudio()
+        }
+        .onDisappear { recorder.stop() }
+        .sheet(isPresented: $showRecordPanel, onDismiss: { recorder.stop() }) {
+            RecordPanelView(recorder: recorder, bpm: bpm, steps: steps) { mergedGrid in
+                mergeRecordedGrid(mergedGrid)
+            }
+        }
     }
 
     // MARK: - Left: sequencer face
@@ -125,6 +170,26 @@ struct BuildView: View {
             }
 
             Spacer(minLength: 4)
+
+            // Record button
+            Button { showRecordPanel = true } label: {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(SPColor.ledRed)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: SPColor.ledRed.opacity(0.8), radius: 4)
+                    Text("REC").font(SPFont.ui(11, weight: .bold)).tracking(1.4)
+                }
+                .foregroundStyle(SPColor.ledRed)
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(LinearGradient(colors: [Color(hex: 0x34383F), Color(hex: 0x1F2127)],
+                                           startPoint: .top, endPoint: .bottom))
+                .clipShape(RoundedRectangle(cornerRadius: 5))
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(SPColor.ledRed.opacity(0.4), lineWidth: 1))
+                .shadow(color: SPColor.ledRed.opacity(0.2), radius: 6)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Open real-time record mode")
 
             // Clear button
             Button(role: .destructive) { clear() } label: {
@@ -380,6 +445,8 @@ struct BuildView: View {
                         action: { loadIntoPlayer() }, disabled: isEmpty)
                 toolBtn(icon: "arrow.clockwise", label: "Resize", tint: SPColor.stickerCyan,
                         action: { steps = steps == 16 ? 32 : 16; resize(to: steps) })
+                toolBtn(icon: "record.circle", label: "Record", tint: SPColor.ledRed,
+                        action: { showRecordPanel = true })
             }
         }
         .chassisModule()
@@ -405,6 +472,23 @@ struct BuildView: View {
         }
         .buttonStyle(.plain)
         .disabled(disabled)
+    }
+
+    // MARK: - Record-mode merge
+
+    /// Merges hits captured in real-time recording into the current grid.
+    /// Existing steps are OR-ed with recorded ones so manual edits survive.
+    private func mergeRecordedGrid(_ recorded: [[Bool]]) {
+        guard recorded.count == grid.count else { return }
+        for laneIdx in grid.indices {
+            guard laneIdx < recorded.count else { continue }
+            let recordedRow = recorded[laneIdx]
+            for stepIdx in grid[laneIdx].indices {
+                if stepIdx < recordedRow.count, recordedRow[stepIdx] {
+                    grid[laneIdx][stepIdx] = true
+                }
+            }
+        }
     }
 
     // MARK: - Business logic (unchanged)
@@ -449,10 +533,55 @@ struct BuildView: View {
         persistBuilderState()
         guard let data = try? JSONEncoder().encode(lesson),
               let json = String(data: data, encoding: .utf8) else { return }
+
+        let isAutoNamed = grooveName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let nameExists = extraLessons.contains { $0.name == lesson.name }
+
+        // Collision check (issue #71): only show alert for user-typed names that
+        // already exist.  The auto-numbered “My Groove N” fallback is always unique
+        // (resolvedName() guarantees it), so no alert needed for that path.
+        if !isAutoNamed && nameExists {
+            overwriteCandidateName = lesson.name
+            overwriteCandidateJSON = json
+            showOverwriteAlert = true
+            return
+        }
+
+        // No collision — proceed straight to save.
         upsertExtraLesson(name: lesson.name, json: json)
-        store.achievements?.fire(.creator)
-        if !coach.isEmpty { store.achievements?.fire(.coach) }
+        let savedCount = extraLessons.count + (nameExists ? 0 : 1)
+        store.achievements?.fire(.creator(savedCount: savedCount))
+        if !coach.isEmpty {
+            let coachedCount = extraLessons.filter {
+                guard let lessonData = $0.lessonJSON.data(using: .utf8),
+                      let decoded = try? JSONDecoder().decode(Lesson.self, from: lessonData)
+                else { return false }
+                return !decoded.tip.isEmpty
+            }.count + 1
+            store.achievements?.fire(.coach(coachedCount: coachedCount))
+        }
         showSaveToast("Saved “\(lesson.name)” to library")
+    }
+
+    /// Returns the smallest `”<base> (N)”` that doesn't collide with an existing name.
+    private func uniqueSuffix(for base: String) -> String {
+        let existing = Set(extraLessons.map(\.name))
+        var n = 2
+        while existing.contains("\(base) (\(n))") { n += 1 }
+        return "\(base) (\(n))"
+    }
+
+    /// Re-encodes a lesson JSON blob with a different `name` field.
+    private func rebrandedJSON(_ json: String, newName: String) -> String {
+        guard let data = json.data(using: .utf8),
+              let orig = try? JSONDecoder().decode(Lesson.self, from: data),
+              let encoded = try? JSONEncoder().encode(
+                  Lesson(name: newName, bpm: orig.bpm, tip: orig.tip,
+                         difficulty: orig.difficulty, genre: orig.genre,
+                         patterns: orig.patterns)),
+              let result = String(data: encoded, encoding: .utf8)
+        else { return json }
+        return result
     }
 
     private func showSaveToast(_ message: String) {

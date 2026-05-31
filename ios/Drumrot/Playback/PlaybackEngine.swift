@@ -1,5 +1,23 @@
 import Foundation
 
+/// Metronome subdivision granularity shown on the Play screen.
+enum MetronomeSubdivision: Int, CaseIterable, Identifiable {
+    case quarter  = 1   // 1/4  — one click per quarter note
+    case eighth   = 2   // 1/8  — two clicks per quarter note
+    case sixteenth = 4  // 1/16 — four clicks per quarter note
+
+    var id: Int { rawValue }
+
+    /// Short label shown in the picker.
+    var label: String {
+        switch self {
+        case .quarter:   return "1/4"
+        case .eighth:    return "1/8"
+        case .sixteenth: return "1/16"
+        }
+    }
+}
+
 /// Drives a lesson's gameplay clock: count-in, note travel, hit judging, a
 /// continuous metronome, seamless loop rollover (with shadow notes) and
 /// completion. Ported from the `js/highway.js` `animate` model — note positions
@@ -43,8 +61,18 @@ final class PlaybackEngine: ObservableObject {
 
     var loop = false
     var metronomeEnabled = true
+    /// User-adjustable latency offset in milliseconds (range −50..50).
+    /// A positive value shifts the judgment window later (compensates for
+    /// devices with extra output latency such as Bluetooth speakers).
+    /// A negative value shifts it earlier. Wired from `AppSettings.audioLatencyOffsetMs`.
+    var latencyOffsetMs: Double = 0
+    /// Controls the subdivision resolution: quarter, eighth, or sixteenth notes.
+    /// Downbeats (beat 0 of each bar) are always accented; subdivision clicks
+    /// use a softer tone so the pulse hierarchy remains clear.
+    var metronomeSubdivision: MetronomeSubdivision = .quarter
 
-    /// Fired on each new quarter-note beat (count-in AND groove). `accent` = downbeat.
+    /// Fired on each new metronome sub-beat. `accent` = downbeat (beat 0 of bar);
+    /// `isSubdivision` = true when the click falls between quarter notes.
     var onMetronome: ((_ accent: Bool) -> Void)?
 
     private(set) var lesson: Lesson?
@@ -105,11 +133,24 @@ final class PlaybackEngine: ObservableObject {
         let elapsed = nowMs - startMs
 
         // ── Continuous metronome — fires through count-in AND groove ──────────
+        // The sub-beat interval is quarterMs divided by the subdivision factor
+        // (1 for 1/4, 2 for 1/8, 4 for 1/16).  Downbeat detection: a sub-beat
+        // is an accent when it lands exactly on beat 0 of a bar (every 4
+        // quarter notes = every 4*factor sub-beats).
         if metronomeEnabled, elapsed >= 0, quarterMs > 0 {
-            let beat = Int(floor(elapsed / quarterMs))
-            if beat != lastMetronomeBeat {
-                lastMetronomeBeat = beat
-                onMetronome?(beat % 4 == 0)
+            let factor = metronomeSubdivision.rawValue
+            let subBeatMs = quarterMs / Double(factor)
+            let subBeat = Int(floor(elapsed / subBeatMs))
+            if subBeat != lastMetronomeBeat {
+                lastMetronomeBeat = subBeat
+                // A sub-beat is a quarter-note downbeat when it divides evenly
+                // into the quarter-note grid AND falls on beat 0 of a 4/4 bar.
+                let isQuarterNote = subBeat % factor == 0
+                let quarterIndex = subBeat / factor          // 0-based quarter count
+                // Subdivision clicks between quarter notes use the softer
+                // (non-accent) sound so the pulse hierarchy is preserved.
+                let playAccent = isQuarterNote && quarterIndex % 4 == 0
+                onMetronome?(playAccent)
             }
         }
 
@@ -170,7 +211,10 @@ final class PlaybackEngine: ObservableObject {
     @discardableResult
     func registerHit(lane: Int) -> ScoringEngine.Judgment? {
         guard let startMs, phase == .playing else { return nil }
-        let grooveElapsed = (clock.nowMs - startMs) - countInMs
+        // Apply the user-set latency offset: a positive offset means the
+        // user hears the audio slightly late, so we shift the virtual hit
+        // time forward by that amount so it lands closer to the note.
+        let grooveElapsed = (clock.nowMs - startMs) - countInMs + latencyOffsetMs
         var bestIndex: Int?
         var bestError = Double.greatestFiniteMagnitude
         var hitIsInNextIteration = false
@@ -198,7 +242,12 @@ final class PlaybackEngine: ObservableObject {
             }
         }
 
-        guard let idx = bestIndex, bestError <= Self.hitWindowMs else { return nil }
+        guard let idx = bestIndex, bestError <= Self.hitWindowMs else {
+            // No matching in-window note found — record a ghost hit so spam
+            // lowers accuracy (anti-spam, issue #68).
+            scoring.recordGhostHit()
+            return nil
+        }
 
         // If the winning note lives in the next iteration, pre-advance the loop
         // so the note can be marked hit cleanly.  update() will see pass ==

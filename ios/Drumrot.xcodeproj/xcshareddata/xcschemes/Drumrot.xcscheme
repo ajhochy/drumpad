@@ -38,6 +38,16 @@
                ReferencedContainer = "container:Drumrot.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "CC0000000000000000000012"
+               BuildableName = "DrumrotSnapshotTests.xctest"
+               BlueprintName = "DrumrotSnapshotTests"
+               ReferencedContainer = "container:Drumrot.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

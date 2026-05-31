@@ -13,6 +13,16 @@ struct ProgressTabView: View {
     private var bestScore: Int { scores.map(\.high).max() ?? 0 }
     private var topAccuracy: Int { scores.map(\.lastAccuracy).max() ?? 0 }
 
+    /// True when the player has an active streak but hasn't practiced today yet.
+    private var streakAtRisk: Bool {
+        guard streak > 0 else { return false }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.timeZone = TimeZone(identifier: "UTC")
+        let todayKey = fmt.string(from: Date())
+        return !daySet.contains(todayKey)
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
@@ -69,6 +79,21 @@ struct ProgressTabView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .lcdPanel()
 
+            // Streak-at-risk callout (issue #72)
+            if streakAtRisk {
+                HStack(spacing: 8) {
+                    Text("🥁").font(.body)
+                    Text("Practice today to keep your streak alive!")
+                        .font(SPFont.monoSmall).tracking(1.2)
+                        .foregroundStyle(SPColor.ledAmberHot)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(SPColor.ledAmberHot.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(SPColor.ledAmberHot.opacity(0.4), lineWidth: 1))
+            }
+
             Text("LAST 14 DAYS").font(SPFont.monoMicro).tracking(1.8).foregroundStyle(SPColor.textDim)
 
             calendarStrip
@@ -115,7 +140,6 @@ struct ProgressTabView: View {
         VStack(alignment: .leading, spacing: 10) {
             SPModuleTitle(title: "Activity", meta: "\(totalSessions) SESSIONS")
 
-            // 14-day heatmap expanded to 4-week view
             fourWeekHeatmap
 
             Spacer(minLength: 0)
@@ -202,18 +226,44 @@ struct ProgressTabView: View {
     // MARK: - Achievements module
 
     private var achievementsModule: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        // Group achievements by category for the quest-log layout.
+        let categories = [
+            ("on_the_kit", "🥁", "On the Kit"),
+            ("showing_up", "📅", "Showing Up"),
+            ("speed_runs", "⚡", "Speed Runs"),
+            ("craft_crew", "🎛️", "Craft Crew"),
+        ]
+        let byCategory = Dictionary(grouping: AchievementCatalog.all) { $0.cat }
+
+        return VStack(alignment: .leading, spacing: 10) {
             SPModuleTitle(
                 title: "Achievements",
                 meta: "\(unlockedIds.count)/\(AchievementCatalog.all.count)"
             )
 
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
-                spacing: 8
-            ) {
-                ForEach(AchievementCatalog.all) { ach in
-                    achievementBadge(ach)
+            ForEach(categories, id: \.0) { (catId, catIcon, catName) in
+                let catAchs = byCategory[catId] ?? []
+                if !catAchs.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        // Category header
+                        HStack(spacing: 6) {
+                            Text(catIcon).font(.caption)
+                            Text(catName.uppercased())
+                                .font(SPFont.monoSmall).tracking(1.8)
+                                .foregroundStyle(SPColor.ledAmber)
+                        }
+                        .padding(.bottom, 2)
+
+                        LazyVGrid(
+                            columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
+                            spacing: 8
+                        ) {
+                            ForEach(catAchs) { ach in
+                                achievementBadge(ach)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 8)
                 }
             }
         }
@@ -227,18 +277,47 @@ struct ProgressTabView: View {
 
     private func achievementBadge(_ ach: Achievement) -> some View {
         let unlocked = unlockedIds.contains(ach.id)
+        let isSecret = ach.isSecret && !unlocked
+
         return HStack(spacing: 8) {
-            Text(ach.icon).font(.title3)
+            // Icon: padlock for secret+locked, category icon for non-secret+locked, achievement icon when unlocked
+            if isSecret {
+                Text("🔒").font(.title3)
+            } else if unlocked {
+                Text(ach.icon).font(.title3)
+            } else {
+                Text(ach.categoryIcon).font(.title3)
+            }
+
             VStack(alignment: .leading, spacing: 2) {
-                Text(ach.name)
-                    .font(SPFont.ui(11, weight: .bold)).tracking(0.4)
-                    .foregroundStyle(unlocked ? SPColor.text : SPColor.textDim)
-                    .lineLimit(1)
-                Text(ach.desc)
-                    .font(SPFont.monoMicro).tracking(0.5)
-                    .foregroundStyle(SPColor.textDim).lineLimit(1)
+                if isSecret {
+                    Text("???")
+                        .font(SPFont.ui(11, weight: .bold)).tracking(0.4)
+                        .foregroundStyle(SPColor.textDim)
+                        .lineLimit(1)
+                    Text("Secret achievement")
+                        .font(SPFont.monoMicro).tracking(0.5)
+                        .foregroundStyle(SPColor.textDim).lineLimit(1)
+                } else {
+                    Text(ach.name)
+                        .font(SPFont.ui(11, weight: .bold)).tracking(0.4)
+                        .foregroundStyle(unlocked ? SPColor.text : SPColor.textDim)
+                        .lineLimit(1)
+                    // Show hint for non-secret, locked achievements
+                    let hintText = unlocked ? ach.desc : (ach.hint.isEmpty ? ach.desc : ach.hint)
+                    Text(hintText)
+                        .font(SPFont.monoMicro).tracking(0.5)
+                        .foregroundStyle(SPColor.textDim).lineLimit(2)
+                }
             }
             Spacer(minLength: 0)
+        }
+        .overlay(alignment: .topTrailing) {
+            // Difficulty badge (not shown for secret achievements)
+            if !isSecret {
+                difficultyBadge(ach.dropDifficulty)
+                    .padding(4)
+            }
         }
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -254,8 +333,26 @@ struct ProgressTabView: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(unlocked ? SPColor.ledAmber.opacity(0.5) : Color.white.opacity(0.05), lineWidth: 1)
         )
-        .opacity(unlocked ? 1 : 0.45)
-        .accessibilityLabel("\(ach.name): \(ach.desc). \(unlocked ? "Unlocked" : "Locked")")
+        .opacity(unlocked ? 1 : (isSecret ? 0.35 : 0.55))
+        .accessibilityLabel(isSecret ? "Secret achievement — locked" : "\(ach.name): \(ach.desc). \(unlocked ? "Unlocked" : "Locked")")
+    }
+
+    private func difficultyBadge(_ difficulty: DropDifficulty) -> some View {
+        let (color, label): (Color, String) = {
+            switch difficulty {
+            case .entry:  return (SPColor.ledGreen,    "ENTRY")
+            case .easy:   return (SPColor.lcdFG,       "EASY")
+            case .medium: return (SPColor.ledAmber,    "MED")
+            case .hard:   return (SPColor.ledAmberHot, "HARD")
+            case .elite:  return (SPColor.stickerPink, "ELITE")
+            }
+        }()
+        return Text(label)
+            .font(SPFont.monoMicro).tracking(1)
+            .foregroundStyle(color)
+            .padding(.horizontal, 4).padding(.vertical, 2)
+            .background(color.opacity(0.15))
+            .clipShape(RoundedRectangle(cornerRadius: 3))
     }
 }
 

@@ -73,6 +73,42 @@ struct PersistenceService {
         try? context.save()
     }
 
+    /// Renames a user-authored lesson in-place, preserving its `createdAt` timestamp.
+    ///
+    /// Implementation note: `ExtraLesson.name` carries `@Attribute(.unique)`, so
+    /// we cannot mutate it directly — SwiftData will reject it with a constraint
+    /// violation.  Instead we delete the old row and insert a new one, patching
+    /// the `name` field inside the JSON payload so the encoded Lesson round-trips
+    /// correctly.
+    ///
+    /// Returns `true` on success, `false` if the source row is missing or the new
+    /// name already exists.
+    @discardableResult
+    func renameExtraLesson(from oldName: String, to newName: String) -> Bool {
+        guard let oldRow = fetchOne(ExtraLesson.self, #Predicate { $0.name == oldName }) else { return false }
+        guard fetchOne(ExtraLesson.self, #Predicate { $0.name == newName }) == nil else { return false }
+
+        // Patch name inside the JSON payload.
+        let newJSON: String
+        if let data = oldRow.lessonJSON.data(using: .utf8),
+           let orig = try? JSONDecoder().decode(Lesson.self, from: data),
+           let encoded = try? JSONEncoder().encode(
+               Lesson(name: newName, bpm: orig.bpm, tip: orig.tip,
+                      difficulty: orig.difficulty, genre: orig.genre,
+                      patterns: orig.patterns)),
+           let str = String(data: encoded, encoding: .utf8) {
+            newJSON = str
+        } else {
+            newJSON = oldRow.lessonJSON
+        }
+
+        let createdAt = oldRow.createdAt
+        context.delete(oldRow)
+        context.insert(ExtraLesson(name: newName, lessonJSON: newJSON, createdAt: createdAt))
+        try? context.save()
+        return true
+    }
+
     /// Removes a user-authored lesson by name. No-op if absent.
     func deleteExtraLesson(name: String) {
         guard let row = fetchOne(ExtraLesson.self, #Predicate { $0.name == name }) else { return }

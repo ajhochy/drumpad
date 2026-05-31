@@ -52,6 +52,10 @@ enum SPColor {
     ]
     static let laneNames = ["CRSH", "HHAT", "SNRE", "KICK", "TOMS", "RIDE"]
 
+    // ---- Tier accents ----
+    /// OG / Prismatic tier white — matches `DrumrotTier.og.hexColor`.
+    static let og = Color(hex: 0xFFFFFF)
+
     // ---- Back-compat aliases (existing Play/cards/Chassis/LED call sites) ----
     static let background  = roomBG
     static let bgRoom      = roomBG
