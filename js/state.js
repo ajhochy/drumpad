@@ -5,7 +5,7 @@ export const State = {
   currentLesson: 0,
   playing: false,
   score: 0, combo: 0, maxCombo: 0,
-  hits: 0, misses: 0, streak: 0,
+  hits: 0, misses: 0, ghostHits: 0, streak: 0,
   STREAK_MAX: 10,
   notes: [], noteEls: [], noteStates: [], shadowNoteEls: [],
   startTime: null, animFrameId: null,
