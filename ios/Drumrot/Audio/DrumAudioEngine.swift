@@ -85,6 +85,17 @@ final class DrumAudioEngine {
             scheduler.pool = pool
             scheduler.laneBuffers = laneBuffers
             scheduler.isReady = true
+            // Pre-warm: schedule a silent (zero-amplitude) buffer on every node
+            // so they're hot before the first real hit.  Eliminates the one-time
+            // AVAudioEngine warmup cost (≈10–30 ms) that would otherwise hit the
+            // first drum tap after opening Play.
+            if let silenceBuffer = makeSilenceBuffer(format: format, frameCount: 512) {
+                pool.forEach { node in
+                    node.volume = 0
+                    node.scheduleBuffer(silenceBuffer, at: nil, options: .interrupts, completionHandler: nil)
+                    node.volume = 1
+                }
+            }
         } catch {
             isRunning = false
             assertionFailure("AVAudioEngine start failed: \(error)")
@@ -116,6 +127,15 @@ final class DrumAudioEngine {
     func playClick(accent: Bool) {
         guard isRunning, let buffer = clickBuffers[accent] else { return }
         schedule(buffer, volume: 1)
+    }
+
+    /// Creates a short all-zero PCM buffer in the given format.
+    /// Returns nil if the format is invalid (prevents a crash on bad configs).
+    private func makeSilenceBuffer(format: AVAudioFormat, frameCount: AVAudioFrameCount) -> AVAudioPCMBuffer? {
+        guard let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return nil }
+        buf.frameLength = frameCount
+        // Float32 channels are already zero after initialisation; nothing to fill.
+        return buf
     }
 
     private func schedule(_ buffer: AVAudioPCMBuffer, volume: Float) {

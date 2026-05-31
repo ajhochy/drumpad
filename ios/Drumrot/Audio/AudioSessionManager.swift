@@ -16,7 +16,10 @@ final class AudioSessionManager {
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-            try session.setPreferredIOBufferDuration(0.005)
+            // Try 3 ms on A12+ silicon; older devices may sustain this too.
+            // If the system doesn't honour it, it silently falls back to a
+            // higher value, which is fine — the diagnostic log below reveals it.
+            try session.setPreferredIOBufferDuration(0.003)
             try session.setActive(true)
         } catch {
             // Non-fatal: engine can still run at default latency.
