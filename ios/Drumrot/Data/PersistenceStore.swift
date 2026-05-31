@@ -233,6 +233,34 @@ final class PersistenceStore: ObservableObject {
         persist(extraLessons, key: Key.extraLessons)
     }
 
+    /// Renames a user-authored lesson, preserving its `createdAt` timestamp.
+    /// Returns `true` on success, `false` if the source is missing or the new name is taken.
+    @discardableResult
+    func renameExtraLesson(from oldName: String, to newName: String) -> Bool {
+        guard let oldRow = extraLessons.first(where: { $0.name == oldName }) else { return false }
+        guard !extraLessons.contains(where: { $0.name == newName }) else { return false }
+
+        // Patch name inside the JSON payload.
+        let newJSON: String
+        if let data = oldRow.lessonJSON.data(using: .utf8),
+           let orig = try? JSONDecoder().decode(Lesson.self, from: data),
+           let encoded = try? JSONEncoder().encode(
+               Lesson(name: newName, bpm: orig.bpm, tip: orig.tip,
+                      difficulty: orig.difficulty, genre: orig.genre,
+                      patterns: orig.patterns)),
+           let str = String(data: encoded, encoding: .utf8) {
+            newJSON = str
+        } else {
+            newJSON = oldRow.lessonJSON
+        }
+
+        let createdAt = oldRow.createdAt
+        extraLessons.removeAll { $0.name == oldName }
+        extraLessons.append(ExtraLesson(name: newName, lessonJSON: newJSON, createdAt: createdAt))
+        persist(extraLessons, key: Key.extraLessons)
+        return true
+    }
+
     /// Removes a user-authored lesson by name. No-op if absent.
     func deleteExtraLesson(name: String) {
         let before = extraLessons.count
