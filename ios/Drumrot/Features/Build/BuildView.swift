@@ -21,6 +21,10 @@ struct BuildView: View {
     @StateObject private var recorder = BuilderRecordEngine()
     @State private var showRecordPanel = false
 
+    // Record mode
+    @StateObject private var recorder = BuilderRecordEngine()
+    @State private var showRecordPanel = false
+
     private let lanes: [DrumLane] = DrumLane.allCases
     private var isEmpty: Bool { !grid.contains { $0.contains(true) } }
 
