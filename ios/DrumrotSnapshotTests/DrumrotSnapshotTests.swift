@@ -28,11 +28,22 @@ final class DrumrotSnapshotTests: XCTestCase {
         ProcessInfo.processInfo.environment["RECORD_SNAPSHOTS"] == "1" ? .all : .missing
     }
 
+    /// Builds an isolated in-memory persistence store + app store for a snapshot.
+    /// The ios16 branch injects state via `.environmentObject` (no SwiftData
+    /// model container), so every view under test gets both objects.
+    private func makeEnvironment() -> (PersistenceStore, AppStore) {
+        let persistence = PersistenceStore(defaults: nil)
+        let store = AppStore(persistence: persistence)
+        return (persistence, store)
+    }
+
     // MARK: - DropsView
 
     func testDropsViewSnapshot() throws {
+        let (persistence, store) = makeEnvironment()
         let view = DropsView()
-            .modelContainer(AppModelContainer.make(inMemory: true))
+            .environmentObject(store)
+            .environmentObject(persistence)
             .preferredColorScheme(.dark)
             .frame(width: 1024, height: 768)
 
@@ -44,8 +55,10 @@ final class DrumrotSnapshotTests: XCTestCase {
     // MARK: - ProgressTabView
 
     func testProgressTabViewSnapshot() throws {
+        let (persistence, store) = makeEnvironment()
         let view = ProgressTabView()
-            .modelContainer(AppModelContainer.make(inMemory: true))
+            .environmentObject(store)
+            .environmentObject(persistence)
             .preferredColorScheme(.dark)
             .frame(width: 1024, height: 768)
 
@@ -57,10 +70,10 @@ final class DrumrotSnapshotTests: XCTestCase {
     // MARK: - LibraryView
 
     func testLibraryViewSnapshot() throws {
-        let store = AppStore()
+        let (persistence, store) = makeEnvironment()
         let view = LibraryView()
             .environmentObject(store)
-            .modelContainer(AppModelContainer.make(inMemory: true))
+            .environmentObject(persistence)
             .preferredColorScheme(.dark)
             .frame(width: 1024, height: 768)
 
@@ -72,10 +85,10 @@ final class DrumrotSnapshotTests: XCTestCase {
     // MARK: - BuildView
 
     func testBuildViewSnapshot() throws {
-        let store = AppStore()
+        let (persistence, store) = makeEnvironment()
         let view = BuildView()
             .environmentObject(store)
-            .modelContainer(AppModelContainer.make(inMemory: true))
+            .environmentObject(persistence)
             .preferredColorScheme(.dark)
             .frame(width: 1024, height: 768)
 
@@ -88,8 +101,10 @@ final class DrumrotSnapshotTests: XCTestCase {
 
     func testAchievementTileLockedSnapshot() throws {
         // Renders the Progress tab with no unlocks so all tiles are in locked state.
+        let (persistence, store) = makeEnvironment()
         let view = ProgressTabView()
-            .modelContainer(AppModelContainer.make(inMemory: true))
+            .environmentObject(store)
+            .environmentObject(persistence)
             .preferredColorScheme(.dark)
             .frame(width: 1024, height: 900)
 
