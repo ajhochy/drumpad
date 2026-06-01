@@ -147,43 +147,4 @@ final class GrooveLibraryTests: XCTestCase {
         XCTAssertEqual(rows.first?.lessonJSON, "{\"v\":2}", "latest JSON wins")
     }
 
-    // MARK: - Issue #71 – confirm-overwrite prompt helpers
-
-    /// Verifies the uniqueSuffix logic used by the "Save as New" path in BuildView.
-    /// The function should append " (2)" for the first dupe, " (3)" for the second, etc.
-    func testUniqueSuffixGeneratesCorrectSuffix() throws {
-        let ctx = makeContext()
-        let svc = PersistenceService(context: ctx)
-
-        // Seed "Bass Groove" and "Bass Groove (2)" so the next unique is " (3)".
-        svc.saveExtraLesson(name: "Bass Groove", lessonJSON: "{}")
-        svc.saveExtraLesson(name: "Bass Groove (2)", lessonJSON: "{}")
-        try ctx.save()
-
-        let existing = Set(try ctx.fetch(FetchDescriptor<ExtraLesson>()).map(\.name))
-
-        func uniqueSuffix(for base: String) -> String {
-            var n = 2
-            while existing.contains("\(base) (\(n))") { n += 1 }
-            return "\(base) (\(n))"
-        }
-
-        XCTAssertEqual(uniqueSuffix(for: "Bass Groove"), "Bass Groove (3)")
-        XCTAssertEqual(uniqueSuffix(for: "New Groove"), "New Groove (2)",
-                       "name with no collision should get suffix (2)")
-    }
-
-    /// Verifies the upsert (replace) path: saving the same name twice keeps exactly one row.
-    func testUpsertReplacesExistingGrooveWithSameName() throws {
-        let ctx = makeContext()
-        let svc = PersistenceService(context: ctx)
-
-        svc.saveExtraLesson(name: "Funky Beat", lessonJSON: "{\"v\":1}")
-        svc.saveExtraLesson(name: "Funky Beat", lessonJSON: "{\"v\":2}")
-        try ctx.save()
-
-        let rows = try ctx.fetch(FetchDescriptor<ExtraLesson>())
-        XCTAssertEqual(rows.count, 1, "replace path must produce exactly one row")
-        XCTAssertEqual(rows.first?.lessonJSON, "{\"v\":2}", "latest JSON wins")
-    }
 }
