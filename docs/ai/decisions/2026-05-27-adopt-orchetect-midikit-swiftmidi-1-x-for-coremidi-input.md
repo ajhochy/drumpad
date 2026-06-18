@@ -1,0 +1,20 @@
+---
+date: 2026-05-27
+repo: drumrot
+tags: [decision, drumrot]
+---
+
+# Adopt orchetect/MIDIKit (SwiftMIDI 1.x) for CoreMIDI input (#59 closes #57)
+
+- **Decision:** Replace the hand-rolled CoreMIDI plumbing in `Drumrot/MIDI/MIDIInputManager.swift` with a thin wrapper over orchetect's MIDIKit library — added via SPM as the umbrella package URL `https://github.com/orchetect/MIDIKit`, "Up to Next Major Version", linked product **`SwiftMIDI`** on the Drumrot target. MIDIKit 1.1.0 resolved (transitive pins for swift-midi-io 1.1.0, swift-midi-core 1.0.1, swift-midi-controlsurfaces, -file, -sync, -ui, -timecode, swift-data-parsing).
+- **Why:** Closes #57's silent-receive root cause on iOS 16 (Roland TD-50X USB devices enumerate but the UMP receive path stays silent). MIDIKit transparently falls back to the legacy `MIDIInputPortCreateWithBlock` path on iOS 16/17 while still surfacing MIDI 2.0 events internally — i.e. the exact dual-path fix #57 originally proposed hand-rolling, already battle-tested in the AudioKit ecosystem. Trade: one SPM dep (Apache-2.0, iOS 12+, pure-Swift, ~300–500 KB est.) for ~70 LOC of CoreMIDI compatibility shim we'd otherwise own + maintain.
+- **Alternative rejected:** "#57 as-written" — hand-roll the dual-path receive ourselves with no new dependency. Rejected: more code surface, no test coverage on the iOS-16 path until real hardware lands, and we'd be re-implementing what MIDIKit already does. Recommendation in #59's body is followed: close #57 as superseded.
+- **Package architecture note (caught during implementation, not from the issue body):** orchetect renamed the public surface in MIDIKit 1.x. The umbrella **`MIDIKit`** package now exposes a single `SwiftMIDI` library product that `@_exported public import`s `SwiftMIDIIO` + `SwiftMIDICore`. The 0.x product names (`MIDIKitIO`, `MIDIKitCore`) and their parent module `MIDIKit` are gone. **Type names inside are preserved** (`MIDIManager`, `MIDIEvent`, `MIDIReceiver`, `MIDINote`, `MIDIIdentifier = Int32`, etc.), so the issue body's 0.x README sketch still mostly applies — but `import MIDIKitIO` is wrong for 1.x (correct: `import SwiftMIDI`), and `NotificationHandler` is a 1-arg closure `(MIDIIONotification) -> Void` (not 2-arg). Documented here so the next agent doesn't repeat the mistake.
+- **Public API surface preserved:** `MIDIInputManager.Source: Identifiable, Equatable { id: Int32; name: String }`, `@Published private(set) var sources: [Source]`, `@Published private(set) var activity: Bool`, `var onNote: ((DrumLane, Int) -> Void)?`, `func start()`. PlayView (`store.midi.onNote = ...`, `store.midi.start()`, `store.midi.activity`, `store.midi.sources.isEmpty`) and SettingsView (`ForEach(store.midi.sources) { source in Text("uid \(source.id)") }`) call-sites are untouched.
+- **Network MIDI kept manual:** `MIDINetworkSession.default()` is still configured via direct CoreMIDI for exact build-1 parity on the existing "Network Session 1" source. MIDIKit can manage it too; deferred to a later cleanup.
+- **Consequences:**
+  - Bundle-size impact unmeasured on simulator; real-device hardware gate is `du -h Drumrot.app` before/after — target < 1 MB delta per #59. Revisit if larger.
+  - MIDIKit's recent minimum platform = iOS 13, Swift 6 strict concurrency. We pin to "Up to Next Major" so a Swift 6 forced bump in MIDIKit 2.x won't auto-upgrade us.
+  - Receive callback now runs MIDIKit's threading model (still marshalled to MainActor via `Task { @MainActor in ... }`); no behavioural change to scoring path.
+- **Cherry-pick to `release/ios16-only`:** the file is conflict-free per `IOS16_BRANCH.md`'s divergence map (`MIDIInputManager.swift` is identical on both branches). After main merges, cherry-pick the commit + commit the new Package.resolved entries; ios16 build/test on the same iPad Pro 11-inch M5 sim.
+- **Verification snapshot:** `xcodebuild build` SUCCEEDED + 45/45 tests green on iPad Pro 11-inch M5 sim (CODE_SIGNING_ALLOWED=NO). Hardware verification (TD-50X strike → highway kick lane + audio + scoring increment) remains a real-device gate.
