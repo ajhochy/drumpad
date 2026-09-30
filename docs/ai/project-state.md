@@ -30,3 +30,15 @@ Native: `xcodebuild test -project ios/Drumrot.xcodeproj -scheme Drumrot -sdk iph
 4. A4/A5 content/IP review (#52 wrap, runbook §9) — meme portraits handled reactively per the 2026-05-26 decision.
 
 **Run history:** one file per run under `docs/ai/runs/` (surfaced as `ai-runs/`). This snapshot is overwritten in place.
+
+## Consolidation 2026-09-29
+Non-destructive git consolidation; nothing deleted. Draft PR https://github.com/ajhochy/drumpad/pull/77, tracking issues #78 (review + cleanup) and #79 (apply ios16 docs to `release/ios16-only`).
+- **Folded into `mega/2026-09-29-consolidation`:** `wip/drumrot-2026-09-29` (`08349ee`), `refs/clone/drumrot-research/wip/drumrot-research-2026-09-29` (`e1f11d8`).
+- **Preserved, not merged:** `refs/clone/drumpad-work/wip/drumpad-work-2026-09-29` (`0be3745`, on the ios16 lineage) as `consolidation/unmerged/wip-drumpad-work-release-ios16-only-docs.patch`.
+- **Kept:** `main` (`ef5fe6b`); `release/ios16-only` (`e15e13c`, permanent fork, PR #76 open, never merged into main/mega); `~/Documents/drumpad-work` stays as its single local checkout.
+- **Dropped (bundle `~/Documents/.consolidation-backups/drumpad-2026-09-29.bundle`):**
+  - merged into main: `feature/midikit-adoption` (`e4edced`), `feature/midi-diagnostic-overlay` (`c66c69e`), `feature/external-audio-toggle` (`cf207df`), `workflow/run-2026-05-26` (`24e9d8b`), `workflow/drumpad-2026-05-19` (`b6619f2`), clone `main` refs (`fc02deb`, `848b597`)
+  - content already on main: `chore/agents-md-ios-target` (`4a5b847`), `chore/backport-2026-05-27-postmortems` (`e461d5a`), `chore/branches-readme` (`dc773e2`), `origin/workflow/run-2026-05-27` (`8bec48a`, patch-identical to squash #54)
+  - ios16 lineage, content already in `release/ios16-only`: `fix/appsettings-decode-fallback` (`5d58988`), `chore/retro-pr64-appsettings-decode` (`c9af2e1`), `feat/groove-library-edit` (`afaec4b`), `workflow/run-2026-05-27` (`88a5872`)
+- **In flight:** none (no linked worktrees, no live processes).
+- **Cleanup script (not run):** `~/Documents/.consolidation-backups/cleanup/drumpad-2026-09-29-cleanup.sh`; also deletes the redundant clone `~/Documents/drumrot-research`.
