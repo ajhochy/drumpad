@@ -1,3 +1,7 @@
+---
+type: project
+---
+
 # Repo map
 
 - `index.html` — single-page shell, tabs, drumrot reveal overlay

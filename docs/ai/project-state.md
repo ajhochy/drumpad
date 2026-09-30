@@ -1,3 +1,7 @@
+---
+type: run-log
+---
+
 # Project state
 
 ## Current focus

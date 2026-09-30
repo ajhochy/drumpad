@@ -1,3 +1,7 @@
+---
+type: project
+---
+
 # Architecture
 
 Static web app served from disk. ES modules; no bundler.
