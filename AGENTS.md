@@ -30,3 +30,6 @@ drumrot also ships as a native iOS app (App Store + TestFlight). Source root is 
 - **pbxproj is load-bearing**: Xcode holds an exclusive lock on `ios/Drumrot.xcodeproj/project.pbxproj` while open, so SPM additions, signing settings, deployment-target changes, and build-number bumps must go through the Xcode UI. Ask the user up front rather than failing at archive time.
 - **Canonical test**: `xcodebuild test -project ios/Drumrot.xcodeproj -scheme Drumrot -sdk iphonesimulator -destination 'platform=iOS Simulator,id=6C5FDCB6-8346-4690-A788-B59FBFA26B0F' CODE_SIGNING_ALLOWED=NO` (iPad Pro 11-inch M5). The Xcode `BuildProject` MCP tool is faster for incremental builds when local signing is configured.
 - **Ops docs**: `docs/app-store/release-runbook.md` (hardware gates 1–9), `docs/app-store/handoff.md` (ASC + TestFlight). ASC API key ID + Issuer ID + `.p8` path live in auto-memory at `reference_asc_credentials.md` — NEVER commit signing material.
+
+## Worktree hygiene
+Once a branch's work is committed and pushed to a PR, remove its worktree immediately (`git worktree remove <path> && git worktree prune`) and squash-delete the local branch. Never leave worktrees checked out after PR creation; idle worktrees keep compiling, watching, and eating disk. One active worktree per task, gone when the PR opens.

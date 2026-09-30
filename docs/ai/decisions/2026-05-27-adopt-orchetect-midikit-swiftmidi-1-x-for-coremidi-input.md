@@ -1,4 +1,5 @@
 ---
+index: "[[drumrot]]"
 date: 2026-05-27
 repo: drumrot
 tags: [decision, drumrot]

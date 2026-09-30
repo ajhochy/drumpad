@@ -1,0 +1,80 @@
+From 0be37451736dee8e9e034044a927df53043d74b9 Mon Sep 17 00:00:00 2001
+From: ajhochy <ajhochy@gmail.com>
+Date: Tue, 29 Sep 2026 22:42:15 -0700
+Subject: [PATCH] WIP snapshot release/ios16-only 2026-09-29
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ docs/ai/decisions.md          | 10 ++++++++++
+ docs/ai/project-state.md      |  7 +++++++
+ ios/build/ExportOptions.plist | 20 --------------------
+ 3 files changed, 17 insertions(+), 20 deletions(-)
+ delete mode 100644 ios/build/ExportOptions.plist
+
+diff --git a/docs/ai/decisions.md b/docs/ai/decisions.md
+index 4f2ab72..f3176c7 100644
+--- a/docs/ai/decisions.md
++++ b/docs/ai/decisions.md
+@@ -1,5 +1,15 @@
+ # Decisions
+ 
++## 2026-06-01 — Snapshot tests are advisory (non-blocking) on `release/ios16-only` (PR #76)
++- **Decision:** Mark the "Snapshot tests (iPad simulator)" CI step `continue-on-error: true` in `.github/workflows/ios-build.yml`. The step still runs and logs visual diffs for human review, but a mismatch no longer fails the build.
++- **Why:** The baseline PNGs committed in `ios/DrumrotSnapshotTests/__Snapshots__/` (`9caa84b`, recorded on a developer's Mac) have never matched the CI runner's renderer — cross-machine font hinting / anti-aliasing differences. Result: the snapshot suite hard-failed on *every* CI run since it was added, blocking an otherwise-passing build (Build + Unit + UI all green). These diffs are not real regressions, so they must not gate the iOS-16 release branch whose job is shipping TestFlight builds. The workflow's own comments already described snapshots as a "soft failure" on first run, so advisory matches original intent.
++- **Alternatives rejected:**
++  - *Regenerate baselines on the CI runner and commit them* — keeps the suite gating/meaningful, but needs an artifact round-trip (delete local PNGs → CI records → download → commit) and ongoing "re-bless the images" friction on every intentional UI change. User explicitly chose against this for a release branch.
++  - *Delete the baselines so CI records fresh every run* — green, but the suite would never actually compare against anything (degenerate; guards nothing).
++- **User chose:** advisory (option #1), accepting that accidental visual regressions won't fail CI — they're only visible by reading the step's logged diffs.
++- **Consequences:** To restore gating later, record baselines *on the CI runner itself* and commit them, then flip the step back to hard-fail. Until then, snapshot diffs are an FYI in the CI log, not a gate. Intentional UI redesigns no longer require a baseline-update commit on this branch.
++- **Context — what unblocked this:** the snapshot mismatch only became visible after fixing a compile-error cascade (commits `deeff4b`, `e327eb8`, `05201fe`) where the `main`→`ios16` merge had leaked SwiftData test APIs (`AppModelContainer`/`.modelContainer`/`makeContext`/`PersistenceService`/`FetchDescriptor`) into this UserDefaults-based branch. Recurring hazard: any cherry-pick/merge from `main` that touches test targets must be re-checked for SwiftData-only symbols, since `release/ios16-only` dropped SwiftData entirely.
++
+ ## 2026-05-27 — Adopt orchetect/MIDIKit (SwiftMIDI 1.x) for CoreMIDI input (#59 closes #57)
+ - **Decision:** Replace the hand-rolled CoreMIDI plumbing in `Drumrot/MIDI/MIDIInputManager.swift` with a thin wrapper over orchetect's MIDIKit library — added via SPM as the umbrella package URL `https://github.com/orchetect/MIDIKit`, "Up to Next Major Version", linked product **`SwiftMIDI`** on the Drumrot target. MIDIKit 1.1.0 resolved (transitive pins for swift-midi-io 1.1.0, swift-midi-core 1.0.1, swift-midi-controlsurfaces, -file, -sync, -ui, -timecode, swift-data-parsing).
+ - **Why:** Closes #57's silent-receive root cause on iOS 16 (Roland TD-50X USB devices enumerate but the UMP receive path stays silent). MIDIKit transparently falls back to the legacy `MIDIInputPortCreateWithBlock` path on iOS 16/17 while still surfacing MIDI 2.0 events internally — i.e. the exact dual-path fix #57 originally proposed hand-rolling, already battle-tested in the AudioKit ecosystem. Trade: one SPM dep (Apache-2.0, iOS 12+, pure-Swift, ~300–500 KB est.) for ~70 LOC of CoreMIDI compatibility shim we'd otherwise own + maintain.
+diff --git a/docs/ai/project-state.md b/docs/ai/project-state.md
+index b10ac7d..70ccedf 100644
+--- a/docs/ai/project-state.md
++++ b/docs/ai/project-state.md
+@@ -1,6 +1,13 @@
+ # Project state
+ 
+ ## Current focus
++**2026-06-01 — PR #76 (`release/ios16-only`) CI is GREEN.** CI run [`26767234338`](https://github.com/ajhochy/drumpad/actions/runs/26767234338) = success (Build + Unit + UI all pass; snapshot step now advisory). This closed a 3-fix repair loop: the earlier `main`→`ios16` merge leaked SwiftData-based test code into this UserDefaults branch, breaking compilation.
++- **Fix 1 (`deeff4b`):** removed duplicated Issue #71 test methods in `DrumrotTests/GrooveLibraryTests.swift` (invalid redeclaration).
++- **Fix 2 (`e327eb8`):** ported the two surviving Issue #71 tests off SwiftData (`makeContext`/`PersistenceService`/`FetchDescriptor`) to the ios16 `PersistenceStore(defaults: nil)` API.
++- **Fix 3 (`05201fe`):** ported `DrumrotSnapshotTests/DrumrotSnapshotTests.swift` off SwiftData (`AppModelContainer.make()` / `.modelContainer()` / bare `AppStore()`) to the ios16 `.environmentObject` injection pattern — `PersistenceStore(defaults: nil)` + `AppStore(persistence:)`, matching `DrumrotApp`. Swept all 3 test targets afterward: zero SwiftData APIs remain.
++- **Fix 4 (`e15e13c`):** made the snapshot-tests CI step `continue-on-error: true` (advisory). The committed baseline PNGs in `ios/DrumrotSnapshotTests/__Snapshots__/` were recorded on a dev Mac and have never matched the CI runner's renderer — the suite had failed on every run since it was added (`9caa84b`). Now it runs and logs diffs for human review but no longer gates the build. To restore gating, baselines must be re-recorded on the CI runner and committed. Decision logged in `decisions.md` (2026-06-01).
++- **Merge status:** PR #76 stays open for human review/merge — not merged. The compile-fix class (SwiftData leakage) is the recurring hazard when porting between `main` (SwiftData) and `release/ios16-only` (UserDefaults) — any future cherry-pick that touches test targets must be re-checked for SwiftData-only APIs.
++
+ **2026-05-30 — Groove Library + Edit landed on `feat/groove-library-edit` (off `release/ios16-only`).** User-created grooves from the Builder and MIDI imports now persist into the Library with a USER stamp + Edit/Delete context menu. Verified: 59/59 tests + visual smoke green (Library v2 screenshot shows seeded extras at cells 09/10 with USER stamp; BUILDER + IMPORT genre chips appear only with extras present; Build tab shows the new `NAME THIS GROOVE…` LCD field + `ADD TO LIBRARY` button + `SAVE LIB` tool tile). Working tree dirty, ready to commit. Manual smoke checklist in `docs/testing/manual-smoke.md`. Port to `main` (SwiftData @Model) is a follow-up since persistence layers diverge.
+ 
+ **TestFlight build 3 uploaded 2026-05-27 (later, post-MIDIKit+overlays+external-audio toggle).** Includes #59 (MIDIKit/SwiftMIDI adoption), #58 (on-screen MIDI diagnostic overlay + Settings disclosure), #60 (External audio mode toggle for V-Drum/module users). `MARKETING_VERSION=0.1`, `CFBundleVersion=3`. Archived + exported + uploaded via `xcrun altool` using App Manager API key `N4344XHZUP`. **Delivery UUID `ee1452f2-ab9a-4848-81ea-ba3289a7a0c5`, 6.9 MB IPA** (+2.2 MB vs build 1 — accounted for by MIDIKit + its swift-midi-* sub-packages; well within the < 1 MB-per-linked-binary expectation from #59's verification list). Now waiting on Apple processing (~15–20 min) before internal-tester install. Build 1 (`CFBundleVersion=1`, 4.7 MB, delivery UUID `60eccddb-eb6c-4a63-b4c6-b2ef66051d83`) was uploaded earlier 2026-05-27 but never installed on a device.
+diff --git a/ios/build/ExportOptions.plist b/ios/build/ExportOptions.plist
+deleted file mode 100644
+index c0859f6..0000000
+--- a/ios/build/ExportOptions.plist
++++ /dev/null
+@@ -1,20 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+-<plist version="1.0">
+-<dict>
+-    <key>method</key>
+-    <string>app-store-connect</string>
+-    <key>teamID</key>
+-    <string>56Q69NYP9H</string>
+-    <key>signingStyle</key>
+-    <string>automatic</string>
+-    <key>destination</key>
+-    <string>export</string>
+-    <key>uploadSymbols</key>
+-    <true/>
+-    <key>stripSwiftSymbols</key>
+-    <true/>
+-    <key>generateAppStoreInformation</key>
+-    <false/>
+-</dict>
+-</plist>
+-- 
+2.50.1 (Apple Git-155)
+
