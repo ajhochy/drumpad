@@ -1,3 +1,7 @@
+---
+type: project
+---
+
 # Current plan — SP-808 KILLA native iPadOS port (v1)
 
 > **Source of truth.** Promoted 2026-05-26 from [docs/ai/codex-ios-plan.md](codex-ios-plan.md) (the iPad-first planning pass that matches the locked 2026-05-21 direction), with a tightened entitlements/usage-description section grafted from [docs/ai/claudes-ios-plan.md](claudes-ios-plan.md). Both prior planning passes are preserved alongside this file for historical comparison; this file is the authoritative current plan and supersedes the v0.3 card-system plan (shipped via PR #5 / #8 / #10).
